@@ -11,6 +11,7 @@ If you are not familiar with the different technologies used in this project, pl
 - [Next.js](https://nextjs.org)
 - [NextAuth.js](https://next-auth.js.org)
 - [Prisma](https://prisma.io)
+- [Drizzle](https://orm.drizzle.team)
 - [Tailwind CSS](https://tailwindcss.com)
 - [tRPC](https://trpc.io)
 
@@ -26,3 +27,28 @@ You can check out the [create-t3-app GitHub repository](https://github.com/t3-os
 ## How do I deploy this?
 
 Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
+
+I need to complete this tomorow at work
+
+- [ ] Fix the header to be fixed at the top when you scroll so only the main section can scroll
+- [ ] Improve the search button to follow the same design button
+- [ ] Resarch to see if you can call a next server action on type
+- [ ] Add github action
+- [ ] Add docker contatiner
+- [ ] Add SQL Databasae
+- [ ] Prepare the school database to be use on sql lite on the xcell spread
+sheed
+- [ ] text
+- [ ] Dark theme switcher.... should be able to switch between dark theme and
+light theme
+
+
+
+
+
+
+
+
+
+
+
