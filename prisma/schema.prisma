@@ -64,4 +64,4 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
-}
+s
