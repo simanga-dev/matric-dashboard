@@ -1,513 +1,132 @@
-District Name                       EMIS No          Centre Number     Centre Name
-ALFRED NZO EAST                     200500039        4241001          A D TSHAYINGCA SECONDARY SCHOOL                           3         62              292           213              72,9           3             326           277              85,0           2             328           258              78,7
-ALFRED NZO EAST                     200500013        4241002          BALENI SENIOR SECONDARY SCHOOL                            1         21              149           91               61,1           0             183           116              63,4         14              169           96               56,8
-ALFRED NZO EAST                     200500315        4241040          BHOVULENGWE S S S                                         99                                                                       0             23            19               82,6           0             29            29               100,0
-ALFRED NZO EAST                     200500041        4241003          BIZANA SENIOR SECONDARY SCHOOL                            3         133 370                       196              53,0         64              447           271              60,6           1             393           269              68,4
-ALFRED NZO EAST                     200501456        4241004          CANGCI COMPREHENSIVE TECHNICAL HIGH                       1         46              178           122              68,5         13              149           130              87,2           7             160           144              90,0
-ALFRED NZO EAST                     200501404        4241005          CHIEF DUMILE SENIOR SECONDARY SCHOOL                      1         50              136           99               72,8         41              228           180              78,9         14              201           149              74,1
-ALFRED NZO EAST                     200500138        4241006          DUDUMENI HIGH SCHOOL                                      1           0             68            54               79,4           1             86            73               84,9           9             148           116              78,4
-ALFRED NZO EAST                     200500150        4241007          DUMSI COMPREHENSIVE HIGH SCHOOL                           1         10              98            75               76,5           0             103           72               69,9           8             128           108              84,4
-ALFRED NZO EAST                     200500205        4241008          ENQABENI SENIOR SECONDARY SCHOOL                          1         12              102           81               79,4         27              135           95               70,4           4             141           115              81,6
-ALFRED NZO EAST                     200500208        4241036          ENYANISWENI SENIOR SECONDARY SCHOOL                       3         13              113           89               78,8           8             206           151              73,3         25              231           186              80,5
-ALFRED NZO EAST                     200500270        4241009          GREENVILLE SENIOR SECONDARY SCHOOL                        1           9             57            45               78,9         34              146           84               57,5         26              109           95               87,2
-ALFRED NZO EAST                     200500278        4241010          GUMZANA SENIOR SECONDARY SCHOOL                           3         78              241           171              71,0         66              320           221              69,1           5             159           153              96,2
-ALFRED NZO EAST                     200500300        4241011          HLAMANDANA SENIOR SECONDARY SCHOOL                        2         36              100           57               57,0         59              151           110              72,8         22              189           134              70,9
-ALFRED NZO EAST                     0                4241042          KWANIKWE SENIOR SECONDARY SCHOOL                          99                                                                                                                                   0             84            79               94,0
-ALFRED NZO EAST                     200500580        4241012          MADIKIZELA SENIOR SECONDARY SCHOOL                        1         13              48            16               33,3         21              76            46               60,5         16              89            58               65,2
-ALFRED NZO EAST                     200500529        4241013          MAJAVU SECONDARY SCHOOL                                   3         31              116           82               70,7           8             155           131              84,5         31              199           161              80,9
-ALFRED NZO EAST                     200500577        4241014          MAQONGWANA SENIOR SECONDARY SCHOOL                        1           0             35            18               51,4           0             35            17               48,6         10              64            45               70,3
-ALFRED NZO EAST                     200500580        4241015          MARELANE SENIOR SECONDARY SCHOOL                          1         62              215           166              77,2         20              254           229              90,2         46              252           229              90,9
-ALFRED NZO EAST                     200500583        4241016          MARINA COMPREHENSIIVE HIGH SCHOOL                         1         81              275           169              61,5         53              250           182              72,8         34              236           191              80,9
-ALFRED NZO EAST                     200500639        4241017          MDATYA SENIOR SECONDARY SCHOOL                            1         19              214           152              71,0         95              388           220              56,7         67              178           115              64,6
-ALFRED NZO EAST                     200500672        4241018          MHLABI C H SCHOOL                                         1         16              83            64               77,1           5             120           97               80,8         136 174                       165              94,8
-ALFRED NZO EAST                     200500699        4241039          MKOMANE SECONDARY SCHOOL                                  2                                                                       0             58            44               75,9           9             121           68               56,2
-ALFRED NZO EAST                     200500712        4241041          MNCWATHI S S S                                            99                                                                       1             42            27               64,3           1             83            73               88,0
-ALFRED NZO EAST                     200500754        4241019          MPENI SENIOR SECONDARY SCHOOL                             3           8             54            29               53,7           0             73            54               74,0         28              100           64               64,0
-ALFRED NZO EAST                     200500764        4241020          MPONDOMBINI SENIOR SECONDARY SCHOOL                       2         30              179           162              90,5         14              266           224              84,2           5             255           185              72,5
-ALFRED NZO EAST                     200500824        4241021          MZAMBA COMPREHENSIVE HIGH SCHOOL                          2         20              128           95               74,2         15              154           131              85,1           0             178           137              77,0
-ALFRED NZO EAST                     200500849        4241035          NCURA SECONDARY SCHOOL                                    3         22              77            62               80,5           3             100           84               84,0           0             135           131              97,0
-ALFRED NZO EAST                    200500871       4241022            NGALONKULU SENIOR SECONDARY SCHOOL                       1         12              69            16               23,2          24              73            35               47,9         32              69            52               75,4
-ALFRED NZO EAST                    200501457       4241023            NOMAGQWATHEKANA COMP TECH HIGH SCHOOL                    1         34              51            25               49,0          17              76            44               57,9           4             113           64               56,6
-ALFRED NZO EAST                    200500935       4241024            NONGEKE SENIOR SECONDARY SCHOOL                          1           0             148           78               52,7          14              187           104              55,6         30              305           164              53,8
-ALFRED NZO EAST                    200500939       4241037            NONKQUBELA SENIOR SECONDARY SCHOOL                       1           0             66            59               89,4          10              140           127              90,7         11              185           157              84,9
-ALFRED NZO EAST                    200500954       4241025            NTABEZULU SENIOR SECONDARY SCHOOL                        1           0             158           130              82,3          46              244           193              79,1           0             206           174              84,5
-ALFRED NZO EAST                    200500985       4241026            NTUKAYI SENIOR SECONDARY SCHOOL                          1           8             84            71               84,5            3             107           83               77,6           0             108           86               79,6
-ALFRED NZO EAST                    200500998       4241027            OLIVER TAMBO TECH SCHOOL                                 1         12              56            33               58,9          15              90            63               70,0         20              58            41               70,7
-ALFRED NZO EAST                    0               4241043            QADU SENIOR SECONDARY SCHOOL                             99                                                                                                                                    0             21            21               100,0
-ALFRED NZO EAST                    200501047       4241038            QOBO AHS                                                 99                                                                        0             18            14               77,8         10              49            22               44,9
-ALFRED NZO EAST                    200501090       4241028            SHUKUMA SENIOR SECONDARY SCHOOL                          1           0             130           102              78,5          38              179           109              60,9         10              127           107              84,3
-ALFRED NZO EAST                    200501123       4241029            SITHUKUTHEZI SENIOR SECONDARY SCHOOL                     1           0             46            32               69,6          25              124           80               64,5           8             112           76               67,9
-ALFRED NZO EAST                    200501195       4241030            THEMBALESIZWE COM TECH                                   1         12              44            27               61,4          34              85            71               83,5           9             89            76               85,4
-ALFRED NZO EAST                    200501278       4241031            VUKAYIBAMBE SENIOR SECONDARY SCHOOL                      1         22              66            32               48,5          17              78            58               74,4         14              60            48               80,0
-ALFRED NZO EAST                    200501280       4243032            VUKUZENZELE SPECIAL SCHOOL                               99           0               6              6             100,0           1             12            10               83,3           0               6              5             83,3
-ALFRED NZO EAST                    200501282       4241033            VULINDLELA COMP TECH                                     3         38              102           66               64,7          21              138           98               71,0         29              128           100              78,1
-ALFRED NZO EAST                    200501293       4241034            WINNIE MANDELA COMPTECH SENIOR SECON                     1         15              70            33               47,1          13              71            58               81,7         11              53            46               86,8
-ALFRED NZO EAST                    200501311       4243035            ZAMOKUHLE SPECIAL SCHOOL                                 99           0             14            12               85,7            0             11               9             81,8           0             11               9             81,8
+district_name                       emis_number      centre_number    centre_name                                               quantile      p_2020          t_w_2020      t_a_2020         %_achi_2020    p_2021          t_w_2021    t_a_2021         %_achi_2021    p_2022        t_w_2022      t_a_2022         %_achi_2022
+ALFRED NZO EAST                     200500039        4241001          A D TSHAYINGCA SECONDARY SCHOOL                           3             62              292           213              72,9           3             326           277              85,0           2             328           258              78,7
+ALFRED NZO EAST                     200500013        4241002          BALENI SENIOR SECONDARY SCHOOL                            1             21              149           91               61,1           0             183           116              63,4           14            169           96               56,8
+ALFRED NZO EAST                     200500315        4241040          BHOVULENGWE S S S                                         99                                                                           0             23            19               82,6          0             29            29               100,0
+ALFRED NZO EAST                     200500041        4241003          BIZANA SENIOR SECONDARY SCHOOL                            3             133 370                       196              53,0         64              447           271              60,6           1             393           269              68,4
+ALFRED NZO EAST                     200501456        4241004          CANGCI COMPREHENSIVE TECHNICAL HIGH                       1             46              178           122              68,5         13              149           130              87,2           7             160           144              90,0
+ALFRED NZO EAST                     200501404        4241005          CHIEF DUMILE SENIOR SECONDARY SCHOOL                      1             50              136           99               72,8         41              228           180              78,9           14            201           149              74,1
+ALFRED NZO EAST                     200500138        4241006          DUDUMENI HIGH SCHOOL                                      1               0             68            54               79,4           1             86            73               84,9           9             148           116              78,4
+ALFRED NZO EAST                     200500150        4241007          DUMSI COMPREHENSIVE HIGH SCHOOL                           1             10              98            75               76,5           0             103           72               69,9           8             128           108              84,4
+ALFRED NZO EAST                     200500205        4241008          ENQABENI SENIOR SECONDARY SCHOOL                          1             12              102           81               79,4         27              135           95               70,4           4             141           115              81,6
+ALFRED NZO EAST                     200500208        4241036          ENYANISWENI SENIOR SECONDARY SCHOOL                       3             13              113           89               78,8           8             206           151              73,3           25            231           186              80,5
+ALFRED NZO EAST                     200500270        4241009          GREENVILLE SENIOR SECONDARY SCHOOL                        1               9             57            45               78,9         34              146           84               57,5           26            109           95               87,2
+ALFRED NZO EAST                     200500278        4241010          GUMZANA SENIOR SECONDARY SCHOOL                           3             78              241           171              71,0         66              320           221              69,1           5             159           153              96,2
+ALFRED NZO EAST                     200500300        4241011          HLAMANDANA SENIOR SECONDARY SCHOOL                        2             36              100           57               57,0         59              151           110              72,8           22            189           134              70,9
+ALFRED NZO EAST                     0                4241042          KWANIKWE SENIOR SECONDARY SCHOOL                          99                                                                                                                                      0             84            79               94,0
+ALFRED NZO EAST                     200500580        4241012          MADIKIZELA SENIOR SECONDARY SCHOOL                        1             13              48            16               33,3         21              76            46               60,5           16            89            58               65,2
+ALFRED NZO EAST                     200500529        4241013          MAJAVU SECONDARY SCHOOL                                   3             31              116           82               70,7           8             155           131              84,5           31            199           161              80,9
+ALFRED NZO EAST                     200500577        4241014          MAQONGWANA SENIOR SECONDARY SCHOOL                        1               0             35            18               51,4           0             35            17               48,6           10            64            45               70,3
+ALFRED NZO EAST                     200500580        4241015          MARELANE SENIOR SECONDARY SCHOOL                          1             62              215           166              77,2         20              254           229              90,2           46            252           229              90,9
+ALFRED NZO EAST                     200500583        4241016          MARINA COMPREHENSIIVE HIGH SCHOOL                         1             81              275           169              61,5         53              250           182              72,8           34            236           191              80,9
+ALFRED NZO EAST                     200500639        4241017          MDATYA SENIOR SECONDARY SCHOOL                            1             19              214           152              71,0         95              388           220              56,7           67            178           115              64,6
+ALFRED NZO EAST                     200500672        4241018          MHLABI C H SCHOOL                                         1             16              83            64               77,1           5             120           97               80,8           136           174           165              94,8
+ALFRED NZO EAST                     200500699        4241039          MKOMANE SECONDARY SCHOOL                                  2                                                                           0             58            44               75,9           9             121           68               56,2
+ALFRED NZO EAST                     200500712        4241041          MNCWATHI S S S                                            99                                                                           1             42            27               64,3           1            83            73               88,0
+ALFRED NZO EAST                     200500754        4241019          MPENI SENIOR SECONDARY SCHOOL                             3               8             54            29               53,7           0             73            54               74,0           28            100           64               64,0
+ALFRED NZO EAST                     200500764        4241020          MPONDOMBINI SENIOR SECONDARY SCHOOL                       2             30              179           162              90,5         14              266           224              84,2           5             255           185              72,5
+ALFRED NZO EAST                     200500824        4241021          MZAMBA COMPREHENSIVE HIGH SCHOOL                          2             20              128           95               74,2         15              154           131              85,1           0             178           137              77,0
+ALFRED NZO EAST                     200500849        4241035          NCURA SECONDARY SCHOOL                                    3             22              77            62               80,5           3             100           84               84,0           0             135           131              97,0
+ALFRED NZO EAST                    200500871         4241022          NGALONKULU SENIOR SECONDARY SCHOOL                       1             12              69            16               23,2          24              73            35               47,9         32              69            52               75,4
+ALFRED NZO EAST                    200501457         4241023          NOMAGQWATHEKANA COMP TECH HIGH SCHOOL                    1             34              51            25               49,0          17              76            44               57,9           4             113           64               56,6
+ALFRED NZO EAST                    200500935         4241024          NONGEKE SENIOR SECONDARY SCHOOL                          1               0             148           78               52,7          14              187           104              55,6         30              305           164              53,8
+ALFRED NZO EAST                    200500939         4241037          NONKQUBELA SENIOR SECONDARY SCHOOL                       1               0             66            59               89,4          10              140           127              90,7         11              185           157              84,9
+ALFRED NZO EAST                    200500954         4241025          NTABEZULU SENIOR SECONDARY SCHOOL                        1               0             158           130              82,3          46              244           193              79,1           0             206           174              84,5
+ALFRED NZO EAST                    200500985         4241026          NTUKAYI SENIOR SECONDARY SCHOOL                          1               8             84            71               84,5            3             107           83               77,6           0             108           86               79,6
+ALFRED NZO EAST                    200500998         4241027          OLIVER TAMBO TECH SCHOOL                                 1             12              56            33               58,9          15              90            63               70,0         20              58            41               70,7
+ALFRED NZO EAST                    0                 4241043          QADU SENIOR SECONDARY SCHOOL                             99                                                                                                                                        0             21            21               100,0
+ALFRED NZO EAST                    200501047         4241038          QOBO AHS                                                 99                                                                            0             18            14               77,8         10              49            22               44,9
+ALFRED NZO EAST                    200501090         4241028          SHUKUMA SENIOR SECONDARY SCHOOL                          1               0             130           102              78,5          38              179           109              60,9         10              127           107              84,3
+ALFRED NZO EAST                    200501123         4241029          SITHUKUTHEZI SENIOR SECONDARY SCHOOL                     1               0             46            32               69,6          25              124           80               64,5           8             112           76               67,9
+ALFRED NZO EAST                    200501195         4241030          THEMBALESIZWE COM TECH                                   1             12              44            27               61,4          34              85            71               83,5           9             89            76               85,4
+ALFRED NZO EAST                    200501278         4241031          VUKAYIBAMBE SENIOR SECONDARY SCHOOL                      1             22              66            32               48,5          17              78            58               74,4         14              60            48               80,0
+ALFRED NZO EAST                    200501280         4243032          VUKUZENZELE SPECIAL SCHOOL                               99               0               6              6             100,0           1             12            10               83,3           0               6              5             83,3
+ALFRED NZO EAST                    200501282         4241033          VULINDLELA COMP TECH                                     3             38              102           66               64,7          21              138           98               71,0         29              128           100              78,1
+ALFRED NZO EAST                    200501293         4241034          WINNIE MANDELA COMPTECH SENIOR SECON                     1             15              70            33               47,1          13              71            58               81,7         11              53            46               86,8
+ALFRED NZO EAST                    200501311         4243035          ZAMOKUHLE SPECIAL SCHOOL                                 99               0             14            12               85,7            0             11               9             81,8           0             11               9             81,8
+ALFRED NZO WEST                    200501564         4252085          ADVENT COMPREHENSIVE SCHOOL                              99               2             33            26               78,8            0             39            34               87,2           0             43            40               93,0
+ALFRED NZO WEST                    200500005         4251001          ARTHUR NGUNGA SENIOR SECONDARY SCHOOL                     2             49              137           53               38,7          28              130           63               48,5           3             93            75               80,6
+ALFRED NZO WEST                    200500006         4251002          AZARIEL SENIOR SECONDARY SCHOOL                           1             14              49            27               55,1          12              76            43               56,6         10              107           78               72,9
+ALFRED NZO WEST                    200501571         4252003          BERGVIEW COLLEGE                                          99               0             51            39               76,5            0             44            40               90,9           0             54            49               90,7
+ALFRED NZO WEST                    200500094         4251004          BONXA HIGH SCHOOL                                         2               9             159           114              71,7            5             184           153              83,2           5             187           162              86,6
+ALFRED NZO WEST                    200500060         4251005          BROOKSNEK SENIOR SECONDARY SCHOOL                         2               0             20            10               50,0            8             38            26               68,4           5             23            22               95,7
+ALFRED NZO WEST                    200501574         4251006          CEDARVILLE PUBLIC SCHOOL                                  2             17              46            34               73,9          33              73            41               56,2         23              71            51               71,8
+ALFRED NZO WEST                    200500098         4251007          COLANA SENIOR SECONDARY SCHOOL                            1               3             330           176              53,3          28              90            50               55,6         10              72            49               68,1
+ALFRED NZO WEST                    200500113         4251008          DALUHLANGA SENIOR SECONDARY SCHOOL                        2             11              95            48               50,5            1             113           79               69,9           1             91            74               81,3
+ALFRED NZO WEST                    200500119         4251009          DANGWANA SENIOR SECONDARY SCHOOL                          2               0             139           87               62,6            6             193           138              71,5           7             166           138              83,1
+ALFRED NZO WEST                    200500144         4251010          DUMEZWENI SENIOR SECONDARY SCHOOL                         1               0             199           146              73,4          11              224           161              71,9           5             259           167              64,5
+ALFRED NZO WEST                    200500151         4251011          DUMSI SENIOR SECONDARY SCHOOL                             1             18              113           63               55,8         14              154           86               55,8          15              126           99               78,6
+ALFRED NZO WEST                    200501589         4252012          FOCUSED HIGH SCHOOL                                       99               0             38            31               81,6           0             46            42               91,3            1             40            38               95,0
+ALFRED NZO WEST                    200500302         4251014          HLANGWINI SENIOR SECONDARY SCHOOL                         1               9             42            15               35,7           8             36            17               47,2            1             44            24               54,5
+ALFRED NZO WEST                    200500313         4251015          HUKU SENIOR SECONDARY SCHOOL                              1               5             99            75               75,8           0             92            83               90,2            0             129           101              78,3
+ALFRED NZO WEST                    200500058         4252016          IKHWEZI LOMSO EDUCARE CENTRE                              99               0             10               4             40,0           0             10            10               100,0           0             10            10               100,0
+ALFRED NZO WEST                    200500338         4251017          JOJO SENIOR SECONDARY SCHOOL                              2               7             180           169              93,9           0             283           225              79,5            3             263           235              89,4
+ALFRED NZO WEST                    200501580         4251018          KHANYA-NALEDI COMBINED SCHOOL                             2             45              92            54               58,7         30              126           79               62,7          49              90            70               77,8
+ALFRED NZO WEST                    200500554         4251045          KHULANGOPHONDO SENIOR SECONDARY SCHO                      1               0             46            24               52,2           0             39            22               56,4            0             62            48               77,4
+ALFRED NZO WEST                    200501581         4251019          KING EDWARD HIGH SCHOOL                                   4               0             47            46               97,9           0             52            52               100,0           0             47            47               100,0
+ALFRED NZO WEST                    200501458         4251020          LINDELANI SENIOR SECONDARY SCHOOL                         3             32              114           70               61,4         14              115           111              96,5          22              120           114              95,0
+ALFRED NZO WEST                    200500438         4251021          LOYISO SINOR SECONDARY SCHOOL                             1               0             51            29               56,9           6             73            52               71,2            9             96            73               76,0
+ALFRED NZO WEST                    200500449         4251022          LUDIDI SENIOR SECONDARY SCHOOL                            1             24              60            28               46,7           4             54            31               57,4          14              72            43               59,7
+ALFRED NZO WEST                    200500470         4251023          LUPINDO SENIOR SECONDARY SCHOOL                           2             10              40            24               60,0         22              54            25               46,3            5             37            35               94,6
+ALFRED NZO WEST                    200500479         4251024          LUTATENI SENIOR SECONDARY SCHOOL                          1             41              116           81               69,8         31              150           129              86,0          23              103           89               86,4
+ALFRED NZO WEST                    200501410         4251025          MAGADLA SENIOR SECONDARY SCHOOL                           2             22              47            33               70,2           1             82            50               61,0          36              100           75               75,0
+ALFRED NZO WEST                    200500534         4251026          MAKAULA SENIOR SECONDARY SCHOOL                           2               0             253           227              89,7           0             316           291              92,1            0             394           353              89,6
+ALFRED NZO WEST                    200500551         4251027          MALUTI SENIOR SECONDARY SCHOOL                            3             80              143           67               46,9         38              208           123              59,1          39              183           143              78,1
+ALFRED NZO WEST                    200501408         4251028          MANZAMNYAMA SENIOR SECONDARY SCHOOL                       1               0             91            70               76,9           0             67            41               61,2          23              71            59               83,1
+ALFRED NZO WEST                    200500582         4251029          MARIAZELL SENIOR SECONDARY SCHOOL                         1             19              76            60               78,9           9             68            40               58,8            0             90            67               74,4
+ALFRED NZO WEST                    200500585         4251087          MASAKALA SENIOR SECONDARY SCHOOL                          3               1             24            11               45,8           2             24            14               58,3            7             26            21               80,8
+ALFRED NZO WEST                    200500383         4251030          MBODLENI SENIOR SECONDARY SCHOOL                          2             28              171           145              84,8         23              112           109              97,3            6             130           121              93,1
+ALFRED NZO WEST                    200500649         4251062          MBUMBAZI SENIOR SECONDARY SCHOOL                          1             10              72            54               75,0           8             104           90               86,5            4             130           113              86,9
+ALFRED NZO WEST                    200501377         4251031          MFAZWE COMPREHENSIVE TECH HIGH SCH                        1             18              54            27               50,0         15              76            47               61,8            5             59            48               81,4
+ALFRED NZO WEST                    200500710         4251090          MNCEBA SENIOR SECONDARY SCHOOL                            99                 8             59            18               30,5           1             74            41               55,4            3             46            41               89,1
+ALFRED NZO WEST                    200500711         4251033          MNCEBA SENIOR SECONDARY SCHOOL                            2             95              213           143              67,1         26              361           314              87,0            0             252           228              90,5
+ALFRED NZO WEST                    200500725         4251034          MNUKWA SENIOR SECONDARY SCHOOL                            1             21              46            31               67,4         20              77            47               61,0          17              74            65               87,8
+ALFRED NZO WEST                    200500732         4251035          MOIKETSI GRAVES SENIOR SECONDARY SCH                      1             40              90            49               54,4         14              92            71               77,2          24              83            66               79,5
+ALFRED NZO WEST                    200500734         4251036          MOKHESENG SENIOR SECONDARY SCHOOL                         1             21              48            39               81,3         14              71            57               80,3            7             70            63               90,0
+ALFRED NZO WEST                    200501015         4251086          MOOROSI AGRICULTURAL HIGH SCHOOL                          3               3             34            21               61,8           4             42            14               33,3            6             43            27               62,8
+ALFRED NZO WEST                    200500741         4251037          MOSA SIBI SENIOR SECONDARY SCHOOL                         3             70              132           68               51,5         53              156           112              71,8          48              157           132              84,1
+ALFRED NZO WEST                    200500744         4251038          MOSHESH SENIOR SECONDARY SCHOOL                           1               5             35            32               91,4           4             49            45               91,8            0             70            70               100,0
+ALFRED NZO WEST                    200500745         4251039          MOTHIBISI PUBLIC SCHOOL                                   1               5             47            12               25,5           1             63            31               49,2          16              74            38               51,4
+ALFRED NZO WEST                    200500784         4251040          MOUNT AYLIFF SENIOR SECONDARY SCHOOL                      1             20              142           123              86,6           8             165           123              74,5          18              141           121              85,8
+ALFRED NZO WEST                    200404016         4252041          MOUNT FRERE COMMUNITY                                     99               0             12               9             75,0           2             17            17               100,0           1             16            15               93,8
+ALFRED NZO WEST                    200500787         4251042          MOUNT FRERE SENIOR SECONDARY SCHOOL                       3             36              134           86               64,2         28              147           119              81,0          12              170           136              80,0
+ALFRED NZO WEST                    200500748         4251043          MOUNT HARGREAVES SENIOR SECONDARY SC                      2             10              24               9             37,5         10              35            23               65,7          14              57            51               89,5
+ALFRED NZO WEST                    200500757         4251089          MPHARANE SENIOR SECONDARY SCHOOL                          3             20              24               9             37,5           0             36            35               97,2            8             50            36               72,0
+ALFRED NZO WEST                    200500758         4251044          MPHATLALATSANE SENIOR SECONDARY SCHO                      2             20              24               6             25,0         16              26            11               42,3            3             25            20               80,0
+ALFRED NZO WEST                    200501419         4251046          MT WHITE SENIOR SECONDARY SCHOOL                          1               3             37            26               70,3           3             46            21               45,7            3             42            31               73,8
+ALFRED NZO WEST                    200500810         4251047          MVENYANE SENIOR SECONDARY SCHOOL                          2             63              184           115              62,5         31              214           179              83,6          14              253           206              81,4
+ALFRED NZO WEST                    200500897         4251048          NGWEKAZI SENIOR SECONDARY SCHOOL                          2             13              101           76               75,2           3             104           82               78,8          38              128           101              78,9
+ALFRED NZO WEST                    200500951         4251049          NTABANKULU SENIOR SECONDARY SCHOOL                        3             35              130           73               56,2           3             161           135              83,9          11              130           96               73,8
+ALFRED NZO WEST                    200500979         4251050          NTSIKAYEZWE HIGH SCHOOL                                   1             28              152           125              82,2         27              169           126              74,6            5             140           119              85,0
+ALFRED NZO WEST                    200500984         4251051          NTSIZWA SENIOR SECONDARY SCHOOL                           1             10              39            18               46,2           6             75            64               85,3            0             144           141              97,9
+ALFRED NZO WEST                    200500990         4251052          NYANISO SENIOR SECONDARY SCHOOL                           1             41              69            48               69,6         18              64            48               75,0          15              47            38               80,9
+ALFRED NZO WEST                    200501459         4251053          NZULULWAZI SENIOR SECONDARY SCHOOL                        2               0             255           146              57,3         49              135           73               54,1          14              101           77               76,2
+ALFRED NZO WEST                    200501001         4251054          OSBORN SENIOR SECONDARY SCHOOL                            2               7             214           210              98,1         10              302           254              84,1            0             292           273              93,5
+ALFRED NZO WEST                    200501431         4251055          PHUMELELE COMMERCIAL & TECHNICAL SCH                      2               4             19               7             36,8           0             17            15               88,2            1             20            19               95,0
+ALFRED NZO WEST                    200501023         4251091          PHUTHALICHABA T H S                                       99                                                                           0             49            35               71,4            0             84            77               91,7
+ALFRED NZO WEST                    200501057         4251056          RALEBITSO SENIOR SECONDARY SCHOOL                         1               3             31            23               74,2           1             26            18               69,2            0             18            17               94,4
+ALFRED NZO WEST                    200501058         4251057          RAMAFOLE SENIOR SECONDARY SCHOOL                          2             12              127           118              92,9         36              161           119              73,9            2             138           127              92,0
+ALFRED NZO WEST                    200501070         4251058          RODE SENIOR SECONDARY SCHOOL                              2               1             92            74               80,4           0             92            78               84,8            0             68            66               97,1
+ALFRED NZO WEST                    200501082         4251059          SAPUKANDUKU SENIOR SECONDARY SCHOOL                       2             10              69            36               52,2           2             96            61               63,5            4             124           73               58,9
+ALFRED NZO WEST                    200501087         4251060          SENYUKELE SENIOR SECONDARY SCHOOL                         2             59              173           137              79,2         32              297           242              81,5         26              218           192              88,1
+ALFRED NZO WEST                    200501091         4251061          SIBI SENIOR SECONDARY SCHOOL                              2             22              64            40               62,5         22              57            32               56,1         12              54            50               92,6
+ALFRED NZO WEST                    200500308         4251092          SINAKHO SENIOR SECONDARY SCHOOL                          99                                                                                                                                       1             46            43               93,5
+ALFRED NZO WEST                    200501449         4253001          SIVE SPECIAL SCHOOL                                       3               0               4              1             25,0           1               9              1             11,1           0               4              1             25,0
+ALFRED NZO WEST                    200501143         4251063          SONQISHE SENIOR SECONDARY SCHOOL                          1               0             93            47               50,5           2             119           92               77,3         11              140           135              96,4
+ALFRED NZO WEST                    200501157         4251064          ST GEORGES SENIOR SECONDARY SCHOOL                        3             31              213           120              56,3           4             186           116              62,4           0             173           152              87,9
+ALFRED NZO WEST                    200501159         4251065          ST MARGARET SENIOR SECONDARY SCHOOL                       2             30              88            63               71,6         41              124           61               49,2         53              88            68               77,3
+ALFRED NZO WEST                    200500726         4251066          ST MARKS TECHNICAL HIGH SCHOOL                            1               0             44            37               84,1           0             69            60               87,0           0             23            20               87,0
+ALFRED NZO WEST                    200501171         4251067          SUKUDE SENIOR SECONDARY SCHOOL                            1             34              257           192              74,7           0             134           113              84,3           0             142           115              81,0
+ALFRED NZO WEST                    200501203         4251082          THOLANG SENIOR SECONDARY SCHOOL                           3             112             277           151              54,5         48              347           216              62,2         124 354                       240              67,8
+ALFRED NZO WEST                    0                 4251085          TOLENI SENIOR SECONDARY SCHOOL                            5               2             242           147              60,7           0             140           63               45,0           0             128           86               67,2
+ALFRED NZO WEST                    200500876         4251084          TYELIMHLOPHE SENIOR SECONDARY SCHOOL                      2               9             98            77               78,6           0             61            52               85,2           0             80            73               91,3
+ALFRED NZO WEST                    200501464         4252069          ZANOKHANYO BAPTIST COMPREHENSIVE SCH                      99               0             29            27               93,1           0             24            19               79,2           0             26            23               88,5
+ALFRED NZO WEST                    200501321         4251070          ZIBI MEYER SENIOR SECONDARY SCHOOL                        2             14              52            22               42,3           7             75            35               46,7           6             33            29               87,9
+ALFRED NZO WEST                    200501322         4251071          ZIBOKWANA SENIOR SECONDARY SCHOOL                         2             15              84            64               76,2           1             102           86               84,3           2             100           89               89,0
+ALFRED NZO WEST                    200501331         4251072          ZINYOSINI SENIOR SECONDARY SCHOOL                         1             17              100           98               98,0         12              150           147              98,0           6             184           177              96,2
+ALFRED NZO WEST                    200501338         4251073          ZWELAKHE SENIOR SECONDARY SCHOOL                          2             38              194           163              84,0         22              261           225              86,2           6             203           186              91,6
+ALFRED NZO WEST                    200501381         4251074          ZWELITSHA SENIOR SECONDARY SCHOOL                         1             27              200           116              58,0         13              138           82               59,4         14              138           81               58,7
 
 
-
-             ALFRED NZO WEST
-
-                                                      ADVENT COMPREHENSIVE
-                               200501564 4252085                                      99           2             33            26               78,8            0             39            34               87,2           0             43            40               93,0
-                                              SCHOOL
-                                              ARTHUR NGUNGA SENIOR
-                       200500005 4251001                                       2         49              137           53               38,7          28              130           63               48,5           3             93            75               80,6
-                                              SECONDARY SCHOO
-                                              AZARIEL SENIOR SECONDARY
-                       200500006 4251002                                       1         14              49            27               55,1          12              76            43               56,6         10              107           78               72,9
-                                              SCHOOL
-                       200501571 4252003 BERGVIEW COLLEGE                     99           0             51            39               76,5            0             44            40               90,9           0             54            49               90,7
-
-
-
-
-
-
-
-
-                       200500094 4251004 BONXA HIGH SCHOOL                     2           9             159           114              71,7            5             184           153              83,2           5             187           162              86,6
-                                              BROOKSNEK SENIOR
-                       200500060 4251005                                       2           0             20            10               50,0            8             38            26               68,4           5             23            22               95,7
-                                              SECONDARY SCHOOL
-                       200501574 4251006 CEDARVILLE PUBLIC SCHOOL              2         17              46            34               73,9          33              73            41               56,2         23              71            51               71,8
-                                              COLANA SENIOR SECONDARY
-                       200500098 4251007                                       1           3             330           176              53,3          28              90            50               55,6         10              72            49               68,1
-                                              SCHOOL
-                                              DALUHLANGA SENIOR
-                       200500113 4251008                                       2         11              95            48               50,5            1             113           79               69,9           1             91            74               81,3
-                                              SECONDARY SCHOOL
-                                              DANGWANA SENIOR
-                       200500119 4251009                                       2           0             139           87               62,6            6             193           138              71,5           7             166           138              83,1
-                                              SECONDARY SCHOOL
-                                              DUMEZWENI SENIOR
-                       200500144 4251010                                       1           0             199           146              73,4          11              224           161              71,9           5             259           167              64,5
-                                              SECONDARY SCHOOL
-
-
-
-14
-                           National Senior Certificate (NSC) School Performance Report 2022
-                                                                   EASTERN CAPE
-                                                                                                     2020                                                        2021                                                         2022
-
-
-
-
-                                                                           Progressed No
-
-
-
-
-                                                                                                                                       Progressed No
-
-
-
-
-                                                                                                                                                                                                    Progressed No
-                                                                                                         Total Achieved
-
-
-
-
-                                                                                                                                                                     Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                  Total Achieved
-  District Name
-
-
-
-                            Centre
-
-
-
-
-                                                                                                                          % Achieved
-
-
-
-
-                                                                                                                                                                                       % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                    % Achieved
-                                                                                           Total Wrote
-
-
-
-
-                                                                                                                                                       Total Wrote
-
-
-
-
-                                                                                                                                                                                                                    Total Wrote
-                  EMIS No
-                            No
-
-
-
-
-                                                                Quintile
-                                      DUMSI SENIOR SECONDARY
-                  200500151 4251011                              1         18              113           63               55,8         14              154           86               55,8          15              126           99               78,6
-                                      SCHOOL
-                  200501589 4252012 FOCUSED HIGH SCHOOL         99           0             38            31               81,6           0             46            42               91,3            1             40            38               95,0
-                                      HLANGWINI SENIOR
-                  200500302 4251014                              1           9             42            15               35,7           8             36            17               47,2            1             44            24               54,5
-                                      SECONDARY SCHOOL
-                                      HUKU SENIOR SECONDARY
-                  200500313 4251015                              1           5             99            75               75,8           0             92            83               90,2            0             129           101              78,3
-                                      SCHOOL
-                                      IKHWEZI LOMSO EDUCARE
-                  200500058 4252016                             99           0             10               4             40,0           0             10            10               100,0           0             10            10               100,0
-                                      CENTRE
-                                      JOJO SENIOR SECONDARY
-                  200500338 4251017                              2           7             180           169              93,9           0             283           225              79,5            3             263           235              89,4
-                                      SCHOOL
-                                      KHANYA-NALEDI COMBINED
-                  200501580 4251018                              2         45              92            54               58,7         30              126           79               62,7          49              90            70               77,8
-                                      SCHOOL
-                                      KHULANGOPHONDO SENIOR
-                  200500554 4251045                              1           0             46            24               52,2           0             39            22               56,4            0             62            48               77,4
-                                      SECONDARY SCHO
-                  200501581 4251019 KING EDWARD HIGH SCHOOL      4           0             47            46               97,9           0             52            52               100,0           0             47            47               100,0
-                                    LINDELANI SENIOR
-                  200501458 4251020                              3         32              114           70               61,4         14              115           111              96,5          22              120           114              95,0
-                                    SECONDARY SCHOOL
-                                      LOYISO SINOR SECONDARY
-                  200500438 4251021                              1           0             51            29               56,9           6             73            52               71,2            9             96            73               76,0
-                                      SCHOOL
-                                      LUDIDI SENIOR SECONDARY
-                  200500449 4251022                              1         24              60            28               46,7           4             54            31               57,4          14              72            43               59,7
-                                      SCHOOL
-                                      LUPINDO SENIOR
-ALFRED NZO WEST
-
-
-
-
-                  200500470 4251023                              2         10              40            24               60,0         22              54            25               46,3            5             37            35               94,6
-                                      SECONDARY SCHOOL
-                                      LUTATENI SENIOR
-                  200500479 4251024                              1         41              116           81               69,8         31              150           129              86,0          23              103           89               86,4
-                                      SECONDARY SCHOOL
-                                      MAGADLA SENIOR
-                  200501410 4251025                              2         22              47            33               70,2           1             82            50               61,0          36              100           75               75,0
-                                      SECONDARY SCHOOL
-                                      MAKAULA SENIOR
-                  200500534 4251026                              2           0             253           227              89,7           0             316           291              92,1            0             394           353              89,6
-                                      SECONDARY SCHOOL
-                                      MALUTI SENIOR SECONDARY
-                  200500551 4251027                              3         80              143           67               46,9         38              208           123              59,1          39              183           143              78,1
-                                      SCHOOL
-                                      MANZAMNYAMA SENIOR
-                  200501408 4251028                              1           0             91            70               76,9           0             67            41               61,2          23              71            59               83,1
-                                      SECONDARY SCHOOL
-                                      MARIAZELL SENIOR
-                  200500582 4251029                              1         19              76            60               78,9           9             68            40               58,8            0             90            67               74,4
-                                      SECONDARY SCHOOL
-                                      MASAKALA SENIOR
-                  200500585 4251087                              3           1             24            11               45,8           2             24            14               58,3            7             26            21               80,8
-                                      SECONDARY SCHOOL
-                                      MBODLENI SENIOR
-                  200500383 4251030                              2         28              171           145              84,8         23              112           109              97,3            6             130           121              93,1
-                                      SECONDARY SCHOOL
-                                      MBUMBAZI SENIOR
-                  200500649 4251062                              1         10              72            54               75,0           8             104           90               86,5            4             130           113              86,9
-                                      SECONDARY SCHOOL
-                                      MFAZWE COMPREHENSIVE
-                  200501377 4251031                              1         18              54            27               50,0         15              76            47               61,8            5             59            48               81,4
-                                      TECH HIGH SCH
-                                      MNCEBA SENIOR SECONDARY
-                  200500710 4251090                           99             8             59            18               30,5           1             74            41               55,4            3             46            41               89,1
-                                      SCHOOL
-                                      MNCEBA SENIOR SECONDARY
-                  200500711 4251033                              2         95              213           143              67,1         26              361           314              87,0            0             252           228              90,5
-                                      SCHOOL
-                                      MNUKWA SENIOR
-                  200500725 4251034                              1         21              46            31               67,4         20              77            47               61,0          17              74            65               87,8
-                                      SECONDARY SCHOOL
-
-
-                                                                                                                                                                                                                                                                 15
-                                                                           National Senior Certificate (NSC) School Performance Report 2022
-                                                                              EASTERN CAPE
-                                                                                                                2020                                                        2021                                                         2022
-
-
-
-
-                                                                                      Progressed No
-
-
-
-
-                                                                                                                                                  Progressed No
-
-
-
-
-                                                                                                                                                                                                               Progressed No
-                                                                                                                    Total Achieved
-
-
-
-
-                                                                                                                                                                                Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                             Total Achieved
-       District Name
-
-
-
-                                  Centre
-
-
-
-
-                                                                                                                                     % Achieved
-
-
-
-
-                                                                                                                                                                                                  % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                               % Achieved
-                                                                                                      Total Wrote
-
-
-
-
-                                                                                                                                                                  Total Wrote
-
-
-
-
-                                                                                                                                                                                                                               Total Wrote
-                       EMIS No             Centre Name
-                                  No
-
-
-
-
-                                                                           Quintile
-                                           MOIKETSI GRAVES SENIOR
-                       200500732 4251035                                    1         40              90            49               54,4         14              92            71               77,2          24              83            66               79,5
-                                           SECONDARY SCH
-                                           MOKHESENG SENIOR
-                       200500734 4251036                                    1         21              48            39               81,3         14              71            57               80,3            7             70            63               90,0
-                                           SECONDARY SCHOOL
-                                           MOOROSI AGRICULTURAL
-                       200501015 4251086                                    3           3             34            21               61,8           4             42            14               33,3            6             43            27               62,8
-                                           HIGH SCHOOL
-                                           MOSA SIBI SENIOR
-                       200500741 4251037                                    3         70              132           68               51,5         53              156           112              71,8          48              157           132              84,1
-                                           SECONDARY SCHOOL
-                                           MOSHESH SENIOR
-                       200500744 4251038                                    1           5             35            32               91,4           4             49            45               91,8            0             70            70               100,0
-                                           SECONDARY SCHOOL
-                       200500745 4251039 MOTHIBISI PUBLIC SCHOOL            1           5             47            12               25,5           1             63            31               49,2          16              74            38               51,4
-                                           MOUNT AYLIFF SENIOR
-                       200500784 4251040                                    1         20              142           123              86,6           8             165           123              74,5          18              141           121              85,8
-                                           SECONDARY SCHOOL
-                       200404016 4252041 MOUNT FRERE COMMUNITY             99           0             12               9             75,0           2             17            17               100,0           1             16            15               93,8
-                                           MOUNT FRERE SENIOR
-                       200500787 4251042                                    3         36              134           86               64,2         28              147           119              81,0          12              170           136              80,0
-                                           SECONDARY SCHOOL
-                                           MOUNT HARGREAVES SENIOR
-                       200500748 4251043                                    2         10              24               9             37,5         10              35            23               65,7          14              57            51               89,5
-                                           SECONDARY SC
-                                           MPHARANE SENIOR
-                       200500757 4251089                                    3         20              24               9             37,5           0             36            35               97,2            8             50            36               72,0
-                                           SECONDARY SCHOOL
-                                           MPHATLALATSANE SENIOR
-                       200500758 4251044                                    2         20              24               6             25,0         16              26            11               42,3            3             25            20               80,0
-                                           SECONDARY SCHO
-                                           MT WHITE SENIOR
-     ALFRED NZO WEST
-
-
-
-
-                       200501419 4251046                                    1           3             37            26               70,3           3             46            21               45,7            3             42            31               73,8
-                                           SECONDARY SCHOOL
-                                           MVENYANE SENIOR
-                       200500810 4251047                                    2         63              184           115              62,5         31              214           179              83,6          14              253           206              81,4
-                                           SECONDARY SCHOOL
-                                           NGWEKAZI SENIOR
-                       200500897 4251048                                    2         13              101           76               75,2           3             104           82               78,8          38              128           101              78,9
-                                           SECONDARY SCHOOL
-                                           NTABANKULU SENIOR
-                       200500951 4251049                                    3         35              130           73               56,2           3             161           135              83,9          11              130           96               73,8
-                                           SECONDARY SCHOOL
-                       200500979 4251050 NTSIKAYEZWE HIGH SCHOOL            1         28              152           125              82,2         27              169           126              74,6            5             140           119              85,0
-                                         NTSIZWA SENIOR
-                       200500984 4251051                                    1         10              39            18               46,2           6             75            64               85,3            0             144           141              97,9
-                                         SECONDARY SCHOOL
-                                           NYANISO SENIOR
-                       200500990 4251052                                    1         41              69            48               69,6         18              64            48               75,0          15              47            38               80,9
-                                           SECONDARY SCHOOL
-                                           NZULULWAZI SENIOR
-                       200501459 4251053                                    2           0             255           146              57,3         49              135           73               54,1          14              101           77               76,2
-                                           SECONDARY SCHOOL
-                                           OSBORN SENIOR SECONDARY
-                       200501001 4251054                                    2           7             214           210              98,1         10              302           254              84,1            0             292           273              93,5
-                                           SCHOOL
-                                           PHUMELELE COMMERCIAL &
-                       200501431 4251055                                    2           4             19               7             36,8           0             17            15               88,2            1             20            19               95,0
-                                           TECHNICAL SCH
-                       200501023 4251091 PHUTHALICHABA T H S               99                                                                       0             49            35               71,4            0             84            77               91,7
-                                           RALEBITSO SENIOR
-                       200501057 4251056                                    1           3             31            23               74,2           1             26            18               69,2            0             18            17               94,4
-                                           SECONDARY SCHOOL
-                                           RAMAFOLE SENIOR
-                       200501058 4251057                                    2         12              127           118              92,9         36              161           119              73,9            2             138           127              92,0
-                                           SECONDARY SCHOOL
-                                           RODE SENIOR SECONDARY
-                       200501070 4251058                                    2           1             92            74               80,4           0             92            78               84,8            0             68            66               97,1
-                                           SCHOOL
-                                           SAPUKANDUKU SENIOR
-                       200501082 4251059                                    2         10              69            36               52,2           2             96            61               63,5            4             124           73               58,9
-                                           SECONDARY SCHOOL
-
-
-16
-                        National Senior Certificate (NSC) School Performance Report 2022
-                                                                   EASTERN CAPE
-                                                                                                     2020                                                        2021                                                        2022
-
-
-
-
-                                                                           Progressed No
-
-
-
-
-                                                                                                                                       Progressed No
-
-
-
-
-                                                                                                                                                                                                   Progressed No
-                                                                                                         Total Achieved
-
-
-
-
-                                                                                                                                                                     Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                 Total Achieved
-  District Name
-
-
-
-                            Centre
-
-
-
-
-                                                                                                                          % Achieved
-
-
-
-
-                                                                                                                                                                                      % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                   % Achieved
-                                                                                           Total Wrote
-
-
-
-
-                                                                                                                                                       Total Wrote
-
-
-
-
-                                                                                                                                                                                                                   Total Wrote
-                  EMIS No             Centre Name
-                            No
-
-
-
-
-                                                                Quintile
-                                      SENYUKELE SENIOR
-                  200501087 4251060                              2         59              173           137              79,2         32              297           242              81,5         26              218           192              88,1
-                                      SECONDARY SCHOOL
-                                      SIBI SENIOR SECONDARY
-                  200501091 4251061                              2         22              64            40               62,5         22              57            32               56,1         12              54            50               92,6
-                                      SCHOOL
-                                      SINAKHO SENIOR
-                  200500308 4251092                             99                                                                                                                                   1             46            43               93,5
-                                      SECONDARY SCHOOL
-                  200501449 4253001 SIVE SPECIAL SCHOOL          3           0               4              1             25,0           1               9              1             11,1           0               4              1             25,0
-                                    SONQISHE SENIOR
-                  200501143 4251063                              1           0             93            47               50,5           2             119           92               77,3         11              140           135              96,4
-                                    SECONDARY SCHOOL
-                                      ST GEORGES SENIOR
-                  200501157 4251064                              3         31              213           120              56,3           4             186           116              62,4           0             173           152              87,9
-                                      SECONDARY SCHOOL
-                                      ST MARGARET SENIOR
-                  200501159 4251065                              2         30              88            63               71,6         41              124           61               49,2         53              88            68               77,3
-                                      SECONDARY SCHOOL
-                                      ST MARKS TECHNICAL HIGH
-                  200500726 4251066                              1           0             44            37               84,1           0             69            60               87,0           0             23            20               87,0
-                                      SCHOOL
-ALFRED NZO WEST
-
-
-
-
-                                      SUKUDE SENIOR SECONDARY
-                  200501171 4251067                              1         34              257           192              74,7           0             134           113              84,3           0             142           115              81,0
-                                      SCHOOL
-                                      THOLANG SENIOR
-                  200501203 4251082                              3         112             277           151              54,5         48              347           216              62,2         124 354                       240              67,8
-                                      SECONDARY SCHOOL
-                                      TOLENI SENIOR SECONDARY
-                  0         4251085                              5           2             242           147              60,7           0             140           63               45,0           0             128           86               67,2
-                                      SCHOOL
-                                      TYELIMHLOPHE SENIOR
-                  200500876 4251084                              2           9             98            77               78,6           0             61            52               85,2           0             80            73               91,3
-                                      SECONDARY SCHOOL
-                                      ZANOKHANYO BAPTIST
-                  200501464 4252069                             99           0             29            27               93,1           0             24            19               79,2           0             26            23               88,5
-                                      COMPREHENSIVE SCH
-                                      ZIBI MEYER SENIOR
-                  200501321 4251070                              2         14              52            22               42,3           7             75            35               46,7           6             33            29               87,9
-                                      SECONDARY SCHOOL
-                                      ZIBOKWANA SENIOR
-                  200501322 4251071                              2         15              84            64               76,2           1             102           86               84,3           2             100           89               89,0
-                                      SECONDARY SCHOOL
-                                      ZINYOSINI SENIOR
-                  200501331 4251072                              1         17              100           98               98,0         12              150           147              98,0           6             184           177              96,2
-                                      SECONDARY SCHOOL
-                                      ZWELAKHE SENIOR
-                  200501338 4251073                              2         38              194           163              84,0         22              261           225              86,2           6             203           186              91,6
-                                      SECONDARY SCHOOL
-                                      ZWELITSHA SENIOR
-                  200501381 4251074                              1         27              200           116              58,0         13              138           82               59,4         14              138           81               58,7
-                                      SECONDARY SCHOOL
                                       AMABELE SENIOR
                   200300003 4301001                              1         16              38            16               42,1           0             49            30               61,2           1             48            29               60,4
                                       SECONDARY SCHOOL
@@ -534,72 +153,6 @@ AMATHOLE EAST
                                       SECONDARY SCHOOL
                   0         4302092 BULUNGULA COLLEGE            2                                                                       0             44            28               63,6           0             36            36               100,0
                   200300741 4301009 BUTTERWORTH HIGH SCHOOL      4         17              120           93               77,5           3             156           98               62,8         11              108           82               75,9
-
-
-                                                                                                                                                                                                                                                                17
-                                                                           National Senior Certificate (NSC) School Performance Report 2022
-                                                                              EASTERN CAPE
-                                                                                                                2020                                                         2021                                                        2022
-
-
-
-
-                                                                                      Progressed No
-
-
-
-
-                                                                                                                                                   Progressed No
-
-
-
-
-                                                                                                                                                                                                               Progressed No
-                                                                                                                    Total Achieved
-
-
-
-
-                                                                                                                                                                                 Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                             Total Achieved
-       District Name
-
-
-
-                                  Centre
-
-
-
-
-                                                                                                                                      % Achieved
-
-
-
-
-                                                                                                                                                                                                  % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                               % Achieved
-                                                                                                      Total Wrote
-
-
-
-
-                                                                                                                                                                   Total Wrote
-
-
-
-
-                                                                                                                                                                                                                               Total Wrote
-                       EMIS No             Centre Name
-                                  No
-
 
 
 
@@ -683,69 +236,6 @@ AMATHOLE EAST
 
 
 
-18
-                        National Senior Certificate (NSC) School Performance Report 2022
-                                                                     EASTERN CAPE
-                                                                                                       2020                                                        2021                                                         2022
-
-
-
-
-                                                                             Progressed No
-
-
-
-
-                                                                                                                                         Progressed No
-
-
-
-
-                                                                                                                                                                                                      Progressed No
-                                                                                                           Total Achieved
-
-
-
-
-                                                                                                                                                                       Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                    Total Achieved
-  District Name
-
-
-
-                            Centre
-
-
-
-
-                                                                                                                            % Achieved
-
-
-
-
-                                                                                                                                                                                         % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                     % Achieved
-                                                                                             Total Wrote
-
-
-
-
-                                                                                                                                                         Total Wrote
-
-
-
-
-                                                                                                                                                                                                                      Total Wrote
-                  EMIS No             Centre Name
-                            No
 
 
 
@@ -833,71 +323,6 @@ AMATHOLE EAST
 
 
                                                                                                                                                                                                                                                                   19
-                                                                             National Senior Certificate (NSC) School Performance Report 2022
-                                                                              EASTERN CAPE
-                                                                                                                2020                                                        2021                                                        2022
-
-
-
-
-                                                                                      Progressed No
-
-
-
-
-                                                                                                                                                  Progressed No
-
-
-
-
-                                                                                                                                                                                                              Progressed No
-                                                                                                                    Total Achieved
-
-
-
-
-                                                                                                                                                                                Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                            Total Achieved
-       District Name
-
-
-
-                                  Centre
-
-
-
-
-                                                                                                                                     % Achieved
-
-
-
-
-                                                                                                                                                                                                 % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                             % Achieved
-                                                                                                      Total Wrote
-
-
-
-
-                                                                                                                                                                  Total Wrote
-
-
-
-
-                                                                                                                                                                                                                              Total Wrote
-                       EMIS No             Centre Name
-                                  No
-
-
-
 
                                                                            Quintile
                                            NOMAHEYA SENIOR
@@ -983,69 +408,6 @@ AMATHOLE EAST
 
 
 
-20
-                        National Senior Certificate (NSC) School Performance Report 2022
-                                                                   21
-National Senior Certificate (NSC) School Performance Report 2022
-                                                                              EASTERN CAPE
-                                                                                                                2020                                                        2021                                                         2022
-
-
-
-
-                                                                                      Progressed No
-
-
-
-
-                                                                                                                                                  Progressed No
-
-
-
-
-                                                                                                                                                                                                               Progressed No
-                                                                                                                    Total Achieved
-
-
-
-
-                                                                                                                                                                                Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                             Total Achieved
-       District Name
-
-
-
-                                  Centre
-
-
-
-
-                                                                                                                                     % Achieved
-
-
-
-
-                                                                                                                                                                                                  % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                               % Achieved
-                                                                                                      Total Wrote
-
-
-
-
-                                                                                                                                                                  Total Wrote
-
-
-
-
-                                                                                                                                                                                                                               Total Wrote
                        EMIS No             Centre Name
                                   No
 
@@ -1129,69 +491,6 @@ National Senior Certificate (NSC) School Performance Report 2022
                                            SECONDARY SCHOOL
 
 
-22
-                        National Senior Certificate (NSC) School Performance Report 2022
-                                                                   23
-National Senior Certificate (NSC) School Performance Report 2022
-                                                                             EASTERN CAPE
-                                                                                                               2020                                                         2021                                                         2022
-
-
-
-
-                                                                                     Progressed No
-
-
-
-
-                                                                                                                                                  Progressed No
-
-
-
-
-                                                                                                                                                                                                               Progressed No
-                                                                                                                   Total Achieved
-
-
-
-
-                                                                                                                                                                                Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                             Total Achieved
-      District Name
-
-
-
-                                 Centre
-
-
-
-
-                                                                                                                                     % Achieved
-
-
-
-
-                                                                                                                                                                                                  % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                               % Achieved
-                                                                                                     Total Wrote
-
-
-
-
-                                                                                                                                                                  Total Wrote
-
-
-
-
-                                                                                                                                                                                                                               Total Wrote
                       EMIS No             Centre Name
                                  No
 
@@ -1269,69 +568,6 @@ National Senior Certificate (NSC) School Performance Report 2022
 
 
 
-24
-                       National Senior Certificate (NSC) School Performance Report 2022
-                                                                    EASTERN CAPE
-                                                                                                      2020                                                         2021                                                         2022
-
-
-
-
-                                                                            Progressed No
-
-
-
-
-                                                                                                                                         Progressed No
-
-
-
-
-                                                                                                                                                                                                      Progressed No
-                                                                                                          Total Achieved
-
-
-
-
-                                                                                                                                                                       Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                    Total Achieved
- District Name
-
-
-
-                           Centre
-
-
-
-
-                                                                                                                            % Achieved
-
-
-
-
-                                                                                                                                                                                         % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                      % Achieved
-                                                                                            Total Wrote
-
-
-
-
-                                                                                                                                                         Total Wrote
-
-
-
-
-                                                                                                                                                                                                                      Total Wrote
-                 EMIS No             Centre Name
-                           No
 
 
 
@@ -1411,73 +647,6 @@ BUFFALO CITY
 
 
 
-                                                                                                                                                                                                                                                                   25
-                                                                            National Senior Certificate (NSC) School Performance Report 2022
-                                                                             EASTERN CAPE
-                                                                                                               2020                                                         2021                                                        2022
-
-
-
-
-                                                                                     Progressed No
-
-
-
-
-                                                                                                                                                  Progressed No
-
-
-
-
-                                                                                                                                                                                                              Progressed No
-                                                                                                                   Total Achieved
-
-
-
-
-                                                                                                                                                                                Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                            Total Achieved
-      District Name
-
-
-
-                                 Centre
-
-
-
-
-                                                                                                                                     % Achieved
-
-
-
-
-                                                                                                                                                                                                 % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                              % Achieved
-                                                                                                     Total Wrote
-
-
-
-
-                                                                                                                                                                  Total Wrote
-
-
-
-
-                                                                                                                                                                                                                              Total Wrote
-                      EMIS No             Centre Name
-                                 No
-
-
-
-
                                                                           Quintile
                                           MZAMOWETHU PUBLIC
                       200200521 4321062                                    3           0             42            32               76,2            2             52            46               88,5           1             60            52               86,7
@@ -1552,69 +721,6 @@ BUFFALO CITY
 
 
 
-26
-                       National Senior Certificate (NSC) School Performance Report 2022
-                                                                   EASTERN CAPE
-                                                                                                     2020                                                         2021                                                         2022
-
-
-
-
-                                                                           Progressed No
-
-
-
-
-                                                                                                                                        Progressed No
-
-
-
-
-                                                                                                                                                                                                     Progressed No
-                                                                                                         Total Achieved
-
-
-
-
-                                                                                                                                                                      Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                   Total Achieved
- District Name
-
-
-
-                           Centre
-
-
-
-
-                                                                                                                           % Achieved
-
-
-
-
-                                                                                                                                                                                        % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                     % Achieved
-                                                                                           Total Wrote
-
-
-
-
-                                                                                                                                                        Total Wrote
-
-
-
-
-                                                                                                                                                                                                                     Total Wrote
-                 EMIS No             Centre Name
-                           No
 
 
 
@@ -1686,73 +792,6 @@ BUFFALO CITY
                  200200951 4321119                               3           5             58            20               34,5            5             29            22               75,9            0             29            21               72,4
                                      SECONDARY SCHOOL
                  200200963 4321120 ZWELIYANDILA HIGH SCHOOL      2           0             20               9             45,0            6             19            12               63,2            0             24            16               66,7
-
-
-
-
-                                                                                                                                                                                                                                                                  27
-                                                                           National Senior Certificate (NSC) School Performance Report 2022
-                                                                              EASTERN CAPE
-                                                                                                                2020                                                         2021                                                        2022
-
-
-
-
-                                                                                      Progressed No
-
-
-
-
-                                                                                                                                                   Progressed No
-
-
-
-
-                                                                                                                                                                                                               Progressed No
-                                                                                                                    Total Achieved
-
-
-
-
-                                                                                                                                                                                 Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                             Total Achieved
-       District Name
-
-
-
-                                  Centre
-
-
-
-
-                                                                                                                                      % Achieved
-
-
-
-
-                                                                                                                                                                                                  % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                               % Achieved
-                                                                                                      Total Wrote
-
-
-
-
-                                                                                                                                                                   Total Wrote
-
-
-
-
-                                                                                                                                                                                                                               Total Wrote
-                       EMIS No             Centre Name
-                                  No
 
 
 
@@ -1840,69 +879,6 @@ BUFFALO CITY
 
 
 
-28
-                        National Senior Certificate (NSC) School Performance Report 2022
-                                                                   EASTERN CAPE
-                                                                                                     2020                                                        2021                                                         2022
-
-
-
-
-                                                                           Progressed No
-
-
-
-
-                                                                                                                                       Progressed No
-
-
-
-
-                                                                                                                                                                                                    Progressed No
-                                                                                                         Total Achieved
-
-
-
-
-                                                                                                                                                                     Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                  Total Achieved
-  District Name
-
-
-
-                            Centre
-
-
-
-
-                                                                                                                          % Achieved
-
-
-
-
-                                                                                                                                                                                       % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                    % Achieved
-                                                                                           Total Wrote
-
-
-
-
-                                                                                                                                                       Total Wrote
-
-
-
-
-                                                                                                                                                                                                                    Total Wrote
-                  EMIS No             Centre Name
-                            No
 
 
 
@@ -1991,72 +967,6 @@ CHRIS HANI EAST
 
 
 
-                                                                                                                                                                                                                                                                 29
-                                                                           National Senior Certificate (NSC) School Performance Report 2022
-                                                                                 EASTERN CAPE
-                                                                                                                   2020                                                         2021                                                         2022
-
-
-
-
-                                                                                         Progressed No
-
-
-
-
-                                                                                                                                                      Progressed No
-
-
-
-
-                                                                                                                                                                                                                   Progressed No
-                                                                                                                       Total Achieved
-
-
-
-
-                                                                                                                                                                                    Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                                 Total Achieved
-       District Name
-
-
-
-                                     Centre
-
-
-
-
-                                                                                                                                         % Achieved
-
-
-
-
-                                                                                                                                                                                                      % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                                   % Achieved
-                                                                                                         Total Wrote
-
-
-
-
-                                                                                                                                                                      Total Wrote
-
-
-
-
-                                                                                                                                                                                                                                   Total Wrote
-                       EMIS No                 Centre Name
-                                     No
-
-
-
 
                                                                               Quintile
                                                ZWELANDILE SENIOR
@@ -2137,69 +1047,6 @@ CHRIS HANI EAST
 
 
 
-30
-                           National Senior Certificate (NSC) School Performance Report 2022
-                                                                   EASTERN CAPE
-                                                                                                     2020                                                         2021                                                         2022
-
-
-
-
-                                                                           Progressed No
-
-
-
-
-                                                                                                                                        Progressed No
-
-
-
-
-                                                                                                                                                                                                     Progressed No
-                                                                                                         Total Achieved
-
-
-
-
-                                                                                                                                                                      Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                   Total Achieved
-  District Name
-
-
-
-                            Centre
-
-
-
-
-                                                                                                                           % Achieved
-
-
-
-
-                                                                                                                                                                                        % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                     % Achieved
-                                                                                           Total Wrote
-
-
-
-
-                                                                                                                                                        Total Wrote
-
-
-
-
-                                                                                                                                                                                                                     Total Wrote
-                  EMIS No             Centre Name
-                            No
 
 
 
@@ -2268,71 +1115,6 @@ CHRIS HANI WEST
                   200600542 4331050 N MOTMAN PUBLIC SCHOOL
 
 
-
-
-                                                                                                                                                                                                                                                                  31
-                                                                           National Senior Certificate (NSC) School Performance Report 2022
-                                                                              EASTERN CAPE
-                                                                                                                2020                                                         2021                                                         2022
-
-
-
-
-                                                                                      Progressed No
-
-
-
-
-                                                                                                                                                   Progressed No
-
-
-
-
-                                                                                                                                                                                                                Progressed No
-                                                                                                                    Total Achieved
-
-
-
-
-                                                                                                                                                                                 Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                              Total Achieved
-       District Name
-
-
-
-                                  Centre
-
-
-
-
-                                                                                                                                      % Achieved
-
-
-
-
-                                                                                                                                                                                                   % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                               % Achieved
-                                                                                                      Total Wrote
-
-
-
-
-                                                                                                                                                                   Total Wrote
-
-
-
-
-                                                                                                                                                                                                                                Total Wrote
-                       EMIS No             Centre Name
-                                  No
 
 
 
@@ -2417,69 +1199,6 @@ CHRIS HANI WEST
 
 
 
-32
-                        National Senior Certificate (NSC) School Performance Report 2022
-                                                                    EASTERN CAPE
-                                                                                                      2020                                                        2021                                                        2022
-
-
-
-
-                                                                            Progressed No
-
-
-
-
-                                                                                                                                        Progressed No
-
-
-
-
-                                                                                                                                                                                                    Progressed No
-                                                                                                          Total Achieved
-
-
-
-
-                                                                                                                                                                      Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                  Total Achieved
-  District Name
-
-
-
-                            Centre
-
-
-
-
-                                                                                                                           % Achieved
-
-
-
-
-                                                                                                                                                                                       % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                    % Achieved
-                                                                                            Total Wrote
-
-
-
-
-                                                                                                                                                        Total Wrote
-
-
-
-
-                                                                                                                                                                                                                    Total Wrote
-                  EMIS No             Centre Name
-                            No
 
 
 
@@ -2569,71 +1288,6 @@ JOE GQABI
 
 
                                                                                                                                                                                                                                                                  33
-                                                                            National Senior Certificate (NSC) School Performance Report 2022
-                                                                             EASTERN CAPE
-                                                                                                               2020                                                         2021                                                         2022
-
-
-
-
-                                                                                     Progressed No
-
-
-
-
-                                                                                                                                                  Progressed No
-
-
-
-
-                                                                                                                                                                                                               Progressed No
-                                                                                                                   Total Achieved
-
-
-
-
-                                                                                                                                                                                Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                             Total Achieved
-      District Name
-
-
-
-                                 Centre
-
-
-
-
-                                                                                                                                     % Achieved
-
-
-
-
-                                                                                                                                                                                                  % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                               % Achieved
-                                                                                                     Total Wrote
-
-
-
-
-                                                                                                                                                                  Total Wrote
-
-
-
-
-                                                                                                                                                                                                                               Total Wrote
-                      EMIS No             Centre Name
-                                 No
-
-
-
 
                                                                           Quintile
                                           MALCOMESS SECODARY
@@ -2715,69 +1369,6 @@ JOE GQABI
 
 
 
-34
-                       National Senior Certificate (NSC) School Performance Report 2022
-                                                                         EASTERN CAPE
-                                                                                                           2020                                                         2021                                                         2022
-
-
-
-
-                                                                                 Progressed No
-
-
-
-
-                                                                                                                                              Progressed No
-
-
-
-
-                                                                                                                                                                                                           Progressed No
-                                                                                                               Total Achieved
-
-
-
-
-                                                                                                                                                                            Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                         Total Achieved
-   District Name
-
-
-
-                                 Centre
-
-
-
-
-                                                                                                                                 % Achieved
-
-
-
-
-                                                                                                                                                                                              % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                           % Achieved
-                                                                                                 Total Wrote
-
-
-
-
-                                                                                                                                                              Total Wrote
-
-
-
-
-                                                                                                                                                                                                                           Total Wrote
-                       EMIS No             Centre Name
-                                 No
 
 
 
@@ -2854,71 +1445,6 @@ NELSON MANDELA METRO
 
 
                                                                                                                                                                                                                                                                         35
-                                                                                 National Senior Certificate (NSC) School Performance Report 2022
-                                                                                   EASTERN CAPE
-                                                                                                                     2020                                                         2021                                                         2022
-
-
-
-
-                                                                                           Progressed No
-
-
-
-
-                                                                                                                                                        Progressed No
-
-
-
-
-                                                                                                                                                                                                                     Progressed No
-                                                                                                                         Total Achieved
-
-
-
-
-                                                                                                                                                                                      Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                                   Total Achieved
-        District Name
-
-
-
-                                       Centre
-
-
-
-
-                                                                                                                                           % Achieved
-
-
-
-
-                                                                                                                                                                                                        % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                                     % Achieved
-                                                                                                           Total Wrote
-
-
-
-
-                                                                                                                                                                        Total Wrote
-
-
-
-
-                                                                                                                                                                                                                                     Total Wrote
-                            EMIS No             Centre Name
-                                       No
-
-
-
 
                                                                                 Quintile
                             200101031 4342099 INSIGHT LEARNING CENTRE           99           0               0              0                             0               3              3             100,0           0               3              3             100,0
@@ -2995,69 +1521,6 @@ NELSON MANDELA METRO
 
 
 
-36
-                             National Senior Certificate (NSC) School Performance Report 2022
-                                                                       EASTERN CAPE
-                                                                                                         2020                                                         2021                                                         2022
-
-
-
-
-                                                                               Progressed No
-
-
-
-
-                                                                                                                                            Progressed No
-
-
-
-
-                                                                                                                                                                                                         Progressed No
-                                                                                                             Total Achieved
-
-
-
-
-                                                                                                                                                                          Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                       Total Achieved
-   District Name
-
-
-
-                                 Centre
-
-
-
-
-                                                                                                                               % Achieved
-
-
-
-
-                                                                                                                                                                                            % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                         % Achieved
-                                                                                               Total Wrote
-
-
-
-
-                                                                                                                                                            Total Wrote
-
-
-
-
-                                                                                                                                                                                                                         Total Wrote
-                       EMIS No             Centre Name
-                                 No
 
 
 
@@ -3122,74 +1585,8 @@ NELSON MANDELA METRO
                        200100772 4341082                             3                                                                                                                                     0             13               9             69,2
                                          SECONDARY SCHOOL
                        200100918 4342083 THE HILL COLLEGE           99           0             31            31               100,0           0             34            33               97,1            0             24            24               100,0
-                       200100788 4341086 TINARA HIGH SCHOOL          J0 -1.2 Td[(SEC Td(13)Tj2.748 (9)Tj2.52 0 Td(0)Tj2.414 0 Td(0K5)Tj3.937 0U90Td(200100735)T 0 Td
+                       200100788  4341086 TINARA HIGH SCHOOL         3            6             29            26               89.7            5             42            32                76.2           0             30            25               83.3
 
-
-
-
-                                                                                                                                                                                                                                                                      37
-                                                                               National Senior Certificate (NSC) School Performance Report 2022
-                                                                                   EASTERN CAPE
-                                                                                                                     2020                                                        2021                                                        2022
-
-
-
-
-                                                                                           Progressed No
-
-
-
-
-                                                                                                                                                       Progressed No
-
-
-
-
-                                                                                                                                                                                                                   Progressed No
-                                                                                                                         Total Achieved
-
-
-
-
-                                                                                                                                                                                     Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                                 Total Achieved
-        District Name
-
-
-
-                                       Centre
-
-
-
-
-                                                                                                                                          % Achieved
-
-
-
-
-                                                                                                                                                                                                      % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                                  % Achieved
-                                                                                                           Total Wrote
-
-
-
-
-                                                                                                                                                                       Total Wrote
-
-
-
-
-                                                                                                                                                                                                                                   Total Wrote
-                            EMIS No             Centre Name
-                                       No
 
 
 
@@ -3280,69 +1677,6 @@ NELSON MANDELA METRO
                                                 SCHOOL
 
 
-38
-                             National Senior Certificate (NSC) School Performance Report 2022
-                                                                    EASTERN CAPE
-                                                                                                      2020                                                        2021                                                        2022
-
-
-
-
-                                                                            Progressed No
-
-
-
-
-                                                                                                                                        Progressed No
-
-
-
-
-                                                                                                                                                                                                    Progressed No
-                                                                                                          Total Achieved
-
-
-
-
-                                                                                                                                                                      Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                  Total Achieved
-  District Name
-
-
-
-                             Centre
-
-
-
-
-                                                                                                                           % Achieved
-
-
-
-
-                                                                                                                                                                                       % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                   % Achieved
-                                                                                            Total Wrote
-
-
-
-
-                                                                                                                                                        Total Wrote
-
-
-
-
-                                                                                                                                                                                                                    Total Wrote
-                   EMIS No             Centre Name
-                             No
 
 
 
@@ -3429,74 +1763,6 @@ OR Tambo Coastal
 
 
 
-
-                                                                                                                                                                                                                                                                39
-                                                                            National Senior Certificate (NSC) School Performance Report 2022
-                                                                               EASTERN CAPE
-                                                                                                                 2020                                                        2021                                                        2022
-
-
-
-
-                                                                                       Progressed No
-
-
-
-
-                                                                                                                                                   Progressed No
-
-
-
-
-                                                                                                                                                                                                               Progressed No
-                                                                                                                     Total Achieved
-
-
-
-
-                                                                                                                                                                                 Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                             Total Achieved
-       District Name
-
-
-
-                                   Centre
-
-
-
-
-                                                                                                                                      % Achieved
-
-
-
-
-                                                                                                                                                                                                  % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                              % Achieved
-                                                                                                       Total Wrote
-
-
-
-
-                                                                                                                                                                   Total Wrote
-
-
-
-
-                                                                                                                                                                                                                               Total Wrote
-                        EMIS No             Centre Name
-                                   No
-
-
-
-
                                                                             Quintile
                                             NKOS-MVINJELWA SENIOR
                         200400783 4281077                                    3           0             43            11               25,6           0             142           86               60,6           0             97            63               64,9
@@ -3576,69 +1842,6 @@ OR Tambo Coastal
 
 
 
-40
-                         National Senior Certificate (NSC) School Performance Report 2022
-                                                                    EASTERN CAPE
-                                                                                                      2020                                                        2021                                                        2022
-
-
-
-
-                                                                            Progressed No
-
-
-
-
-                                                                                                                                        Progressed No
-
-
-
-
-                                                                                                                                                                                                    Progressed No
-                                                                                                          Total Achieved
-
-
-
-
-                                                                                                                                                                      Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                  Total Achieved
-  District Name
-
-
-
-                             Centre
-
-
-
-
-                                                                                                                           % Achieved
-
-
-
-
-                                                                                                                                                                                       % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                   % Achieved
-                                                                                            Total Wrote
-
-
-
-
-                                                                                                                                                        Total Wrote
-
-
-
-
-                                                                                                                                                                                                                    Total Wrote
-                   EMIS No             Centre Name
-                             No
 
 
 
@@ -3729,72 +1932,6 @@ OR TAMBO INLAND
 
 
 
-                                                                                                                                                                                                                                                                41
-                                                                            National Senior Certificate (NSC) School Performance Report 2022
-                                                                              EASTERN CAPE
-                                                                                                                2020                                                        2021                                                        2022
-
-
-
-
-                                                                                      Progressed No
-
-
-
-
-                                                                                                                                                  Progressed No
-
-
-
-
-                                                                                                                                                                                                              Progressed No
-                                                                                                                    Total Achieved
-
-
-
-
-                                                                                                                                                                                Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                            Total Achieved
-       District Name
-
-
-
-                                  Centre
-
-
-
-
-                                                                                                                                     % Achieved
-
-
-
-
-                                                                                                                                                                                                 % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                              % Achieved
-                                                                                                      Total Wrote
-
-
-
-
-                                                                                                                                                                  Total Wrote
-
-
-
-
-                                                                                                                                                                                                                              Total Wrote
-                       EMIS No             Centre Name
-                                  No
-
-
-
 
                                                                            Quintile
                                            GOBIZIZWE SENIOR
@@ -3877,69 +2014,6 @@ OR TAMBO INLAND
 
 
 
-42
-                        National Senior Certificate (NSC) School Performance Report 2022
-                                                                   EASTERN CAPE
-                                                                                                     2020                                                        2021                                                        2022
-
-
-
-
-                                                                           Progressed No
-
-
-
-
-                                                                                                                                       Progressed No
-
-
-
-
-                                                                                                                                                                                                   Progressed No
-                                                                                                         Total Achieved
-
-
-
-
-                                                                                                                                                                     Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                 Total Achieved
-  District Name
-
-
-
-                            Centre
-
-
-
-
-                                                                                                                          % Achieved
-
-
-
-
-                                                                                                                                                                                      % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                   % Achieved
-                                                                                           Total Wrote
-
-
-
-
-                                                                                                                                                       Total Wrote
-
-
-
-
-                                                                                                                                                                                                                   Total Wrote
-                  EMIS No             Centre Name
-                            No
 
 
 
@@ -4024,72 +2098,6 @@ OR TAMBO INLAND
 
 
                                                                                                                                                                                                                                                                 43
-                                                                           National Senior Certificate (NSC) School Performance Report 2022
-                                                                              EASTERN CAPE
-                                                                                                                2020                                                        2021                                                        2022
-
-
-
-
-                                                                                      Progressed No
-
-
-
-
-                                                                                                                                                  Progressed No
-
-
-
-
-                                                                                                                                                                                                              Progressed No
-                                                                                                                    Total Achieved
-
-
-
-
-                                                                                                                                                                                Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                            Total Achieved
-       District Name
-
-
-
-                                  Centre
-
-
-
-
-                                                                                                                                     % Achieved
-
-
-
-
-                                                                                                                                                                                                 % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                             % Achieved
-                                                                                                      Total Wrote
-
-
-
-
-                                                                                                                                                                  Total Wrote
-
-
-
-
-                                                                                                                                                                                                                              Total Wrote
-                       EMIS No             Centre Name
-                                  No
-
-
-
-
                                                                            Quintile
                        200401288 4291073 ST JOHNS COLLEGE                   4           0             360           328              91,1           0             431           333              77,3           0             316           224              70,9
                        200404020 4292074 ST JUDE PRIVATE SCHOOL            99           0             16            13               81,3           0             43            30               69,8           0             30            28               93,3
@@ -4147,69 +2155,6 @@ OR TAMBO INLAND
 
 
 
-44
-                        National Senior Certificate (NSC) School Performance Report 2022
-                                                                    EASTERN CAPE
-                                                                                                      2020                                                         2021                                                         2022
-
-
-
-
-                                                                            Progressed No
-
-
-
-
-                                                                                                                                         Progressed No
-
-
-
-
-                                                                                                                                                                                                      Progressed No
-                                                                                                          Total Achieved
-
-
-
-
-                                                                                                                                                                       Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                    Total Achieved
-  District Name
-
-
-
-                            Centre
-
-
-
-
-                                                                                                                            % Achieved
-
-
-
-
-                                                                                                                                                                                         % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                      % Achieved
-                                                                                            Total Wrote
-
-
-
-
-                                                                                                                                                         Total Wrote
-
-
-
-
-                                                                                                                                                                                                                      Total Wrote
-                  EMIS No             Centre Name
-                            No
 
 
 
@@ -4289,71 +2234,6 @@ SARAH BAARTMAN
 
 
                                                                                                                                                                                                                                                                    45
-                                                                            National Senior Certificate (NSC) School Performance Report 2022
-                                                                              EASTERN CAPE
-                                                                                                                2020                                                         2021                                                         2022
-
-
-
-
-                                                                                      Progressed No
-
-
-
-
-                                                                                                                                                   Progressed No
-
-
-
-
-                                                                                                                                                                                                                Progressed No
-                                                                                                                    Total Achieved
-
-
-
-
-                                                                                                                                                                                 Total Achieved
-
-
-
-
-                                                                                                                                                                                                                                              Total Achieved
-       District Name
-
-
-
-                                  Centre
-
-
-
-
-                                                                                                                                      % Achieved
-
-
-
-
-                                                                                                                                                                                                   % Achieved
-
-
-
-
-                                                                                                                                                                                                                                                                % Achieved
-                                                                                                      Total Wrote
-
-
-
-
-                                                                                                                                                                   Total Wrote
-
-
-
-
-                                                                                                                                                                                                                                Total Wrote
-                       EMIS No             Centre Name
-                                  No
-
-
-
 
                                                                            Quintile
                                            PATENSIE SECONDARY
@@ -4399,5 +2279,3 @@ SARAH BAARTMAN
 
 
 
-
-
