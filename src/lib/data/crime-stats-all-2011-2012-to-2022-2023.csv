@@ -1,0 +1,841 @@
+Geography,Crime Category,Financial Year,Count
+ZA,Contact Crimes,2011/2012,615935
+ZA,Contact Crimes,2012/2013,608724
+ZA,Contact Crimes,2013/2014,611574
+ZA,Contact Crimes,2014/2015,616973
+ZA,Contact Crimes,2015/2016,623223
+ZA,Contact Crimes,2016/2017,608321
+ZA,Contact Crimes,2017/2018,601366
+ZA,Contact Crimes,2018/2019,617210
+ZA,Contact Crimes,2019/2020,621282
+ZA,Contact Crimes,2020/2021,535217
+EC,Contact Crimes,2011/2012,75779
+EC,Contact Crimes,2012/2013,72650
+EC,Contact Crimes,2013/2014,73032
+EC,Contact Crimes,2014/2015,68654
+EC,Contact Crimes,2015/2016,67258
+EC,Contact Crimes,2016/2017,65524
+EC,Contact Crimes,2017/2018,65393
+EC,Contact Crimes,2018/2019,68416
+EC,Contact Crimes,2019/2020,68545
+EC,Contact Crimes,2020/2021,59093
+FS,Contact Crimes,2011/2012,47486
+FS,Contact Crimes,2012/2013,48480
+FS,Contact Crimes,2013/2014,45945
+FS,Contact Crimes,2014/2015,42314
+FS,Contact Crimes,2015/2016,41100
+FS,Contact Crimes,2016/2017,37741
+FS,Contact Crimes,2017/2018,35725
+FS,Contact Crimes,2018/2019,36879
+FS,Contact Crimes,2019/2020,36059
+FS,Contact Crimes,2020/2021,31668
+GT,Contact Crimes,2011/2012,160289
+GT,Contact Crimes,2012/2013,153610
+GT,Contact Crimes,2013/2014,160881
+GT,Contact Crimes,2014/2015,167264
+GT,Contact Crimes,2015/2016,172814
+GT,Contact Crimes,2016/2017,171466
+GT,Contact Crimes,2017/2018,170640
+GT,Contact Crimes,2018/2019,174894
+GT,Contact Crimes,2019/2020,177737
+GT,Contact Crimes,2020/2021,151911
+KZN,Contact Crimes,2011/2012,105443
+KZN,Contact Crimes,2012/2013,105444
+KZN,Contact Crimes,2013/2014,101983
+KZN,Contact Crimes,2014/2015,98757
+KZN,Contact Crimes,2015/2016,97870
+KZN,Contact Crimes,2016/2017,95153
+KZN,Contact Crimes,2017/2018,94914
+KZN,Contact Crimes,2018/2019,97505
+KZN,Contact Crimes,2019/2020,101154
+KZN,Contact Crimes,2020/2021,88851
+LIM,Contact Crimes,2011/2012,38826
+LIM,Contact Crimes,2012/2013,36786
+LIM,Contact Crimes,2013/2014,35953
+LIM,Contact Crimes,2014/2015,37971
+LIM,Contact Crimes,2015/2016,40391
+LIM,Contact Crimes,2016/2017,36764
+LIM,Contact Crimes,2017/2018,35068
+LIM,Contact Crimes,2018/2019,35266
+LIM,Contact Crimes,2019/2020,34780
+LIM,Contact Crimes,2020/2021,31120
+MP,Contact Crimes,2011/2012,36661
+MP,Contact Crimes,2012/2013,33692
+MP,Contact Crimes,2013/2014,31775
+MP,Contact Crimes,2014/2015,31886
+MP,Contact Crimes,2015/2016,32737
+MP,Contact Crimes,2016/2017,33381
+MP,Contact Crimes,2017/2018,32646
+MP,Contact Crimes,2018/2019,34885
+MP,Contact Crimes,2019/2020,35622
+MP,Contact Crimes,2020/2021,31488
+NW,Contact Crimes,2011/2012,36112
+NW,Contact Crimes,2012/2013,36067
+NW,Contact Crimes,2013/2014,34473
+NW,Contact Crimes,2014/2015,35082
+NW,Contact Crimes,2015/2016,35224
+NW,Contact Crimes,2016/2017,35483
+NW,Contact Crimes,2017/2018,36604
+NW,Contact Crimes,2018/2019,37487
+NW,Contact Crimes,2019/2020,36286
+NW,Contact Crimes,2020/2021,31636
+NC,Contact Crimes,2011/2012,18038
+NC,Contact Crimes,2012/2013,18649
+NC,Contact Crimes,2013/2014,18943
+NC,Contact Crimes,2014/2015,18877
+NC,Contact Crimes,2015/2016,18971
+NC,Contact Crimes,2016/2017,18105
+NC,Contact Crimes,2017/2018,17380
+NC,Contact Crimes,2018/2019,17891
+NC,Contact Crimes,2019/2020,17591
+NC,Contact Crimes,2020/2021,15309
+WC,Contact Crimes,2011/2012,97301
+WC,Contact Crimes,2012/2013,103346
+WC,Contact Crimes,2013/2014,108589
+WC,Contact Crimes,2014/2015,116168
+WC,Contact Crimes,2015/2016,116858
+WC,Contact Crimes,2016/2017,114704
+WC,Contact Crimes,2017/2018,112996
+WC,Contact Crimes,2018/2019,113987
+WC,Contact Crimes,2019/2020,113508
+WC,Contact Crimes,2020/2021,94141
+ZA,Sexual Offences,2011/2012,60539
+ZA,Sexual Offences,2012/2013,60888
+ZA,Sexual Offences,2013/2014,56680
+ZA,Sexual Offences,2014/2015,53617
+ZA,Sexual Offences,2015/2016,51895
+ZA,Sexual Offences,2016/2017,49660
+ZA,Sexual Offences,2017/2018,50108
+ZA,Sexual Offences,2018/2019,52420
+ZA,Sexual Offences,2019/2020,53293
+ZA,Sexual Offences,2020/2021,46214
+EC,Sexual Offences,2011/2012,9001
+EC,Sexual Offences,2012/2013,9288
+EC,Sexual Offences,2013/2014,9616
+EC,Sexual Offences,2014/2015,9224
+EC,Sexual Offences,2015/2016,8797
+EC,Sexual Offences,2016/2017,8050
+EC,Sexual Offences,2017/2018,8094
+EC,Sexual Offences,2018/2019,8731
+EC,Sexual Offences,2019/2020,8708
+EC,Sexual Offences,2020/2021,7445
+FS,Sexual Offences,2011/2012,4785
+FS,Sexual Offences,2012/2013,5098
+FS,Sexual Offences,2013/2014,4584
+FS,Sexual Offences,2014/2015,4094
+FS,Sexual Offences,2015/2016,3928
+FS,Sexual Offences,2016/2017,3488
+FS,Sexual Offences,2017/2018,3284
+FS,Sexual Offences,2018/2019,3457
+FS,Sexual Offences,2019/2020,3746
+FS,Sexual Offences,2020/2021,2971
+GT,Sexual Offences,2011/2012,11512
+GT,Sexual Offences,2012/2013,11113
+GT,Sexual Offences,2013/2014,10264
+GT,Sexual Offences,2014/2015,9902
+GT,Sexual Offences,2015/2016,9510
+GT,Sexual Offences,2016/2017,9566
+GT,Sexual Offences,2017/2018,10116
+GT,Sexual Offences,2018/2019,10752
+GT,Sexual Offences,2019/2020,10810
+GT,Sexual Offences,2020/2021,9749
+KZN,Sexual Offences,2011/2012,11034
+KZN,Sexual Offences,2012/2013,10964
+KZN,Sexual Offences,2013/2014,9889
+KZN,Sexual Offences,2014/2015,9079
+KZN,Sexual Offences,2015/2016,8947
+KZN,Sexual Offences,2016/2017,8484
+KZN,Sexual Offences,2017/2018,8759
+KZN,Sexual Offences,2018/2019,9308
+KZN,Sexual Offences,2019/2020,9809
+KZN,Sexual Offences,2020/2021,8201
+LIM,Sexual Offences,2011/2012,4836
+LIM,Sexual Offences,2012/2013,4866
+LIM,Sexual Offences,2013/2014,4423
+LIM,Sexual Offences,2014/2015,4312
+LIM,Sexual Offences,2015/2016,4369
+LIM,Sexual Offences,2016/2017,3828
+LIM,Sexual Offences,2017/2018,3862
+LIM,Sexual Offences,2018/2019,4060
+LIM,Sexual Offences,2019/2020,3990
+LIM,Sexual Offences,2020/2021,3720
+MP,Sexual Offences,2011/2012,3955
+MP,Sexual Offences,2012/2013,4065
+MP,Sexual Offences,2013/2014,3797
+MP,Sexual Offences,2014/2015,3474
+MP,Sexual Offences,2015/2016,3331
+MP,Sexual Offences,2016/2017,3216
+MP,Sexual Offences,2017/2018,3198
+MP,Sexual Offences,2018/2019,3470
+MP,Sexual Offences,2019/2020,3513
+MP,Sexual Offences,2020/2021,3134
+NW,Sexual Offences,2011/2012,4885
+NW,Sexual Offences,2012/2013,5228
+NW,Sexual Offences,2013/2014,4616
+NW,Sexual Offences,2014/2015,4585
+NW,Sexual Offences,2015/2016,4164
+NW,Sexual Offences,2016/2017,4326
+NW,Sexual Offences,2017/2018,4182
+NW,Sexual Offences,2018/2019,4021
+NW,Sexual Offences,2019/2020,3824
+NW,Sexual Offences,2020/2021,3262
+NC,Sexual Offences,2011/2012,1722
+NC,Sexual Offences,2012/2013,1826
+NC,Sexual Offences,2013/2014,1731
+NC,Sexual Offences,2014/2015,1578
+NC,Sexual Offences,2015/2016,1719
+NC,Sexual Offences,2016/2017,1587
+NC,Sexual Offences,2017/2018,1538
+NC,Sexual Offences,2018/2019,1578
+NC,Sexual Offences,2019/2020,1590
+NC,Sexual Offences,2020/2021,1295
+WC,Sexual Offences,2011/2012,8809
+WC,Sexual Offences,2012/2013,8440
+WC,Sexual Offences,2013/2014,7760
+WC,Sexual Offences,2014/2015,7369
+WC,Sexual Offences,2015/2016,7130
+WC,Sexual Offences,2016/2017,7115
+WC,Sexual Offences,2017/2018,7075
+WC,Sexual Offences,2018/2019,7043
+WC,Sexual Offences,2019/2020,7303
+WC,Sexual Offences,2020/2021,6437
+ZA,Aggravated Robberies,2011/2012,100769
+ZA,Aggravated Robberies,2012/2013,105488
+ZA,Aggravated Robberies,2013/2014,118963
+ZA,Aggravated Robberies,2014/2015,129045
+ZA,Aggravated Robberies,2015/2016,132527
+ZA,Aggravated Robberies,2016/2017,140956
+ZA,Aggravated Robberies,2017/2018,138364
+ZA,Aggravated Robberies,2018/2019,140032
+ZA,Aggravated Robberies,2019/2020,143990
+ZA,Aggravated Robberies,2020/2021,119841
+EC,Aggravated Robberies,2011/2012,12476
+EC,Aggravated Robberies,2012/2013,11751
+EC,Aggravated Robberies,2013/2014,13443
+EC,Aggravated Robberies,2014/2015,13245
+EC,Aggravated Robberies,2015/2016,12777
+EC,Aggravated Robberies,2016/2017,13688
+EC,Aggravated Robberies,2017/2018,13485
+EC,Aggravated Robberies,2018/2019,13578
+EC,Aggravated Robberies,2019/2020,13983
+EC,Aggravated Robberies,2020/2021,11458
+FS,Aggravated Robberies,2011/2012,5323
+FS,Aggravated Robberies,2012/2013,5791
+FS,Aggravated Robberies,2013/2014,5347
+FS,Aggravated Robberies,2014/2015,5239
+FS,Aggravated Robberies,2015/2016,4778
+FS,Aggravated Robberies,2016/2017,5147
+FS,Aggravated Robberies,2017/2018,5032
+FS,Aggravated Robberies,2018/2019,5339
+FS,Aggravated Robberies,2019/2020,5119
+FS,Aggravated Robberies,2020/2021,3992
+GT,Aggravated Robberies,2011/2012,35148
+GT,Aggravated Robberies,2012/2013,35717
+GT,Aggravated Robberies,2013/2014,42506
+GT,Aggravated Robberies,2014/2015,47362
+GT,Aggravated Robberies,2015/2016,49792
+GT,Aggravated Robberies,2016/2017,53793
+GT,Aggravated Robberies,2017/2018,51706
+GT,Aggravated Robberies,2018/2019,52040
+GT,Aggravated Robberies,2019/2020,53927
+GT,Aggravated Robberies,2020/2021,44109
+KZN,Aggravated Robberies,2011/2012,18417
+KZN,Aggravated Robberies,2012/2013,19923
+KZN,Aggravated Robberies,2013/2014,20957
+KZN,Aggravated Robberies,2014/2015,20881
+KZN,Aggravated Robberies,2015/2016,21061
+KZN,Aggravated Robberies,2016/2017,22327
+KZN,Aggravated Robberies,2017/2018,21543
+KZN,Aggravated Robberies,2018/2019,22110
+KZN,Aggravated Robberies,2019/2020,22824
+KZN,Aggravated Robberies,2020/2021,20964
+LIM,Aggravated Robberies,2011/2012,3652
+LIM,Aggravated Robberies,2012/2013,3917
+LIM,Aggravated Robberies,2013/2014,5163
+LIM,Aggravated Robberies,2014/2015,6123
+LIM,Aggravated Robberies,2015/2016,6723
+LIM,Aggravated Robberies,2016/2017,6745
+LIM,Aggravated Robberies,2017/2018,7048
+LIM,Aggravated Robberies,2018/2019,7006
+LIM,Aggravated Robberies,2019/2020,7466
+LIM,Aggravated Robberies,2020/2021,6105
+MP,Aggravated Robberies,2011/2012,5681
+MP,Aggravated Robberies,2012/2013,5198
+MP,Aggravated Robberies,2013/2014,5252
+MP,Aggravated Robberies,2014/2015,5656
+MP,Aggravated Robberies,2015/2016,5996
+MP,Aggravated Robberies,2016/2017,6702
+MP,Aggravated Robberies,2017/2018,6757
+MP,Aggravated Robberies,2018/2019,7091
+MP,Aggravated Robberies,2019/2020,7672
+MP,Aggravated Robberies,2020/2021,7004
+NW,Aggravated Robberies,2011/2012,5366
+NW,Aggravated Robberies,2012/2013,5271
+NW,Aggravated Robberies,2013/2014,5409
+NW,Aggravated Robberies,2014/2015,5977
+NW,Aggravated Robberies,2015/2016,6281
+NW,Aggravated Robberies,2016/2017,7017
+NW,Aggravated Robberies,2017/2018,6825
+NW,Aggravated Robberies,2018/2019,7023
+NW,Aggravated Robberies,2019/2020,6807
+NW,Aggravated Robberies,2020/2021,5733
+NC,Aggravated Robberies,2011/2012,967
+NC,Aggravated Robberies,2012/2013,1239
+NC,Aggravated Robberies,2013/2014,1402
+NC,Aggravated Robberies,2014/2015,1446
+NC,Aggravated Robberies,2015/2016,1387
+NC,Aggravated Robberies,2016/2017,1505
+NC,Aggravated Robberies,2017/2018,1639
+NC,Aggravated Robberies,2018/2019,1780
+NC,Aggravated Robberies,2019/2020,1643
+NC,Aggravated Robberies,2020/2021,1426
+WC,Aggravated Robberies,2011/2012,13739
+WC,Aggravated Robberies,2012/2013,16681
+WC,Aggravated Robberies,2013/2014,19484
+WC,Aggravated Robberies,2014/2015,23116
+WC,Aggravated Robberies,2015/2016,23732
+WC,Aggravated Robberies,2016/2017,24032
+WC,Aggravated Robberies,2017/2018,24329
+WC,Aggravated Robberies,2018/2019,24065
+WC,Aggravated Robberies,2019/2020,24549
+WC,Aggravated Robberies,2020/2021,19050
+ZA,Contact Related Crimes,2011/2012,125903
+ZA,Contact Related Crimes,2012/2013,124691
+ZA,Contact Related Crimes,2013/2014,123441
+ZA,Contact Related Crimes,2014/2015,125789
+ZA,Contact Related Crimes,2015/2016,124804
+ZA,Contact Related Crimes,2016/2017,120730
+ZA,Contact Related Crimes,2017/2018,115361
+ZA,Contact Related Crimes,2018/2019,117172
+ZA,Contact Related Crimes,2019/2020,112244
+ZA,Contact Related Crimes,2020/2021,102269
+EC,Contact Related Crimes,2011/2012,13687
+EC,Contact Related Crimes,2012/2013,13514
+EC,Contact Related Crimes,2013/2014,13735
+EC,Contact Related Crimes,2014/2015,13184
+EC,Contact Related Crimes,2015/2016,12498
+EC,Contact Related Crimes,2016/2017,12810
+EC,Contact Related Crimes,2017/2018,12027
+EC,Contact Related Crimes,2018/2019,12738
+EC,Contact Related Crimes,2019/2020,12721
+EC,Contact Related Crimes,2020/2021,11673
+FS,Contact Related Crimes,2011/2012,9134
+FS,Contact Related Crimes,2012/2013,9147
+FS,Contact Related Crimes,2013/2014,8424
+FS,Contact Related Crimes,2014/2015,7942
+FS,Contact Related Crimes,2015/2016,7816
+FS,Contact Related Crimes,2016/2017,6838
+FS,Contact Related Crimes,2017/2018,6232
+FS,Contact Related Crimes,2018/2019,6116
+FS,Contact Related Crimes,2019/2020,5740
+FS,Contact Related Crimes,2020/2021,5769
+GT,Contact Related Crimes,2011/2012,37796
+GT,Contact Related Crimes,2012/2013,36199
+GT,Contact Related Crimes,2013/2014,35757
+GT,Contact Related Crimes,2014/2015,35847
+GT,Contact Related Crimes,2015/2016,35312
+GT,Contact Related Crimes,2016/2017,34023
+GT,Contact Related Crimes,2017/2018,32456
+GT,Contact Related Crimes,2018/2019,31275
+GT,Contact Related Crimes,2019/2020,29232
+GT,Contact Related Crimes,2020/2021,24996
+KZN,Contact Related Crimes,2011/2012,16424
+KZN,Contact Related Crimes,2012/2013,16616
+KZN,Contact Related Crimes,2013/2014,15850
+KZN,Contact Related Crimes,2014/2015,15459
+KZN,Contact Related Crimes,2015/2016,15534
+KZN,Contact Related Crimes,2016/2017,14709
+KZN,Contact Related Crimes,2017/2018,13637
+KZN,Contact Related Crimes,2018/2019,14458
+KZN,Contact Related Crimes,2019/2020,14120
+KZN,Contact Related Crimes,2020/2021,13227
+LIM,Contact Related Crimes,2011/2012,7535
+LIM,Contact Related Crimes,2012/2013,7296
+LIM,Contact Related Crimes,2013/2014,7145
+LIM,Contact Related Crimes,2014/2015,7544
+LIM,Contact Related Crimes,2015/2016,8225
+LIM,Contact Related Crimes,2016/2017,7352
+LIM,Contact Related Crimes,2017/2018,7246
+LIM,Contact Related Crimes,2018/2019,7161
+LIM,Contact Related Crimes,2019/2020,6943
+LIM,Contact Related Crimes,2020/2021,6866
+MP,Contact Related Crimes,2011/2012,6714
+MP,Contact Related Crimes,2012/2013,6355
+MP,Contact Related Crimes,2013/2014,5972
+MP,Contact Related Crimes,2014/2015,6130
+MP,Contact Related Crimes,2015/2016,6113
+MP,Contact Related Crimes,2016/2017,5834
+MP,Contact Related Crimes,2017/2018,5773
+MP,Contact Related Crimes,2018/2019,6031
+MP,Contact Related Crimes,2019/2020,6200
+MP,Contact Related Crimes,2020/2021,5703
+NW,Contact Related Crimes,2011/2012,6913
+NW,Contact Related Crimes,2012/2013,6706
+NW,Contact Related Crimes,2013/2014,6201
+NW,Contact Related Crimes,2014/2015,6231
+NW,Contact Related Crimes,2015/2016,6076
+NW,Contact Related Crimes,2016/2017,6064
+NW,Contact Related Crimes,2017/2018,6144
+NW,Contact Related Crimes,2018/2019,6632
+NW,Contact Related Crimes,2019/2020,6210
+NW,Contact Related Crimes,2020/2021,5988
+NC,Contact Related Crimes,2011/2012,2969
+NC,Contact Related Crimes,2012/2013,3279
+NC,Contact Related Crimes,2013/2014,3250
+NC,Contact Related Crimes,2014/2015,3381
+NC,Contact Related Crimes,2015/2016,3256
+NC,Contact Related Crimes,2016/2017,3103
+NC,Contact Related Crimes,2017/2018,3083
+NC,Contact Related Crimes,2018/2019,3405
+NC,Contact Related Crimes,2019/2020,3241
+NC,Contact Related Crimes,2020/2021,3155
+WC,Contact Related Crimes,2011/2012,24731
+WC,Contact Related Crimes,2012/2013,25579
+WC,Contact Related Crimes,2013/2014,27107
+WC,Contact Related Crimes,2014/2015,30071
+WC,Contact Related Crimes,2015/2016,29974
+WC,Contact Related Crimes,2016/2017,29997
+WC,Contact Related Crimes,2017/2018,28763
+WC,Contact Related Crimes,2018/2019,29356
+WC,Contact Related Crimes,2019/2020,27837
+WC,Contact Related Crimes,2020/2021,24892
+ZA,Property Related Crimes,2011/2012,530624
+ZA,Property Related Crimes,2012/2013,558334
+ZA,Property Related Crimes,2013/2014,558228
+ZA,Property Related Crimes,2014/2015,553487
+ZA,Property Related Crimes,2015/2016,543524
+ZA,Property Related Crimes,2016/2017,540653
+ZA,Property Related Crimes,2017/2018,507975
+ZA,Property Related Crimes,2018/2019,495161
+ZA,Property Related Crimes,2019/2020,469224
+ZA,Property Related Crimes,2020/2021,369745
+EC,Property Related Crimes,2011/2012,55742
+EC,Property Related Crimes,2012/2013,55484
+EC,Property Related Crimes,2013/2014,53240
+EC,Property Related Crimes,2014/2015,53536
+EC,Property Related Crimes,2015/2016,51083
+EC,Property Related Crimes,2016/2017,53097
+EC,Property Related Crimes,2017/2018,51513
+EC,Property Related Crimes,2018/2019,51875
+EC,Property Related Crimes,2019/2020,49576
+EC,Property Related Crimes,2020/2021,42515
+FS,Property Related Crimes,2011/2012,31772
+FS,Property Related Crimes,2012/2013,34738
+FS,Property Related Crimes,2013/2014,33234
+FS,Property Related Crimes,2014/2015,31162
+FS,Property Related Crimes,2015/2016,30622
+FS,Property Related Crimes,2016/2017,29733
+FS,Property Related Crimes,2017/2018,28653
+FS,Property Related Crimes,2018/2019,28778
+FS,Property Related Crimes,2019/2020,27567
+FS,Property Related Crimes,2020/2021,22626
+GT,Property Related Crimes,2011/2012,147690
+GT,Property Related Crimes,2012/2013,153759
+GT,Property Related Crimes,2013/2014,155188
+GT,Property Related Crimes,2014/2015,155912
+GT,Property Related Crimes,2015/2016,150955
+GT,Property Related Crimes,2016/2017,154761
+GT,Property Related Crimes,2017/2018,140476
+GT,Property Related Crimes,2018/2019,133563
+GT,Property Related Crimes,2019/2020,126844
+GT,Property Related Crimes,2020/2021,90906
+KZN,Property Related Crimes,2011/2012,84433
+KZN,Property Related Crimes,2012/2013,91128
+KZN,Property Related Crimes,2013/2014,88205
+KZN,Property Related Crimes,2014/2015,86814
+KZN,Property Related Crimes,2015/2016,86385
+KZN,Property Related Crimes,2016/2017,83492
+KZN,Property Related Crimes,2017/2018,80207
+KZN,Property Related Crimes,2018/2019,78995
+KZN,Property Related Crimes,2019/2020,74804
+KZN,Property Related Crimes,2020/2021,62054
+LIM,Property Related Crimes,2011/2012,29335
+LIM,Property Related Crimes,2012/2013,28533
+LIM,Property Related Crimes,2013/2014,31479
+LIM,Property Related Crimes,2014/2015,31669
+LIM,Property Related Crimes,2015/2016,32081
+LIM,Property Related Crimes,2016/2017,31240
+LIM,Property Related Crimes,2017/2018,28725
+LIM,Property Related Crimes,2018/2019,28468
+LIM,Property Related Crimes,2019/2020,28449
+LIM,Property Related Crimes,2020/2021,22993
+MP,Property Related Crimes,2011/2012,36169
+MP,Property Related Crimes,2012/2013,36312
+MP,Property Related Crimes,2013/2014,35978
+MP,Property Related Crimes,2014/2015,36218
+MP,Property Related Crimes,2015/2016,36107
+MP,Property Related Crimes,2016/2017,36666
+MP,Property Related Crimes,2017/2018,35716
+MP,Property Related Crimes,2018/2019,35008
+MP,Property Related Crimes,2019/2020,33035
+MP,Property Related Crimes,2020/2021,27237
+NW,Property Related Crimes,2011/2012,30389
+NW,Property Related Crimes,2012/2013,31725
+NW,Property Related Crimes,2013/2014,30657
+NW,Property Related Crimes,2014/2015,31674
+NW,Property Related Crimes,2015/2016,31469
+NW,Property Related Crimes,2016/2017,33503
+NW,Property Related Crimes,2017/2018,32255
+NW,Property Related Crimes,2018/2019,33039
+NW,Property Related Crimes,2019/2020,29877
+NW,Property Related Crimes,2020/2021,25247
+NC,Property Related Crimes,2011/2012,11081
+NC,Property Related Crimes,2012/2013,12533
+NC,Property Related Crimes,2013/2014,12886
+NC,Property Related Crimes,2014/2015,13030
+NC,Property Related Crimes,2015/2016,13212
+NC,Property Related Crimes,2016/2017,13407
+NC,Property Related Crimes,2017/2018,12800
+NC,Property Related Crimes,2018/2019,13420
+NC,Property Related Crimes,2019/2020,12735
+NC,Property Related Crimes,2020/2021,11428
+WC,Property Related Crimes,2011/2012,104013
+WC,Property Related Crimes,2012/2013,114122
+WC,Property Related Crimes,2013/2014,116773
+WC,Property Related Crimes,2014/2015,113472
+WC,Property Related Crimes,2015/2016,111610
+WC,Property Related Crimes,2016/2017,104754
+WC,Property Related Crimes,2017/2018,97630
+WC,Property Related Crimes,2018/2019,92015
+WC,Property Related Crimes,2019/2020,86337
+WC,Property Related Crimes,2020/2021,64739
+ZA,Other Serious Crimes,2011/2012,528296
+ZA,Other Serious Crimes,2012/2013,517252
+ZA,Other Serious Crimes,2013/2014,510748
+ZA,Other Serious Crimes,2014/2015,499698
+ZA,Other Serious Crimes,2015/2016,479075
+ZA,Other Serious Crimes,2016/2017,469276
+ZA,Other Serious Crimes,2017/2018,438113
+ZA,Other Serious Crimes,2018/2019,444447
+ZA,Other Serious Crimes,2019/2020,426569
+ZA,Other Serious Crimes,2020/2021,354566
+EC,Other Serious Crimes,2011/2012,43690
+EC,Other Serious Crimes,2012/2013,40986
+EC,Other Serious Crimes,2013/2014,40725
+EC,Other Serious Crimes,2014/2015,37188
+EC,Other Serious Crimes,2015/2016,35238
+EC,Other Serious Crimes,2016/2017,36461
+EC,Other Serious Crimes,2017/2018,34256
+EC,Other Serious Crimes,2018/2019,36271
+EC,Other Serious Crimes,2019/2020,37480
+EC,Other Serious Crimes,2020/2021,32999
+FS,Other Serious Crimes,2011/2012,29529
+FS,Other Serious Crimes,2012/2013,28736
+FS,Other Serious Crimes,2013/2014,26042
+FS,Other Serious Crimes,2014/2015,24134
+FS,Other Serious Crimes,2015/2016,23502
+FS,Other Serious Crimes,2016/2017,23348
+FS,Other Serious Crimes,2017/2018,20235
+FS,Other Serious Crimes,2018/2019,22006
+FS,Other Serious Crimes,2019/2020,21631
+FS,Other Serious Crimes,2020/2021,18708
+GT,Other Serious Crimes,2011/2012,164163
+GT,Other Serious Crimes,2012/2013,159302
+GT,Other Serious Crimes,2013/2014,159385
+GT,Other Serious Crimes,2014/2015,155820
+GT,Other Serious Crimes,2015/2016,148436
+GT,Other Serious Crimes,2016/2017,142974
+GT,Other Serious Crimes,2017/2018,135087
+GT,Other Serious Crimes,2018/2019,134273
+GT,Other Serious Crimes,2019/2020,129696
+GT,Other Serious Crimes,2020/2021,106889
+KZN,Other Serious Crimes,2011/2012,78241
+KZN,Other Serious Crimes,2012/2013,77601
+KZN,Other Serious Crimes,2013/2014,75655
+KZN,Other Serious Crimes,2014/2015,72967
+KZN,Other Serious Crimes,2015/2016,68616
+KZN,Other Serious Crimes,2016/2017,67284
+KZN,Other Serious Crimes,2017/2018,63543
+KZN,Other Serious Crimes,2018/2019,65970
+KZN,Other Serious Crimes,2019/2020,64128
+KZN,Other Serious Crimes,2020/2021,53945
+LIM,Other Serious Crimes,2011/2012,26786
+LIM,Other Serious Crimes,2012/2013,25690
+LIM,Other Serious Crimes,2013/2014,26189
+LIM,Other Serious Crimes,2014/2015,26459
+LIM,Other Serious Crimes,2015/2016,27447
+LIM,Other Serious Crimes,2016/2017,28524
+LIM,Other Serious Crimes,2017/2018,24381
+LIM,Other Serious Crimes,2018/2019,25081
+LIM,Other Serious Crimes,2019/2020,23780
+LIM,Other Serious Crimes,2020/2021,20132
+MP,Other Serious Crimes,2011/2012,30893
+MP,Other Serious Crimes,2012/2013,31130
+MP,Other Serious Crimes,2013/2014,27795
+MP,Other Serious Crimes,2014/2015,26882
+MP,Other Serious Crimes,2015/2016,26546
+MP,Other Serious Crimes,2016/2017,27060
+MP,Other Serious Crimes,2017/2018,25492
+MP,Other Serious Crimes,2018/2019,25235
+MP,Other Serious Crimes,2019/2020,24367
+MP,Other Serious Crimes,2020/2021,21271
+NW,Other Serious Crimes,2011/2012,25208
+NW,Other Serious Crimes,2012/2013,26448
+NW,Other Serious Crimes,2013/2014,26064
+NW,Other Serious Crimes,2014/2015,24229
+NW,Other Serious Crimes,2015/2016,23151
+NW,Other Serious Crimes,2016/2017,21767
+NW,Other Serious Crimes,2017/2018,20020
+NW,Other Serious Crimes,2018/2019,21840
+NW,Other Serious Crimes,2019/2020,20358
+NW,Other Serious Crimes,2020/2021,18245
+NC,Other Serious Crimes,2011/2012,9260
+NC,Other Serious Crimes,2012/2013,9135
+NC,Other Serious Crimes,2013/2014,9353
+NC,Other Serious Crimes,2014/2015,9794
+NC,Other Serious Crimes,2015/2016,9629
+NC,Other Serious Crimes,2016/2017,9619
+NC,Other Serious Crimes,2017/2018,9277
+NC,Other Serious Crimes,2018/2019,9924
+NC,Other Serious Crimes,2019/2020,10538
+NC,Other Serious Crimes,2020/2021,8777
+WC,Other Serious Crimes,2011/2012,120526
+WC,Other Serious Crimes,2012/2013,118224
+WC,Other Serious Crimes,2013/2014,119540
+WC,Other Serious Crimes,2014/2015,122225
+WC,Other Serious Crimes,2015/2016,116510
+WC,Other Serious Crimes,2016/2017,112239
+WC,Other Serious Crimes,2017/2018,105822
+WC,Other Serious Crimes,2018/2019,103847
+WC,Other Serious Crimes,2019/2020,94591
+WC,Other Serious Crimes,2020/2021,73600
+ZA,Crimes Detected as a Result of Police Action,2011/2012,262726
+ZA,Crimes Detected as a Result of Police Action,2012/2013,296734
+ZA,Crimes Detected as a Result of Police Action,2013/2014,350403
+ZA,Crimes Detected as a Result of Police Action,2014/2015,356919
+ZA,Crimes Detected as a Result of Police Action,2015/2016,355926
+ZA,Crimes Detected as a Result of Police Action,2016/2017,390021
+ZA,Crimes Detected as a Result of Police Action,2017/2018,433966
+ZA,Crimes Detected as a Result of Police Action,2018/2019,339281
+ZA,Crimes Detected as a Result of Police Action,2019/2020,290176
+ZA,Crimes Detected as a Result of Police Action,2020/2021,177095
+EC,Crimes Detected as a Result of Police Action,2011/2012,20970
+EC,Crimes Detected as a Result of Police Action,2012/2013,22100
+EC,Crimes Detected as a Result of Police Action,2013/2014,24334
+EC,Crimes Detected as a Result of Police Action,2014/2015,24922
+EC,Crimes Detected as a Result of Police Action,2015/2016,24711
+EC,Crimes Detected as a Result of Police Action,2016/2017,26182
+EC,Crimes Detected as a Result of Police Action,2017/2018,27001
+EC,Crimes Detected as a Result of Police Action,2018/2019,22558
+EC,Crimes Detected as a Result of Police Action,2019/2020,20869
+EC,Crimes Detected as a Result of Police Action,2020/2021,13427
+FS,Crimes Detected as a Result of Police Action,2011/2012,6356
+FS,Crimes Detected as a Result of Police Action,2012/2013,8334
+FS,Crimes Detected as a Result of Police Action,2013/2014,10570
+FS,Crimes Detected as a Result of Police Action,2014/2015,11387
+FS,Crimes Detected as a Result of Police Action,2015/2016,12791
+FS,Crimes Detected as a Result of Police Action,2016/2017,15015
+FS,Crimes Detected as a Result of Police Action,2017/2018,16011
+FS,Crimes Detected as a Result of Police Action,2018/2019,11907
+FS,Crimes Detected as a Result of Police Action,2019/2020,8313
+FS,Crimes Detected as a Result of Police Action,2020/2021,6251
+GT,Crimes Detected as a Result of Police Action,2011/2012,51085
+GT,Crimes Detected as a Result of Police Action,2012/2013,64337
+GT,Crimes Detected as a Result of Police Action,2013/2014,104858
+GT,Crimes Detected as a Result of Police Action,2014/2015,100267
+GT,Crimes Detected as a Result of Police Action,2015/2016,91799
+GT,Crimes Detected as a Result of Police Action,2016/2017,95403
+GT,Crimes Detected as a Result of Police Action,2017/2018,107614
+GT,Crimes Detected as a Result of Police Action,2018/2019,90476
+GT,Crimes Detected as a Result of Police Action,2019/2020,83090
+GT,Crimes Detected as a Result of Police Action,2020/2021,47859
+KZN,Crimes Detected as a Result of Police Action,2011/2012,55907
+KZN,Crimes Detected as a Result of Police Action,2012/2013,62908
+KZN,Crimes Detected as a Result of Police Action,2013/2014,64896
+KZN,Crimes Detected as a Result of Police Action,2014/2015,65418
+KZN,Crimes Detected as a Result of Police Action,2015/2016,64875
+KZN,Crimes Detected as a Result of Police Action,2016/2017,71390
+KZN,Crimes Detected as a Result of Police Action,2017/2018,80143
+KZN,Crimes Detected as a Result of Police Action,2018/2019,60283
+KZN,Crimes Detected as a Result of Police Action,2019/2020,54199
+KZN,Crimes Detected as a Result of Police Action,2020/2021,29371
+LIM,Crimes Detected as a Result of Police Action,2011/2012,9081
+LIM,Crimes Detected as a Result of Police Action,2012/2013,12402
+LIM,Crimes Detected as a Result of Police Action,2013/2014,14269
+LIM,Crimes Detected as a Result of Police Action,2014/2015,18321
+LIM,Crimes Detected as a Result of Police Action,2015/2016,17709
+LIM,Crimes Detected as a Result of Police Action,2016/2017,20044
+LIM,Crimes Detected as a Result of Police Action,2017/2018,27262
+LIM,Crimes Detected as a Result of Police Action,2018/2019,23249
+LIM,Crimes Detected as a Result of Police Action,2019/2020,16920
+LIM,Crimes Detected as a Result of Police Action,2020/2021,13767
+MP,Crimes Detected as a Result of Police Action,2011/2012,8657
+MP,Crimes Detected as a Result of Police Action,2012/2013,10740
+MP,Crimes Detected as a Result of Police Action,2013/2014,11534
+MP,Crimes Detected as a Result of Police Action,2014/2015,12929
+MP,Crimes Detected as a Result of Police Action,2015/2016,14539
+MP,Crimes Detected as a Result of Police Action,2016/2017,16902
+MP,Crimes Detected as a Result of Police Action,2017/2018,18434
+MP,Crimes Detected as a Result of Police Action,2018/2019,15205
+MP,Crimes Detected as a Result of Police Action,2019/2020,13267
+MP,Crimes Detected as a Result of Police Action,2020/2021,7167
+NW,Crimes Detected as a Result of Police Action,2011/2012,9894
+NW,Crimes Detected as a Result of Police Action,2012/2013,11868
+NW,Crimes Detected as a Result of Police Action,2013/2014,13882
+NW,Crimes Detected as a Result of Police Action,2014/2015,14196
+NW,Crimes Detected as a Result of Police Action,2015/2016,15537
+NW,Crimes Detected as a Result of Police Action,2016/2017,15524
+NW,Crimes Detected as a Result of Police Action,2017/2018,17485
+NW,Crimes Detected as a Result of Police Action,2018/2019,13807
+NW,Crimes Detected as a Result of Police Action,2019/2020,12028
+NW,Crimes Detected as a Result of Police Action,2020/2021,5661
+NC,Crimes Detected as a Result of Police Action,2011/2012,3597
+NC,Crimes Detected as a Result of Police Action,2012/2013,3749
+NC,Crimes Detected as a Result of Police Action,2013/2014,4093
+NC,Crimes Detected as a Result of Police Action,2014/2015,4436
+NC,Crimes Detected as a Result of Police Action,2015/2016,5183
+NC,Crimes Detected as a Result of Police Action,2016/2017,6084
+NC,Crimes Detected as a Result of Police Action,2017/2018,6495
+NC,Crimes Detected as a Result of Police Action,2018/2019,4573
+NC,Crimes Detected as a Result of Police Action,2019/2020,3316
+NC,Crimes Detected as a Result of Police Action,2020/2021,2594
+WC,Crimes Detected as a Result of Police Action,2011/2012,97179
+WC,Crimes Detected as a Result of Police Action,2012/2013,100296
+WC,Crimes Detected as a Result of Police Action,2013/2014,101967
+WC,Crimes Detected as a Result of Police Action,2014/2015,105043
+WC,Crimes Detected as a Result of Police Action,2015/2016,108782
+WC,Crimes Detected as a Result of Police Action,2016/2017,123477
+WC,Crimes Detected as a Result of Police Action,2017/2018,133521
+WC,Crimes Detected as a Result of Police Action,2018/2019,97223
+WC,Crimes Detected as a Result of Police Action,2019/2020,78174
+WC,Crimes Detected as a Result of Police Action,2020/2021,50998
+ZA,Contact Crimes,2021/2022,607163
+EC,Contact Crimes,2021/2022,66581
+FS,Contact Crimes,2021/2022,36356
+GT,Contact Crimes,2021/2022,171026
+KZN,Contact Crimes,2021/2022,103725
+LIM,Contact Crimes,2021/2022,37690
+MP,Contact Crimes,2021/2022,36099
+NW,Contact Crimes,2021/2022,36782
+NC,Contact Crimes,2021/2022,16847
+WC,Contact Crimes,2021/2022,102057
+ZA,Sexual Offences,2021/2022,52694
+EC,Sexual Offences,2021/2022,8404
+FS,Sexual Offences,2021/2022,3416
+GT,Sexual Offences,2021/2022,11178
+KZN,Sexual Offences,2021/2022,9617
+LIM,Sexual Offences,2021/2022,4309
+MP,Sexual Offences,2021/2022,3553
+NW,Sexual Offences,2021/2022,3737
+NC,Sexual Offences,2021/2022,1317
+WC,Sexual Offences,2021/2022,7163
+ZA,Aggravated Robberies,2021/2022,64759
+EC,Aggravated Robberies,2021/2022,5723
+FS,Aggravated Robberies,2021/2022,1876
+GT,Aggravated Robberies,2021/2022,26033
+KZN,Aggravated Robberies,2021/2022,12027
+LIM,Aggravated Robberies,2021/2022,3548
+MP,Aggravated Robberies,2021/2022,5151
+NW,Aggravated Robberies,2021/2022,3071
+NC,Aggravated Robberies,2021/2022,377
+WC,Aggravated Robberies,2021/2022,6953
+ZA,Contact Related Crimes,2021/2022,117505
+EC,Contact Related Crimes,2021/2022,13166
+FS,Contact Related Crimes,2021/2022,6806
+GT,Contact Related Crimes,2021/2022,29399
+KZN,Contact Related Crimes,2021/2022,16512
+LIM,Contact Related Crimes,2021/2022,7768
+MP,Contact Related Crimes,2021/2022,6272
+NW,Contact Related Crimes,2021/2022,6739
+NC,Contact Related Crimes,2021/2022,3793
+WC,Contact Related Crimes,2021/2022,27050
+ZA,Property Related Crimes,2021/2022,362274
+EC,Property Related Crimes,2021/2022,40587
+FS,Property Related Crimes,2021/2022,22900
+GT,Property Related Crimes,2021/2022,91075
+KZN,Property Related Crimes,2021/2022,61808
+LIM,Property Related Crimes,2021/2022,23440
+MP,Property Related Crimes,2021/2022,25176
+NW,Property Related Crimes,2021/2022,25020
+NC,Property Related Crimes,2021/2022,10782
+WC,Property Related Crimes,2021/2022,61486
+ZA,Other Serious Crimes,2021/2022,393821
+EC,Other Serious Crimes,2021/2022,36542
+FS,Other Serious Crimes,2021/2022,21875
+GT,Other Serious Crimes,2021/2022,115972
+KZN,Other Serious Crimes,2021/2022,58294
+LIM,Other Serious Crimes,2021/2022,22673
+MP,Other Serious Crimes,2021/2022,21914
+NW,Other Serious Crimes,2021/2022,21647
+NC,Other Serious Crimes,2021/2022,9942
+WC,Other Serious Crimes,2021/2022,84962
+ZA,Crimes Detected as a Result of Police Action,2021/2022,204990
+EC,Crimes Detected as a Result of Police Action,2021/2022,204990
+FS,Crimes Detected as a Result of Police Action,2021/2022,7759
+GT,Crimes Detected as a Result of Police Action,2021/2022,52608
+KZN,Crimes Detected as a Result of Police Action,2021/2022,30794
+LIM,Crimes Detected as a Result of Police Action,2021/2022,11751
+MP,Crimes Detected as a Result of Police Action,2021/2022,7667
+NW,Crimes Detected as a Result of Police Action,2021/2022,8494
+NC,Crimes Detected as a Result of Police Action,2021/2022,2487
+WC,Crimes Detected as a Result of Police Action,2021/2022,68641
+ZA,Contact Crimes,2022/2023,653659
+ZA,Sexual Offences,2022/2023,53888
+ZA,Aggravated Robberies,2022/2023,68015
+ZA,Contact Related Crimes,2022/2023,118816
+ZA,Property Related Crimes,2022/2023,377690
+ZA,Other Serious Crimes,2022/2023,437038
+ZA,Crimes Detected as a Result of Police Action,2022/2023,228983
+EC,Contact Crimes,2022/2023,71191
+EC,Sexual Offences,2022/2023,8361
+EC,Aggravated Robberies,2022/2023,6433
+EC,Contact Related Crimes,2022/2023,13459
+EC,Property Related Crimes,2022/2023,43066
+EC,Other Serious Crimes,2022/2023,39447
+EC,Crimes Detected as a Result of Police Action,2022/2023,16184
+FS,Contact Crimes,2022/2023,39829
+FS,Sexual Offences,2022/2023,3442
+FS,Aggravated Robberies,2022/2023,1838
+FS,Contact Related Crimes,2022/2023,7123
+FS,Property Related Crimes,2022/2023,24768
+FS,Other Serious Crimes,2022/2023,23735
+FS,Crimes Detected as a Result of Police Action,2022/2023,9816
+GT,Contact Crimes,2022/2023,181837
+GT,Sexual Offences,2022/2023,11160
+GT,Aggravated Robberies,2022/2023,26599
+GT,Contact Related Crimes,2022/2023,29252
+GT,Property Related Crimes,2022/2023,94057
+GT,Other Serious Crimes,2022/2023,128695
+GT,Crimes Detected as a Result of Police Action,2022/2023,59348
+KZN,Contact Crimes,2022/2023,109916
+KZN,Sexual Offences,2022/2023,10160
+KZN,Aggravated Robberies,2022/2023,13372
+KZN,Contact Related Crimes,2022/2023,14749
+KZN,Property Related Crimes,2022/2023,59887
+KZN,Other Serious Crimes,2022/2023,63665
+KZN,Crimes Detected as a Result of Police Action,2022/2023,32189
+LIM,Contact Crimes,2022/2023,42142
+LIM,Sexual Offences,2022/2023,4715
+LIM,Aggravated Robberies,2022/2023,3931
+LIM,Contact Related Crimes,2022/2023,8171
+LIM,Property Related Crimes,2022/2023,24614
+LIM,Other Serious Crimes,2022/2023,26767
+LIM,Crimes Detected as a Result of Police Action,2022/2023,11967
+MP,Contact Crimes,2022/2023,36565
+MP,Sexual Offences,2022/2023,3321
+MP,Aggravated Robberies,2022/2023,5052
+MP,Contact Related Crimes,2022/2023,6024
+MP,Property Related Crimes,2022/2023,26434
+MP,Other Serious Crimes,2022/2023,22758
+MP,Crimes Detected as a Result of Police Action,2022/2023,7262
+NW,Contact Crimes,2022/2023,40642
+NW,Sexual Offences,2022/2023,3888
+NW,Aggravated Robberies,2022/2023,3170
+NW,Contact Related Crimes,2022/2023,7171
+NW,Property Related Crimes,2022/2023,26082
+NW,Other Serious Crimes,2022/2023,23921
+NW,Crimes Detected as a Result of Police Action,2022/2023,10210
+NC,Contact Crimes,2022/2023,18830
+NC,Sexual Offences,2022/2023,1531
+NC,Aggravated Robberies,2022/2023,470
+NC,Contact Related Crimes,2022/2023,4272
+NC,Property Related Crimes,2022/2023,12510
+NC,Other Serious Crimes,2022/2023,11876
+NC,Crimes Detected as a Result of Police Action,2022/2023,2901
+WC,Contact Crimes,2022/2023,112707
+WC,Sexual Offences,2022/2023,7310
+WC,Aggravated Robberies,2022/2023,7150
+WC,Contact Related Crimes,2022/2023,28595
+WC,Property Related Crimes,2022/2023,66272
+WC,Other Serious Crimes,2022/2023,96174
+WC,Crimes Detected as a Result of Police Action,2022/2023,79106
