@@ -1,4 +1,4 @@
-province,district_name,emis_number,centre_number,centre_name,quantile, 2021_progressed_no,2021_wrote_no,2021_archived_no,2021_achived(%), 2022_progressed_no,2022_wrote_no,2022_archived_no,2021_achived(%), 2023_progressed_no,2023_wrote_no,2023_archived_no,2023_achived(%)
+province,district_name,emis_number,centre_number,centre_name,quantile, 2021_progressed_no,2021_wrote_no,2021_archived_no,2021_achived_per, 2022_progressed_no,2022_wrote_no,2022_archived_no,2021_achived_per, 2023_progressed_no,2023_wrote_no,2023_archived_no,2023_achived_per
 EASTERN CAPE,ALFRED NZO EAST,200500039,4241001,A D Tshayingca Secondary School,3,3,326,277,85.0,2,328,258,78.7,4,274,236,86.1
 EASTERN CAPE,ALFRED NZO EAST,200500013,4241002,Baleni Senior Secondary School,1,0,183,116,63.4,14,169,96,56.8,13,125,104,83.2
 EASTERN CAPE,ALFRED NZO EAST,200500315,4241040,Bhovulengwe S S S,99,0,23,19,82.6,0,29,29,100.0,0,113,111,98.2
