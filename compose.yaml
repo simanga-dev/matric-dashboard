@@ -25,17 +25,17 @@ services:
       environment:
         # - MEILI_HOST=http://meilisearch:7700
         - MEILI_NO_ANALYTICS=true
-      volumes:
-        - meili_data:/meili_data
+      # volumes:
+      #   - meili_data:/meili_data
 
-volumes:
-  postgres-data:
-  meili_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ~/Workspace
-      o: bind
+# volumes:
+#   postgres-data:
+#   meili_data:
+#     # driver: local
+#     # driver_opts:
+#     #   type: none
+#     #   device: .
+#     #   o: bind
 
 # The commented out section below is an example of how to define a PostgreSQL
 # database that your application can use. `depends_on` tells Docker Compose to

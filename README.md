@@ -7,4 +7,6 @@
 - [ ] configure use-query to search on melisarch 
 
 
+I love problem solving and working in a challanging enviroment that will help me learn more while improving the organisationn
+
 
