@@ -1,8 +1,7 @@
+"use client";
 
-'use client'
-
-import { AppSidebar } from "@/components/app-sidebar"
-import { Search } from "@/components/search"
+import { AppSidebar } from "@/components/app-sidebar";
+import { Search } from "@/components/search";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,31 +9,28 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb"
-import { Separator } from "@/components/ui/separator"
+} from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
-} from "@/components/ui/sidebar"
-import { UserNav } from "@/components/user-nav"
+} from "@/components/ui/sidebar";
+import { UserNav } from "@/components/user-nav";
 
 export default function Page() {
   return (
     <SidebarProvider>
       <AppSidebar />
       <SidebarInset>
-
         <header className="flex justify-center h-16 shrink-0 items-center gap-2 border-b px-4">
-
           <div className="mx-auto">
-              <Search   />
+            <Search />
           </div>
 
           <div className="">
-              <UserNav />
+            <UserNav />
           </div>
-
 
           {/* <SidebarTrigger className="-ml-1" /> */}
           {/* <Separator orientation="vertical" className="mr-2 h-4" /> */}
@@ -51,7 +47,6 @@ export default function Page() {
           {/*     </BreadcrumbItem> */}
           {/*   </BreadcrumbList> */}
           {/* </Breadcrumb> */}
-
         </header>
 
         <div className="flex flex-1 flex-col gap-4 p-4">
@@ -64,5 +59,5 @@ export default function Page() {
         </div>
       </SidebarInset>
     </SidebarProvider>
-  )
+  );
 }
