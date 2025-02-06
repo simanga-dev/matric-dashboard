@@ -19,4 +19,19 @@ let csv = await Bun.file(process.argv[2]).text();
 
 const jsonData = csvToJson(csv);
 
-console.log(jsonData);
+const url =
+  "http://0.0.0.0:7700/indexes/shools/documents?primaryKey=emis_number";
+
+var x = fetch(url, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    Authorization: "Bearer ZnMMn8fURKp8In2v0qfzhhEOn27jO3egzE-20XZ3uqw",
+  },
+  body: jsonData,
+})
+  .then((response) => response.json())
+  .then((data) => console.log(data))
+  .catch((error) => console.error("Error:", error));
+
+console.log(x);
