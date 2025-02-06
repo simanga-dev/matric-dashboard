@@ -1,3 +1,6 @@
+
+'use client'
+
 import { AppSidebar } from "@/components/app-sidebar"
 import { Search } from "@/components/search"
 import {
@@ -48,6 +51,7 @@ export default function Page() {
           {/*     </BreadcrumbItem> */}
           {/*   </BreadcrumbList> */}
           {/* </Breadcrumb> */}
+
         </header>
 
         <div className="flex flex-1 flex-col gap-4 p-4">
