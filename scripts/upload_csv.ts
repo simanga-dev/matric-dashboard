@@ -10,6 +10,7 @@ function csvToJson(csvString: string) {
       const value = values[j].trim();
       obj[key] = value;
     }
+    obj.id = i;
     jsonData.push(obj);
   }
   return JSON.stringify(jsonData);
@@ -19,14 +20,13 @@ let csv = await Bun.file(process.argv[2]).text();
 
 const jsonData = csvToJson(csv);
 
-const url =
-  "http://0.0.0.0:7700/indexes/shools/documents?primaryKey=emis_number";
+const url = "http://0.0.0.0:7700/indexes/schools/documents?primaryKey=id";
 
-var x = fetch(url, {
+var x = await fetch(url, {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
-    Authorization: "Bearer ZnMMn8fURKp8In2v0qfzhhEOn27jO3egzE-20XZ3uqw",
+    Authorization: "Bearer " process.env.TOKEN,
   },
   body: jsonData,
 })

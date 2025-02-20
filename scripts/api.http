@@ -1,6 +1,6 @@
 ##### first queries
 GET http://0.0.0.0:7700/tasks
-
+Authorization: Bearer {{TOKEN}}
 
 
 
@@ -8,8 +8,48 @@ GET http://0.0.0.0:7700/tasks
 GET http://0.0.0.0:7700/version
 
 
-{"results":[{"uid":0,"indexUid":"shools","status":"failed","type":"documentAdditionOrUpdate","canceledBy":null,"details":{"receivedDocuments":6896,"indexedDocuments":0},"error":{"message":"Document identifier `\"\"` is invalid. A document identifier can be of type integer or string, only composed of alphanumeric characters (a-z A-Z 0-9), hyphens (-) and underscores (_).","code":"invalid_document_id","type":"invalid_request","link":"https://docs.meilisearch.com/errors#invalid_document_id"},"duration":"PT0.015470311S","enqueuedAt":"2025-02-06T14:18:10.827720158Z","startedAt":"2025-02-06T14:18:10.832711909Z","finishedAt":"2025-02-06T14:18:10.84818222Z"}],"total":1,"limit":20,"from":0,"next":null}
 
 
-{"results":[{"uid":0,"indexUid":"shools","status":"failed","type":"documentAdditionOrUpdate","canceledBy":null,"details":{"receivedDocuments":6896,"indexedDocuments":0},"error":{"message":"Document identifier `\"\"` is invalid. A document identifier can be of type integer or string, only composed of alphanumeric characters (a-z A-Z 0-9), hyphens (-) and underscores (_).","code":"invalid_document_id","type":"invalid_request","link":"https://docs.meilisearch.com/errors#invalid_document_id"},"duration":"PT0.015470311S","enqueuedAt":"2025-02-06T14:18:10.827720158Z","startedAt":"2025-02-06T14:18:10.832711909Z","finishedAt":"2025-02-06T14:18:10.84818222Z"}],"total":1,"limit":20,"from":0,"next":null}
-# @_END
+
+{"count":616,"name":"hendry","age":49}
+
+#####
+GET https://api.agify.io?name=Hendry
+
+
+
+
+### New amazing request
+GET https://jsonplaceholder.typicode.com/posts
+
+
+
+
+#### This query make sure I win
+POST http://localhost:7700/indexes/shools/search
+Content-Type: application/json
+Authorization: Bearer {{TOKEN}}
+{
+  "q": "s"
+}
+
+
+
+##### first queries
+GET http://0.0.0.0:7700/tasks
+Authorization: Bearer {{TOKEN}}
+
+
+##### first queries
+GET http://0.0.0.0:7700/keys
+Authorization: Bearer {{TOKEN}}
+
+
+#######
+POST http://localhost:7700/indexes/schools/search
+Authorization: Bearer {{TOKEN}}
+Content-Type: application/json
+
+{
+"q": "sincobi"
+}
