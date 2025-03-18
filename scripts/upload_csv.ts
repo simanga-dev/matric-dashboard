@@ -26,7 +26,7 @@ var x = await fetch(url, {
   method: "POST",
   headers: {
     "Content-Type": "application/json",
-    Authorization: "Bearer " process.env.TOKEN,
+    Authorization: "Bearer " + process.env.TOKEN,
   },
   body: jsonData,
 })
