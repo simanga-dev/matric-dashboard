@@ -94,7 +94,7 @@ export function Search() {
 
   return (
     <>
-      <div className="flex">
+      <div className="mx-auto flex">
         <Input
           onClick={() => setOpen((open) => !open)}
           type="search"
