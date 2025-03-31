@@ -1,3 +1,3 @@
 export default function Page() {
-  return <div> is the layout auto magical infer</div>;
+  return <div>Main page for all the school in South Africa</div>;
 }

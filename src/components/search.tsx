@@ -4,7 +4,6 @@ import React from "react";
 
 import {
   Command,
-  CommandDialog,
   CommandEmpty,
   CommandGroup,
   CommandInput,
@@ -12,11 +11,10 @@ import {
   CommandList,
 } from "./ui/command";
 
-import { IconSearch } from "@tabler/icons-react";
-import { Input } from "./ui/input";
+import Link from "next/link";
+import { IconSchool } from "@tabler/icons-react";
 
 import { useQuery } from "@tanstack/react-query";
-import { promises } from "dns";
 
 interface SchoolSearchResult {
   id: number;
@@ -60,13 +58,13 @@ export function Search() {
   const [open, setOpen] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
 
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
-
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "/" && e.ctrlKey) {
         e.preventDefault();
         setOpen((open) => !open);
+      } else if (e.key === "Escape") {
+        setOpen(false);
       }
     };
     document.addEventListener("keydown", down);
@@ -94,47 +92,41 @@ export function Search() {
   });
 
   return (
-    <>
-      <div className="relative mx-auto inline-flex">
-        <Input
-          id="search"
-          className="bg-border h-8 w-fit min-w-65 border-transparent ps-9 pe-9"
+    <div className="relative mx-auto inline-flex">
+      <Command shouldFilter={false} className="bg-border border-b-white">
+        <CommandInput
+          className="bg-border h-8 w-fit min-w-80 border-b border-transparent ps-9 pe-9"
+          placeholder="Type a command or search..."
           onClick={() => setOpen((open) => !open)}
-          aria-label="Search"
+          onChangeCapture={(e) => setSearchTerm(e.target.value)}
         />
-        <div className="text-muted-foreground pointer-events-none absolute inset-y-0 start-0 flex items-center justify-center ps-2 peer-disabled:opacity-50">
-          <IconSearch size={20} aria-hidden="true" />
-        </div>
         <div className="text-muted-foreground pointer-events-none absolute inset-y-0 end-0 flex items-center justify-center pe-2">
           <kbd className="bg-background text-muted-foreground/70 inline-flex size-5 max-h-full items-center justify-center rounded px-1 font-[inherit] text-[0.625rem] font-medium shadow-xs">
             /
           </kbd>
         </div>
-      </div>
 
-      <CommandDialog open={open} onOpenChange={setOpen}>
-        <div className="p-2">
-          <Input
-            onChange={(e) => setSearchTerm(e.target.value)}
-            type="text"
-            placeholder="Search school"
-          />
-
-          {schoolQuery.data &&
-            schoolQuery.data.map((todo) => (
-              <li key={todo.id}>{todo.centre_name}</li>
-            ))}
-
-          {/* { */}
-          {/*   if(schoolQuery.data) */}
-          {/* { */}
-          {/* schoolQuery.data.map((todo) => ( */}
-          {/*   <li key={todo.id}>{todo.id}</li> */}
-          {/* )})} */}
-
-          <h1>Have something amazing her</h1>
-        </div>
-      </CommandDialog>
-    </>
+        <CommandList
+          className={`bg-border absolute start-0 end-0 top-10 rounded-lg ${open ? "" : "hidden"}`}
+          onBlur={() => setOpen(false)}
+        >
+          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandGroup heading="Search School">
+            {schoolQuery.data &&
+              schoolQuery.data.map((todo) => (
+                <CommandItem key={todo.id}>
+                  <IconSchool />
+                  <Link
+                    onClick={() => setOpen(false)}
+                    href={`/dashboard/schools/${todo.emis_number}`}
+                  >
+                    {todo.centre_name}
+                  </Link>
+                </CommandItem>
+              ))}
+          </CommandGroup>
+        </CommandList>
+      </Command>
+    </div>
   );
 }
