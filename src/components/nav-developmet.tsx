@@ -1,41 +1,39 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-
+import * as React from "react";
 import { type Icon } from "@tabler/icons-react";
 
 import {
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "~/components/ui/sidebar";
-import Link from "next/link";
 
-export function NavMain({
+export function NavDevelopment({
   items,
+  ...props
 }: {
   items: {
     title: string;
     url: string;
-    icon?: Icon;
+    icon: Icon;
   }[];
-}) {
-  const pathname = usePathname();
-  console.log(pathname);
+} & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   return (
-    <SidebarGroup>
-      <SidebarGroupContent className="flex flex-col gap-2">
+    <SidebarGroup {...props}>
+      <SidebarGroupLabel>Development</SidebarGroupLabel>
+      <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton
-                isActive={pathname === item.url}
-                tooltip={item.title}
-              >
-                {item.icon && <item.icon />}
-                <Link href={item.url}>{item.title}</Link>
+              <SidebarMenuButton className="text-orange-600" asChild>
+                <a href={item.url}>
+                  <item.icon />
+                  <span>{item.title}</span>
+                </a>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}

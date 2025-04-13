@@ -14,16 +14,21 @@ export const createTable = sqliteTableCreator(
   (name) => `matric-dashboard_${name}`,
 );
 
-export const posts = createTable(
-  "post",
+export const school = createTable(
+  "school",
   (d) => ({
     id: d.integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
-    name: d.text({ length: 256 }),
+    natemis: d.integer({ mode: "number" }),
+    quantile: d.integer({ mode: "number" }),
+    centre_number: d.integer({ mode: "number" }),
+    province: d.text({ length: 256 }),
+    official_institution_name: d.text({ length: 256 }),
+    district_name: d.text({ length: 256 }),
     createdAt: d
       .integer({ mode: "timestamp" })
       .default(sql`(unixepoch())`)
       .notNull(),
     updatedAt: d.integer({ mode: "timestamp" }).$onUpdate(() => new Date()),
   }),
-  (t) => [index("name_idx").on(t.name)],
+  (t) => [index("natemis").on(t.natemis)],
 );

@@ -30,17 +30,14 @@ Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/ver
 
 I need to complete this tomorow at work
 
-- [x] Fix the header to be fixed at the top when you scroll so only the main section can scroll
-- [x] Improve the search button to follow the same design button
-- [ ] Resarch to see if you can call a next server action on type
-- [ ] Add github action
-- [ ] Add docker contatiner
-- [ ] Add SQL Databasae
-- [x] Prepare the school database to be use on sql lite on the xcell spread
-sheed
-- [ ] text
-- [ ] Dark theme switcher.... should be able to switch between dark theme and
-light theme
+- [x] Fix the header to remain fixed at the top when scrolling, allowing only the main section to scroll
+- [x] Improve the search button to match the design of the other buttons
+- [ ] Research to determine if a server action can be called on type
+- [ ] Add GitHub action
+- [ ] Add Docker container
+- [ ] Add SQL Database
+- [x] Prepare the school database to be used in SQLite on the Excel spreadsheet
+- [ ] Implement dark theme switcher functionality to allow switching between dark and light themes
 
 
 
