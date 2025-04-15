@@ -39,6 +39,8 @@ I need to complete this tomorow at work
 - [x] Prepare the school database to be used in SQLite on the Excel spreadsheet
 - [ ] Implement dark theme switcher functionality to allow switching between dark and light themes
 
+lets test this merge
+
 
 
 
