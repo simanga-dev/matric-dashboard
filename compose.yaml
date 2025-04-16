@@ -1,12 +1,15 @@
 services:
   web-app:
+    container_name: nextjs-web-application
     build:
       context: .
     environment:
       NODE_ENV: production
-      DATABASE_URL: sqlite-db:/db-data/db.sqlite
+      DATABASE_URL: ${DATABASE_URL}
+      MEILI_URL: ${MEILI_URL}
+      MEILI_TOKEN: ${MEILI_TOKEN}
     depends_on:
-      - sqlite-db
+      - meilisearch
     ports:
       - 3000:3000
   meilisearch:
@@ -18,11 +21,7 @@ services:
       # user: "${UID}:${GID}"
       environment:
         - MEILI_NO_ANALYTICS=true
-        - MEILI_MASTER_KEY=${TOKEN}
-  sqlite-db:
-    image: nouchka/sqlite3:latest
-    volumes:
-      - db-data:/data
+        - MEILI_MASTER_KEY=${MEILI_TOKEN}
 volumes:
   db-data:
 # secrets:

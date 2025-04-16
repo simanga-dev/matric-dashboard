@@ -37,29 +37,6 @@ interface SchoolSearchResult {
   "2023_achived_per": number;
 }
 
-const transformToSchoolSearchResult = (hit: any): SchoolSearchResult => ({
-  id: hit.id ?? 0,
-  province: hit.province || "",
-  district_name: hit.district_name || "",
-  emis_number: hit.emis_number || "",
-  centre_number: hit.centre_number || "",
-  centre_name: hit.centre_name || "",
-  quantile: hit.quantile || "",
-  "2021_progressed_no": Number(hit["2021_progressed_no"]) || 0,
-  "2021_wrote_no": Number(hit["2021_wrote_no"]) || 0,
-  "2021_archived_no": Number(hit["2021_archived_no"]) || 0,
-  "2021_achived_per": Number(hit["2021_achived_per"]) || 0,
-  "2022_progressed_no": Number(hit["2022_progressed_no"]) || 0,
-  "2022_wrote_no": Number(hit["2022_wrote_no"]) || 0,
-  "2022_archived_no": Number(hit["2022_archived_no"]) || 0,
-  "2023_progressed_no": Number(hit["2023_progressed_no"]) || 0,
-  "2023_wrote_no": Number(hit["2023_wrote_no"]) || 0,
-  "2023_archived_no": Number(hit["2023_archived_no"]) || 0,
-  "2023_achived_per": Number(hit["2023_achived_per"]) || 0,
-});
-
-// Custom hook to debounce a value
-
 export function Search() {
   const [open, setOpen] = React.useState(false);
   const [searchTerm, setSearchTerm] = React.useState("");
@@ -80,24 +57,15 @@ export function Search() {
   const schoolQuery = useQuery({
     queryKey: ["search-school", searchTerm],
     queryFn: async (): Promise<SchoolSearchResult[] | null> => {
-      // if (searchTerm === '') return [] // Avoid making the request if the searchTerm is empty
-      const url = "http://localhost:7700/indexes/schools/search";
-      const response = await fetch(url, {
+      const response = await fetch("api/schools", {
         method: "POST",
         headers: {
-          Authorization: `Bearer Oci4upBIoWH3PCCXdHKQ6KisJtuDrq_1gUc6u8IvXJ8`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ q: searchTerm }),
       });
-
       const res = await response.json();
-
-      const results: SchoolSearchResult[] = res.hits.map(
-        transformToSchoolSearchResult,
-      );
-
-      return results;
+      return res.data;
     },
   });
 

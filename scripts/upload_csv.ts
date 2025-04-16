@@ -26,7 +26,7 @@
 //   method: "POST",
 //   headers: {
 //     "Content-Type": "application/json",
-//     Authorization: "Bearer " + process.env.TOKEN,
+//     Authorization: "Bearer " + process.env.MEILI_TOKEN,
 //   },
 //   body: jsonData,
 // })

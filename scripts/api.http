@@ -1,6 +1,6 @@
 ##### first queries
 GET http://0.0.0.0:7700/tasks
-Authorization: Bearer {{TOKEN}}
+Authorization: Bearer {{MEILI_TOKEN}}
 
 
 
@@ -28,7 +28,7 @@ GET https://jsonplaceholder.typicode.com/posts
 #### This query make sure I win
 POST http://localhost:7700/indexes/shools/search
 Content-Type: application/json
-Authorization: Bearer {{TOKEN}}
+Authorization: Bearer {{MEILI_TOKEN}}
 {
   "q": "s"
 }
@@ -37,17 +37,17 @@ Authorization: Bearer {{TOKEN}}
 
 ##### first queries
 GET http://0.0.0.0:7700/tasks
-Authorization: Bearer {{TOKEN}}
+Authorization: Bearer {{MEILI_TOKEN}}
 
 
 ##### first queries
 GET http://0.0.0.0:7700/keys
-Authorization: Bearer {{TOKEN}}
+Authorization: Bearer {{MEILI_TOKEN}}
 
 
 #######
 POST http://localhost:7700/indexes/schools/search
-Authorization: Bearer {{TOKEN}}
+Authorization: Bearer {{MEILI_TOKEN}}
 Content-Type: application/json
 
 {
