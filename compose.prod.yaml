@@ -1,0 +1,36 @@
+services:
+  web-app:
+    image: ghcr.io/simanga-dev/matric-dashboard
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=sqlite:/data/db.sqlite
+      - MEILI_URL=http://meilisearch:7700
+    depends_on:
+      - meilisearch
+    secrets:
+      - master-key-two
+    ports:
+      - 3000:3000
+    volumes:
+      - data:/data  # Mount to a directory
+    command: /bin/sh -c "export MEILI_TOKEN=$$(cat /run/secrets/master-key-two) && exec bun start"
+  meilisearch:
+     image: getmeili/meilisearch:v1.7.3
+     restart: always
+     ports:
+       - "7700:7700"
+     user: "${UID}:${GID}"
+     secrets:
+       - master-key-two
+     environment:
+        - MEILI_NO_ANALYTICS=true
+     volumes:
+      - data:/meili_data  # Separate volume for MeiliSearch
+     command: /bin/sh -c "export MEILI_MASTER_KEY=$$(cat /run/secrets/master-key-two) && exec meilisearch"
+volumes:
+  data:
+secrets:
+  master-key-two:
+    external: true
+
+
