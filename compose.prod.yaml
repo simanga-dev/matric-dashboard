@@ -1,6 +1,10 @@
 services:
   web-app:
     image: ghcr.io/simanga-dev/matric-dashboard
+    labels:
+      - "traefik.http.routers.carpentry.rule=Host(`matric.simanga.dev`)"
+      - "traefik.http.services.matric.loadbalancer.server.port=3000"
+    restart: always
     environment:
       - NODE_ENV=production
       - DATABASE_URL=sqlite:/data/db.sqlite
@@ -9,16 +13,19 @@ services:
       - meilisearch
     secrets:
       - master-key-two
-    ports:
-      - 3000:3000
+    # ports:
+    #   - 3000:3000
     volumes:
       - data:/data  # Mount to a directory
+    deploy:
+          update_config:
+            order: start-first
     command: /bin/sh -c "export MEILI_TOKEN=$$(cat /run/secrets/master-key-two) && exec bun start"
   meilisearch:
      image: getmeili/meilisearch:v1.7.3
      restart: always
-     ports:
-       - "7700:7700"
+     # ports:
+     #   - "7700:7700"
      user: "${UID}:${GID}"
      secrets:
        - master-key-two
@@ -32,5 +39,3 @@ volumes:
 secrets:
   master-key-two:
     external: true
-
-
