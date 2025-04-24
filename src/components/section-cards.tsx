@@ -31,7 +31,8 @@ export function SectionCards() {
             Trending up this month <IconTrendingUp className="size-4" />
           </div>
           <div className="text-muted-foreground">
-            Visitors for the last 6 months
+            {/* Visitors for the last 6 months */}
+            Cooking somthing Amazing
           </div>
         </CardFooter>
       </Card>
