@@ -1,9 +1,36 @@
 services:
+  traefik:
+      image: traefik:v3.2
+      command:
+        - "--providers.docker"
+        - "--providers.docker.exposedbydefault=false"
+        - "--entryPoints.websecure.address=:443"
+        - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+        - "--certificatesresolvers.myresolver.acme.email=info@simanga.dev"
+        - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+        - "--entrypoints.web.address=:80"
+        - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+        - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      ports:
+        - mode: host
+          protocol: tcp
+          published: 80
+          target: 80
+        - mode: host
+          protocol: tcp
+          published: 443
+          target: 443
+      volumes:
+        - letsencrypt:/letsencrypt
+        - /var/run/docker.sock:/var/run/docker.sock
   web-app:
     image: ghcr.io/simanga-dev/matric-dashboard:latest
     labels:
-      - "traefik.http.routers.carpentry.rule=Host(`matric.simanga.dev`)"
-      - "traefik.http.services.matric.loadbalancer.server.port=3000"
+       - "traefik.enable=true"
+       - "traefik.http.services.matric.loadbalancer.server.port=3000"
+       - "traefik.http.routers.matric.rule=Host(`matric.simanga.dev`)"
+       - "traefik.http.routers.matric.entrypoints=websecure"
+       - "traefik.http.routers.matric.tls.certresolver=myresolver"
     restart: always
     environment:
       - NODE_ENV=production

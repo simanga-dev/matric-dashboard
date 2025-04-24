@@ -1,9 +1,0 @@
-services:
- reverse-proxy:
-    image: traefik:v3.2
-    command: --api.insecure=true --providers.docker
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
