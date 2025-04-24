@@ -1,6 +1,6 @@
 services:
   web-app:
-    image: ghcr.io/simanga-dev/matric-dashboard
+    image: ghcr.io/simanga-dev/matric-dashboard:latest
     labels:
       - "traefik.http.routers.carpentry.rule=Host(`matric.simanga.dev`)"
       - "traefik.http.services.matric.loadbalancer.server.port=3000"
