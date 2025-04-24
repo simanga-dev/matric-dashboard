@@ -30,7 +30,7 @@ services:
     restart: always
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=sqlite:/data/db.sqlite
+      - DATABASE_URL=file:/data/db.sqlite
       - MEILI_URL=http://meilisearch:7700
     depends_on:
       - meilisearch
