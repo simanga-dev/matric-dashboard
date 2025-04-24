@@ -93,6 +93,6 @@ jobs:
             name: matric-dashboard
             file: compose.prod.yaml
             host: ${{ secrets.HOST }}
-            user: deploy
+            user: debloy
             ssh_key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
             env_file: ./envfile
