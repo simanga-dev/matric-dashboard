@@ -4,7 +4,7 @@ import { SidebarTrigger } from "~/components/ui/sidebar";
 
 import { Search } from "~/components/search";
 import { useTheme } from "~/context/theme-context";
-import { IconCheck } from "@tabler/icons-react";
+import { IconCheck, IconMoon, IconSun } from "@tabler/icons-react";
 import { cn } from "~/lib/utils";
 
 export function SiteHeader() {
@@ -21,20 +21,22 @@ export function SiteHeader() {
 
         <Search />
 
-        <Button
-          onClick={() => setTheme("dark")}
-          variant="ghost"
-          size="sm"
-          className="hidden sm:flex"
-        >
-          Dark
-          <IconCheck
-            size={14}
-            className={cn("ml-auto", theme !== "dark" && "hidden")}
-          />
-        </Button>
-
         <div className="ml-auto flex items-center gap-2">
+          <Button
+            onClick={() => {
+              theme === "dark" ? setTheme("light") : setTheme("dark");
+            }}
+            variant="ghost"
+            size="sm"
+            className="hidden sm:flex"
+          >
+            {theme === "dark" ? (
+              <IconSun stroke={2} />
+            ) : (
+              <IconMoon stroke={2} />
+            )}
+          </Button>
+
           <Button variant="ghost" asChild size="sm" className="hidden sm:flex">
             <a
               href="https://github.com/shadcn-ui/ui/tree/main/apps/v4/app/(examples)/dashboard"
