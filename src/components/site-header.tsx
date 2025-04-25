@@ -4,8 +4,7 @@ import { SidebarTrigger } from "~/components/ui/sidebar";
 
 import { Search } from "~/components/search";
 import { useTheme } from "~/context/theme-context";
-import { IconCheck, IconMoon, IconSun } from "@tabler/icons-react";
-import { cn } from "~/lib/utils";
+import { IconMoon, IconSun } from "@tabler/icons-react";
 
 export function SiteHeader() {
   const { theme, setTheme } = useTheme();
@@ -23,9 +22,9 @@ export function SiteHeader() {
 
         <div className="ml-auto flex items-center gap-2">
           <Button
-            onClick={() => {
-              theme === "dark" ? setTheme("light") : setTheme("dark");
-            }}
+            onClick={() =>
+              theme === "dark" ? setTheme("light") : setTheme("dark")
+            }
             variant="ghost"
             size="sm"
             className="hidden sm:flex"

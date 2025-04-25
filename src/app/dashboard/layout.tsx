@@ -7,7 +7,6 @@ import { SiteHeader } from "~/components/site-header";
 import { SidebarInset, SidebarProvider } from "~/components/ui/sidebar";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { FontProvider } from "~/context/font-context";
 import { ThemeProvider } from "~/context/theme-context";
 
 const queryClient = new QueryClient();
