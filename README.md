@@ -1,4 +1,4 @@
-# Matric Dashbaord
+# Matric Dashboard
 
 This is a all in one dashbard to get everything about Education data in South
 AFrica. This datshboard collect all data sourcee for schools in soucth africa
