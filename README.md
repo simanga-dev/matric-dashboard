@@ -1,38 +1,21 @@
 # Matric Dashboard
 
-This is a all in one dashbard to get everything about Education data in South
-AFrica. This datshboard collect all data sourcee for schools in soucth africa
-such as
+This is an all-in-one dashboard to access all information about education data
+in South Africa. This dashboard collects data from various sources for schools
+in South Africa, including:
 
-- Number of School
+- Number of Schools
 - Pass Rate
-- Conditon of school
-- Geo Location for schol
+- School Conditions
+- Geo Location for Schools
 
-## What's next? How do I make an app with this?
+## What's next? How can I create an app using this?
 
+#### To-do
 
-
-#### Todo
-
-- [ ] Update the top card to show information comming from database
-- [ ] Show tatal number of students
-- [ ] Show total number of school
-- [ ] Total Number of
-- [ ] Show tables of school
-- [ ] Show passrate per year from 2008 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- [ ] Update the top card to display information coming from the database
+- [ ] Show total number of students
+- [ ] Show total number of schools
+- [ ] Show total number of...
+- [ ] Display tables of schools
+- [ ] Show pass rate per year from 2008
