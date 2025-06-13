@@ -18,8 +18,8 @@ services:
       container_name: search-meilisearch
       image: getmeili/meilisearch:v1.7.3
       restart: always
-      # ports:
-      #   - "7700:7700"
+      ports:
+        - "7700:7700"
       # user: "${UID}:${GID}"
       environment:
         - MEILI_NO_ANALYTICS=true
