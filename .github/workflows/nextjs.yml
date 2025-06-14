@@ -87,6 +87,16 @@ jobs:
           run: |
             echo "GIT_COMMIT_HASH=${{ github.sha }}" >> ./envfile
 
+        - name: Remove existing Docker network (if any)
+          uses: appleboy/ssh-action@v1.0.3
+          with:
+            host: ${{ secrets.HOST }}
+            username: debloy
+            key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+            script: |
+              docker network inspect matric-dashboard_default &>/dev/null && \
+                docker network rm matric-dashboard_default || true
+
         - name: Docker Stack Deploy
           uses: cssnr/stack-deploy-action@v1
           with:
