@@ -27,7 +27,7 @@ services:
       - "traefik.http.services.matric.loadbalancer.server.port=3000"
       # - "traefik.http.routers.matric.entrypoints=websecure"
       # - "traefik.http.routers.matric.tls.certresolver=myresolver"
-    restart: always
+    # restart: always
     environment:
       - NODE_ENV=production
       - DATABASE_URL=file:/data/db.sqlite
@@ -46,7 +46,7 @@ services:
     command: /bin/sh -c "export MEILI_TOKEN=$$(cat /run/secrets/master-key-two) && exec bun start"
   meilisearch:
      image: getmeili/meilisearch:v1.7.3
-     restart: always
+     # restart: always
      # ports:
      #   - "7700:7700"
      user: "${UID}:${GID}"
