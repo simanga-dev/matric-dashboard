@@ -13,9 +13,10 @@ in South Africa, including:
 
 #### To-do
 
-- [ ] Update the top card to display information coming from the database
-- [ ] Show total number of students
-- [ ] Show total number of schools
-- [ ] Show total number of...
+- [x] Update the top card to display information coming from the database
+- [x] Matric Pass Rate
+- [x] Show total number of students
+- [x] Show total number of schools
+- [x] Show total number of school with 100% pass rate
 - [ ] Display tables of schools
 - [ ] Show pass rate per year from 2008
