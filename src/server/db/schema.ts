@@ -42,7 +42,7 @@ export const marks = createTable("marks", (d) => ({
   id: d.integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
   number_progressed: d.integer({ mode: "number" }),
   total_wrote: d.integer({ mode: "number" }),
-  total_archieved: d.integer({ mode: "number" }),
+  total_archived: d.integer({ mode: "number" }),
   percentage_archived: d.integer({ mode: "number" }),
   createdAt: d
     .integer({ mode: "timestamp" })

@@ -39,7 +39,7 @@ export async function create() {
           year: 2021,
           number_progressed: record[" 2021_progressed_no"],
           total_wrote: record["2021_wrote_no"],
-          total_archieved: record["2021_archived_no"], // use correct field name
+          total_archived: record["2021_archived_no"], // use correct field name
           percentage_archived: record["2021_achived_per"],
         });
 
@@ -48,7 +48,7 @@ export async function create() {
           year: 2022,
           number_progressed: record[" 2022_progressed_no"],
           total_wrote: record["2022_wrote_no"],
-          total_archieved: record["2022_archived_no"], // use correct field name
+          total_archived: record["2022_archived_no"], // use correct field name
           percentage_archived: 0,
         });
 
@@ -57,7 +57,7 @@ export async function create() {
           year: 2023,
           number_progressed: record[" 2023_progressed_no"],
           total_wrote: record["2023_wrote_no"],
-          total_archieved: record["2023_archived_no"], // use correct field name
+          total_archived: record["2023_archived_no"], // use correct field name
           percentage_archived: record["2023_achived_per"],
         });
       }

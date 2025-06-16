@@ -142,7 +142,7 @@ async function PassRateCard() {
           Trending up this year <IconTrendingUp className="size-4" />
         </div>
         <div className="text-muted-foreground">
-          Learnes who pass their Matric Results in 2023
+          Learners who pass their Matric results in 2023
         </div>
       </CardFooter>
     </Card>
