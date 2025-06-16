@@ -1,0 +1,1 @@
+ALTER TABLE `matric-dashboard_marks` RENAME COLUMN "total_archieved" TO "total_archived";
