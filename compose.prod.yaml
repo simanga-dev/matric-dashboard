@@ -39,7 +39,7 @@ services:
     # ports:
     #   - 3000:3000
     volumes:
-      - data:/data  # Mount to a directory
+      - /home/simanga/data:/data
     deploy:
           update_config:
             order: start-first
