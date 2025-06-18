@@ -20,7 +20,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
   web-app:
-    image: ghcr.io/simanga-dev/matric-dashboard:${COMMIT_HASH}
+    image: ghcr.io/simanga-dev/matric-dashboard:${GIT_COMMIT_HASH}
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.matric.rule=Host(`matric.simanga.dev`)"
