@@ -30,7 +30,7 @@ services:
     # restart: always
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=file:/data/db.sqlite
+      - DATABASE_URL=file:/usr/src/app/db.sqlite
       - MEILI_URL=http://meilisearch:7700
     depends_on:
       - meilisearch
@@ -39,7 +39,7 @@ services:
     # ports:
     #   - 3000:3000
     volumes:
-      - /home/simanga-dev/data:/data
+      - /home/simanga-dev/data:/usr/src/app
     deploy:
           update_config:
             order: start-first
