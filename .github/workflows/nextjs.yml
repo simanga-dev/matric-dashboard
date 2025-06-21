@@ -95,8 +95,6 @@ jobs:
             key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
             script: |
               echo ${{ secrets.GH_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-              docker pull  ghcr.io/simanga-dev/matric-dashboard:${{ github.sha }}
-        
 
         - name: Docker Stack Deploy
           uses: cssnr/stack-deploy-action@v1
