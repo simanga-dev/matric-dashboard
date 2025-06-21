@@ -39,7 +39,7 @@ services:
     # ports:
     #   - 3000:3000
     volumes:
-      - /home/simanga-dev/data:/usr/src/app
+      - data:/usr/src/app
     deploy:
           update_config:
             order: start-first
