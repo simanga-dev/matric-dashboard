@@ -94,7 +94,7 @@ jobs:
             username: debloy
             key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
             script: |
-              echo ${{ secrets.GH_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+              echo ${{ secrets.GH_TOKEN }} | docker login ghcr.io -u ${{ github.sha }} --password-stdin
 
         - name: Docker pull image
           uses: appleboy/ssh-action@v1.0.3
@@ -103,7 +103,7 @@ jobs:
             username: debloy
             key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
             script: |
-              docker pull ghcr.io/simanga-dev/matric-dashboard:${{ github.actor }}
+              docker pull ghcr.io/simanga-dev/matric-dashboard:${{ github.sha }}
 
 
         - name: Docker Stack Deploy
