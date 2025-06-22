@@ -55,7 +55,7 @@ services:
      environment:
         - MEILI_NO_ANALYTICS=true
      volumes:
-      - data:/meilisearch
+      - data:/meili_data  # Separate volume for MeiliSearch
      command: /bin/sh -c "export MEILI_MASTER_KEY=$$(cat /run/secrets/master-key-two) && exec meilisearch"
 volumes:
   data:
