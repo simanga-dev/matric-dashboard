@@ -59,6 +59,10 @@ services:
      command: /bin/sh -c "export MEILI_MASTER_KEY=$$(cat /run/secrets/master-key-two) && exec meilisearch"
 volumes:
   data:
-secrets:
+    driver: local
+    driver_opts:
+      type: none
+      device: /home/simanga-dev/data
+      o: bind
   master-key-two:
     external: true
