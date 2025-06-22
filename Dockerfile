@@ -69,4 +69,4 @@ COPY --from=build /usr/src/app/. ./.
 EXPOSE 3000
 
 # Run the application.
-CMD ["bun", "start"]
+CMD ["bun", "run", "start"]
