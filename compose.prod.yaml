@@ -30,7 +30,7 @@ services:
     # restart: always
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=file:/usr/src/app/db.sqlite
+      - DATABASE_URL=file:/web-app/db.sqlite
       - MEILI_URL=http://meilisearch:7700
     depends_on:
       - meilisearch
@@ -39,7 +39,7 @@ services:
     # ports:
     #   - 3000:3000
     volumes:
-      - data:/usr/src/app
+      - data:/web-app
     deploy:
           update_config:
             order: start-first
@@ -55,7 +55,7 @@ services:
      environment:
         - MEILI_NO_ANALYTICS=true
      volumes:
-      - data:/meili_data  # Separate volume for MeiliSearch
+      - data:/meilisearch
      command: /bin/sh -c "export MEILI_MASTER_KEY=$$(cat /run/secrets/master-key-two) && exec meilisearch"
 volumes:
   data:
