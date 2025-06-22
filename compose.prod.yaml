@@ -64,5 +64,6 @@ volumes:
       type: none
       device: /home/simanga-dev/data
       o: bind
+secrets:
   master-key-two:
     external: true
