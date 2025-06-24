@@ -5,8 +5,13 @@ import { SectionCards } from "~/components/section-cards";
 export const dynamic = "force-dynamic";
 
 import data from "./data.json";
+import Q from "./queries";
 
-export default function Page() {
+export default async function Page() {
+
+  const school_data = await Q.GetSchools();
+
+
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
@@ -15,7 +20,7 @@ export default function Page() {
           <div className="px-4 lg:px-6">
             <ChartAreaInteractive />
           </div>
-          <DataTable data={data} />
+          <DataTable data={school_data} />
         </div>
       </div>
     </div>

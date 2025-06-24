@@ -1,26 +1,17 @@
 import { db } from "~/server/db";
 import { z } from "zod";
 import { sql } from "drizzle-orm";
-
-const SchoolCardSchema = z.object({
-  total_school_2023: z.number(),
-  total_school_2022: z.number(),
-  trend_schools_2023: z.number(),
-  trend_percentage_2023: z.number().nullable(),
-});
-
-const LearnerCardSchema = z.object({
-  total_learners_2023: z.number(),
-  total_learners_2022: z.number(),
-  trend_learners_2023: z.number(),
-  trend_percentage_2023: z.number().nullable(),
-});
-
-type SchoolTrends = z.infer<typeof SchoolCardSchema>;
-type LearnerTrends = z.infer<typeof LearnerCardSchema>;
+import {
+  LearnerCardSchema,
+  SchoolCardSchema,
+  SchoolSchema,
+} from "~/lib/schemas";
+import { school } from "~/server/db/schema";
 
 const Q = {
-  GetMatricPassRate: async function (): Promise<LearnerTrends | null> {
+  GetMatricPassRate: async function (): Promise<z.infer<
+    typeof LearnerCardSchema
+  > | null> {
     try {
       const result = await db.run(sql`
         SELECT
@@ -64,7 +55,9 @@ const Q = {
     }
   },
 
-  GetTotalLearner: async function (): Promise<LearnerTrends | null> {
+  GetTotalLearner: async function (): Promise<z.infer<
+    typeof LearnerCardSchema
+  > | null> {
     try {
       const result = await db.run(sql`
         SELECT
@@ -95,7 +88,9 @@ const Q = {
     }
   },
 
-  GetTopSchool: async function (): Promise<SchoolTrends | null> {
+  GetTopSchool: async function (): Promise<z.infer<
+    typeof SchoolCardSchema
+  > | null> {
     try {
       const result = await db.run(sql`
       SELECT
@@ -124,7 +119,9 @@ const Q = {
     }
   },
 
-  Examcenters: async function (): Promise<SchoolTrends | null> {
+  Examcenters: async function (): Promise<z.infer<
+    typeof SchoolCardSchema
+  > | null> {
     try {
       const result = await db.run(sql`
         SELECT
@@ -149,6 +146,24 @@ const Q = {
       const row = result.rows?.[0];
       const parsed = SchoolCardSchema.safeParse(row);
       return parsed.success ? parsed.data : null;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  },
+
+  GetSchools: async function (): Promise<
+    z.infer<typeof SchoolSchema>[] | null
+  > {
+    try {
+      const db_school = await db.select().from(school);
+      // Use z.array(SchoolSchema) to validate and parse the db_school array
+      const parsedSchools = z.array(SchoolSchema).safeParse(db_school);
+      if (!parsedSchools.success) {
+        console.log(parsedSchools.error);
+        return null;
+      }
+      return parsedSchools.data;
     } catch (error) {
       console.log(error);
       return null;
