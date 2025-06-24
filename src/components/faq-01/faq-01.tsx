@@ -7,7 +7,7 @@ import {
 
 const faq = [
   {
-    question: "Still cooking",
+    question: "What is your return policy?",
     answer:
       "You can return unused items in their original packaging within 30 days for a refund or exchange. Contact support for assistance.",
   },
@@ -33,12 +33,12 @@ const faq = [
   },
 ];
 
-export default function Page() {
+const FAQ01 = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center px-6 py-12">
+    <div className="min-h-screen flex items-center justify-center px-6 py-12">
       <div className="max-w-xl">
-        <h2 className="text-4xl !leading-[1.15] font-bold tracking-tight md:text-5xl">
-          Shoool Page,
+        <h2 className="text-4xl md:text-5xl !leading-[1.15] font-bold tracking-tight">
+          Questions & Answers
         </h2>
 
         <Accordion type="single" className="mt-6" defaultValue="question-0">
@@ -54,4 +54,6 @@ export default function Page() {
       </div>
     </div>
   );
-}
+};
+
+export default FAQ01;

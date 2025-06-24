@@ -38,7 +38,7 @@ export default function Page() {
     <div className="flex min-h-screen items-center justify-center px-6 py-12">
       <div className="max-w-xl">
         <h2 className="text-4xl !leading-[1.15] font-bold tracking-tight md:text-5xl">
-          Shoool Page,
+          Analitic Page Plans
         </h2>
 
         <Accordion type="single" className="mt-6" defaultValue="question-0">
