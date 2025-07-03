@@ -4,13 +4,11 @@ import { SectionCards } from "~/components/section-cards";
 
 export const dynamic = "force-dynamic";
 
-import data from "./data.json";
+// import data from "./data.json";
 import Q from "./queries";
 
 export default async function Page() {
-
   const school_data = await Q.GetSchools();
-
 
   return (
     <div className="flex flex-1 flex-col">

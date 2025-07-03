@@ -21,6 +21,7 @@ export const school = createTable(
     natemis: d.integer({ mode: "number" }),
     quantile: d.integer({ mode: "number" }),
     centre_number: d.integer({ mode: "number" }),
+    dinaledi: d.text({ length: 2 }),
     province: d.text({ length: 256 }),
     official_institution_name: d.text({ length: 256 }),
     district_name: d.text({ length: 256 }),
