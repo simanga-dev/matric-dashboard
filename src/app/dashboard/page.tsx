@@ -18,7 +18,7 @@ export default async function Page() {
           <div className="px-4 lg:px-6">
             <ChartAreaInteractive />
           </div>
-          <DataTable data={school_data} />
+          {/* <DataTable data={school_data} /> */}
         </div>
       </div>
     </div>

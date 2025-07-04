@@ -19,9 +19,6 @@ export const school = createTable(
   (d) => ({
     id: d.integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
     natemis: d.integer({ mode: "number" }),
-    quantile: d.integer({ mode: "number" }),
-    centre_number: d.integer({ mode: "number" }),
-    dinaledi: d.text({ length: 2 }),
     province: d.text({ length: 256 }),
     official_institution_name: d.text({ length: 256 }),
     district_name: d.text({ length: 256 }),
@@ -42,9 +39,11 @@ export const marks = createTable("marks", (d) => ({
     .references(() => school.id),
   id: d.integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
   number_progressed: d.integer({ mode: "number" }),
-  total_wrote: d.integer({ mode: "number" }),
-  total_archived: d.integer({ mode: "number" }),
-  percentage_archived: d.integer({ mode: "number" }),
+  dinaledi: d.text({ length: 2 }),
+  quantile: d.integer({ mode: "number" }),
+  centre_number: d.integer({ mode: "number" }),
+  learners_wrote: d.integer({ mode: "number" }),
+  learners_pass: d.integer({ mode: "number" }),
   createdAt: d
     .integer({ mode: "timestamp" })
     .default(sql`(unixepoch())`)
