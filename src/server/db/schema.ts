@@ -38,7 +38,6 @@ export const marks = createTable("marks", (d) => ({
     .notNull()
     .references(() => school.id),
   id: d.integer({ mode: "number" }).primaryKey({ autoIncrement: true }),
-  number_progressed: d.integer({ mode: "number" }),
   dinaledi: d.text({ length: 2 }),
   quantile: d.integer({ mode: "number" }),
   centre_number: d.integer({ mode: "number" }),

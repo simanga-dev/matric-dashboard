@@ -1,17 +1,23 @@
 "use client";
 import { Button } from "~/components/ui/button";
-import { create } from "../actions";
-// import { create } from "../actions";
+import { seedData2012, seedData2023 } from "../actions";
 
 export default function Page() {
-  // let data = await create()
-
   return (
-    <div className="p-18">
-      <p>Seed data from a csv files</p>
-      <Button variant="outline" onClick={() => create()}>
-        Seed Data
-      </Button>
-    </div>
+    <>
+      <div className="p-18">
+        <p>seed 2021 - 2023 Data</p>
+        <Button variant="outline" onClick={() => seedData2023()}>
+          Seed Data
+        </Button>
+      </div>
+
+      <div className="p-18">
+        <p>Seed 2010 - 2012 Data</p>
+        <Button variant="outline" onClick={() => seedData2012()}>
+          Seed Data
+        </Button>
+      </div>
+    </>
   );
 }
