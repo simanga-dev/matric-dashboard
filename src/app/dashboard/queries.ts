@@ -2,51 +2,43 @@ import { db } from "~/server/db";
 import { z } from "zod";
 import { sql } from "drizzle-orm";
 import {
-  LearnerCardSchema,
+  LearnerCountSchema,
+  LearnerPassRateSchema,
   SchoolCardSchema,
+  SchoolCountSchema,
   SchoolSchema,
 } from "~/lib/schemas";
 import { school } from "~/server/db/schema";
 
 const Q = {
   GetMatricPassRate: async function (): Promise<z.infer<
-    typeof LearnerCardSchema
+    typeof LearnerPassRateSchema
   > | null> {
     try {
       const result = await db.run(sql`
         SELECT
             ROUND(
-                ((SUM(CASE WHEN year = 2023 THEN total_archived ELSE 0 END) * 1.0) /
-                 NULLIF(SUM(CASE WHEN year = 2023 THEN total_wrote ELSE 0 END), 0)) * 100, 2
-              ) AS total_learners_2023,
+                ((SUM(CASE WHEN year = 2023 THEN learners_pass ELSE 0 END) * 1.0) /
+                 NULLIF(SUM(CASE WHEN year = 2023 THEN learners_wrote ELSE 0 END), 0)) * 100, 2
+              ) AS pass_rate_2023,
             ROUND(
-                ((SUM(CASE WHEN year = 2022 THEN total_archived ELSE 0 END) * 1.0) /
-                 NULLIF(SUM(CASE WHEN year = 2022 THEN total_wrote ELSE 0 END), 0)) * 100, 2
-              ) AS total_learners_2022,
+                ((SUM(CASE WHEN year = 2022 THEN learners_pass ELSE 0 END) * 1.0) /
+                 NULLIF(SUM(CASE WHEN year = 2022 THEN learners_wrote ELSE 0 END), 0)) * 100, 2
+              ) AS pass_rate_2022,
             ROUND(
                 (
-                    ((SUM(CASE WHEN year = 2023 THEN total_archived ELSE 0 END) * 1.0) /
-                     NULLIF(SUM(CASE WHEN year = 2023 THEN total_wrote ELSE 0 END), 0)) -
-                    ((SUM(CASE WHEN year = 2022 THEN total_archived ELSE 0 END) * 1.0) /
-                     NULLIF(SUM(CASE WHEN year = 2022 THEN total_wrote ELSE 0 END), 0))
+                    ((SUM(CASE WHEN year = 2023 THEN learners_pass ELSE 0 END) * 1.0) /
+                     NULLIF(SUM(CASE WHEN year = 2023 THEN learners_wrote ELSE 0 END), 0)) -
+                    ((SUM(CASE WHEN year = 2022 THEN learners_pass ELSE 0 END) * 1.0) /
+                     NULLIF(SUM(CASE WHEN year = 2022 THEN learners_wrote ELSE 0 END), 0))
                 ), 2
-              ) AS trend_learners_2023,
-
-            ROUND(
-                (
-                    ((SUM(CASE WHEN year = 2023 THEN total_archived ELSE 0 END) * 1.0) /
-                     NULLIF(SUM(CASE WHEN year = 2023 THEN total_wrote ELSE 0 END), 0)) -
-                    ((SUM(CASE WHEN year = 2022 THEN total_archived ELSE 0 END) * 1.0) /
-                     NULLIF(SUM(CASE WHEN year = 2022 THEN total_wrote ELSE 0 END), 0))
-                ) * 100, 2
-              ) AS trend_percentage_2023
-
+              ) AS trend_rate_2023
         FROM "matric-dashboard_marks"
         WHERE year IN (2022, 2023)
     `);
 
       const row = result.rows?.[0];
-      const parsed = LearnerCardSchema.safeParse(row);
+      const parsed = LearnerPassRateSchema.safeParse(row);
 
       return parsed.success ? parsed.data : null;
     } catch (error) {
@@ -56,31 +48,29 @@ const Q = {
   },
 
   GetTotalLearner: async function (): Promise<z.infer<
-    typeof LearnerCardSchema
+    typeof LearnerCountSchema
   > | null> {
     try {
       const result = await db.run(sql`
-        SELECT
-            total_learners_2023,
-            total_learners_2022,
-            trend_learners_2023,
-            CASE
-                WHEN total_learners_2022 = 0 THEN NULL
-                ELSE ROUND(100.0 * trend_learners_2023 / total_learners_2022, 2)
-            END AS trend_percentage_2023
-        FROM (
             SELECT
-                SUM(CASE WHEN year = 2023 THEN total_wrote ELSE 0 END) AS total_learners_2023,
-                SUM(CASE WHEN year = 2022 THEN total_wrote ELSE 0 END) AS total_learners_2022,
-                SUM(CASE WHEN year = 2023 THEN total_wrote ELSE 0 END) -
-                SUM(CASE WHEN year = 2022 THEN total_wrote ELSE 0 END) AS trend_learners_2023
-            FROM "matric-dashboard_marks"
-            WHERE year IN (2022, 2023)
-        ) t
+                total_learners_2023,
+                total_learners_2022,
+                CASE
+                    WHEN total_learners_2022 = 0 THEN NULL
+                    ELSE ROUND((total_learners_2023 - total_learners_2022) / total_learners_2023, 2)
+                END AS trend_rate_learners_2023
+            FROM (
+                SELECT
+                    SUM(CASE WHEN year = 2023 THEN learners_wrote ELSE 0 END) AS total_learners_2023,
+                    SUM(CASE WHEN year = 2022 THEN learners_wrote ELSE 0 END) AS total_learners_2022
+                FROM "matric-dashboard_marks"
+                WHERE year IN (2022, 2023)
+            ) t
+
 `);
 
       const row = result.rows?.[0];
-      const parsed = LearnerCardSchema.safeParse(row);
+      const parsed = LearnerCountSchema.safeParse(row);
       return parsed.success ? parsed.data : null;
     } catch (error) {
       console.log(error);
@@ -89,29 +79,29 @@ const Q = {
   },
 
   GetTopSchool: async function (): Promise<z.infer<
-    typeof SchoolCardSchema
+    typeof SchoolCountSchema
   > | null> {
     try {
       const result = await db.run(sql`
-      SELECT
-          total_school_2023,
-          total_school_2022,
-          total_school_2023 - total_school_2022 AS trend_schools_2023,
-          CASE
-              WHEN total_school_2022 = 0 THEN NULL
-              ELSE ROUND(100.0 * (total_school_2023 - total_school_2022) / total_school_2022, 2)
-          END AS trend_percentage_2023
-      FROM (
-          SELECT
-              COUNT(DISTINCT CASE WHEN year = 2023 AND total_wrote = total_archived THEN school_id END) AS total_school_2023,
-              COUNT(DISTINCT CASE WHEN year = 2022 AND total_wrote = total_archived THEN school_id END) AS total_school_2022
-          FROM "matric-dashboard_marks"
-          WHERE year IN (2022, 2023)
-      ) t
+        SELECT
+            total_school_2023,
+            total_school_2022,
+            CASE
+                WHEN total_school_2022 = 0 THEN NULL
+                ELSE ROUND((total_school_2023 - total_school_2022) / total_school_2022, 2)
+            END AS trend_rate_schools_2023
+        FROM (
+            SELECT
+                COUNT(DISTINCT CASE WHEN year = 2023 AND learners_wrote = learners_pass THEN school_id END) AS total_school_2023,
+                COUNT(DISTINCT CASE WHEN year = 2022 AND learners_wrote = learners_pass THEN school_id END) AS total_school_2022
+            FROM "matric-dashboard_marks"
+            WHERE year IN (2022, 2023)
+        ) t
+
     `);
 
       const row = result.rows?.[0];
-      const parsed = SchoolCardSchema.safeParse(row);
+      const parsed = SchoolCountSchema.safeParse(row);
       return parsed.success ? parsed.data : null;
     } catch (err) {
       console.log(err);
@@ -120,31 +110,29 @@ const Q = {
   },
 
   Examcenters: async function (): Promise<z.infer<
-    typeof SchoolCardSchema
+    typeof SchoolCountSchema
   > | null> {
     try {
       const result = await db.run(sql`
         SELECT
             total_school_2023,
             total_school_2022,
-            total_school_2023 - total_school_2022 AS trend_schools_2023,
             CASE
                 WHEN total_school_2022 = 0 THEN NULL
-                ELSE ROUND(100.0 * total_school_2023 / total_school_2022, 2)
-            END AS trend_percentage_2023
+                ELSE ROUND(100.0 * (total_school_2023 - total_school_2022) / total_school_2022, 2)
+            END AS trend_rate_schools_2023
         FROM (
             SELECT
-                COUNT(CASE WHEN year = 2023 THEN total_wrote ELSE 0 END) AS total_school_2023,
-                COUNT(CASE WHEN year = 2022 THEN total_wrote ELSE 0 END) AS total_school_2022,
-                COUNT(CASE WHEN year = 2023 THEN total_wrote ELSE 0 END) -
-                COUNT(CASE WHEN year = 2022 THEN total_wrote ELSE 0 END) AS trend_school_2023
+                COUNT(CASE WHEN year = 2023 THEN learners_wrote ELSE 0 END) AS total_school_2023,
+                COUNT(CASE WHEN year = 2022 THEN learners_wrote ELSE 0 END) AS total_school_2022
             FROM "matric-dashboard_marks"
             WHERE year IN (2022, 2023)
         ) t
+
       `);
 
       const row = result.rows?.[0];
-      const parsed = SchoolCardSchema.safeParse(row);
+      const parsed = SchoolCountSchema.safeParse(row);
       return parsed.success ? parsed.data : null;
     } catch (error) {
       console.log(error);

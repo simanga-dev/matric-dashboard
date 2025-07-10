@@ -41,7 +41,7 @@ async function TopSchoolCard() {
         <CardAction>
           <Badge variant="outline">
             <IconTrendingDown />
-            {r.trend_percentage_2023} %
+            {r.trend_rate_schools_2023} %
           </Badge>
         </CardAction>
       </CardHeader>
@@ -71,7 +71,7 @@ async function ExamCentreCard() {
         <CardAction>
           <Badge variant="outline">
             <IconArrowNarrowRight />
-            {r.trend_percentage_2023}
+            {r.trend_rate_schools_2023}
           </Badge>
         </CardAction>
       </CardHeader>
@@ -102,14 +102,13 @@ async function LearnersCountCard() {
         <CardAction>
           <Badge variant="outline">
             <IconTrendingDown />
-            {r.trend_percentage_2023}
+            {r.trend_rate_learners_2023 * 100} %
           </Badge>
         </CardAction>
       </CardHeader>
       <CardFooter className="flex-col items-start gap-1.5 text-sm">
         <div className="line-clamp-1 flex gap-2 font-medium">
-          Learners decreased by
-          {r.trend_learners_2023}
+          Learners decreased by {r.trend_rate_learners_2023 * 100} %
           <IconTrendingDown className="size-4" />
         </div>
         <div className="text-muted-foreground">
@@ -128,12 +127,12 @@ async function PassRateCard() {
       <CardHeader>
         <CardDescription>Pass Rate 2023</CardDescription>
         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          {r.total_learners_2023} %
+          {r.pass_rate_2023} %
         </CardTitle>
         <CardAction>
           <Badge variant="outline">
             <IconTrendingUp />
-            {r.trend_percentage_2023} %`
+            {r.trend_rate_2023} %`
           </Badge>
         </CardAction>
       </CardHeader>

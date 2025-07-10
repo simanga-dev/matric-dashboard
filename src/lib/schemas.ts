@@ -7,11 +7,22 @@ export const SchoolCardSchema = z.object({
   trend_percentage_2023: z.number().nullable(),
 });
 
-export const LearnerCardSchema = z.object({
+export const SchoolCountSchema = z.object({
+  total_school_2023: z.number(),
+  total_school_2022: z.number(),
+  trend_rate_schools_2023: z.number(),
+});
+
+export const LearnerCountSchema = z.object({
   total_learners_2023: z.number(),
   total_learners_2022: z.number(),
-  trend_learners_2023: z.number(),
-  trend_percentage_2023: z.number().nullable(),
+  trend_rate_learners_2023: z.number(),
+});
+
+export const LearnerPassRateSchema = z.object({
+  pass_rate_2023: z.number(),
+  pass_rate_2022: z.number(),
+  trend_rate_2023: z.number(),
 });
 
 export const SchoolSchema = z.object({
