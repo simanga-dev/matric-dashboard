@@ -26,6 +26,9 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "~/components/ui/toggle-group";
+import Q from "~/app/dashboard/queries";
+import type { PassRateSchema } from "~/lib/schemas";
+import type { z } from "zod";
 
 export const description = "An interactive area chart";
 
@@ -128,16 +131,20 @@ const chartConfig = {
     label: "Visitors",
   },
   desktop: {
-    label: "Desktop",
+    label: "pass_rate_percent",
     color: "var(--primary)",
   },
   mobile: {
-    label: "Mobile",
+    label: "total_learners_wrote",
     color: "var(--primary)",
   },
 } satisfies ChartConfig;
 
-export function ChartAreaInteractive() {
+export function ChartAreaInteractive({
+  data,
+}: {
+  data: z.infer<typeof PassRateSchema>[];
+}) {
   const isMobile = useIsMobile();
   const [timeRange, setTimeRange] = React.useState("90d");
 
@@ -147,20 +154,38 @@ export function ChartAreaInteractive() {
     }
   }, [isMobile]);
 
-  const filteredData = chartData.filter((item) => {
-    const date = new Date(item.date);
-    const referenceDate = new Date("2024-06-30");
-    let daysToSubtract = 90;
-    if (timeRange === "30d") {
-      daysToSubtract = 30;
-    } else if (timeRange === "7d") {
-      daysToSubtract = 7;
-    }
-    const startDate = new Date(referenceDate);
-    startDate.setDate(startDate.getDate() - daysToSubtract);
-    return date >= startDate;
-  });
+  const min = Math.min(...data.map((l) => l.total_learners_wrote));
+  const max = Math.max(...data.map((l) => l.total_learners_wrote));
 
+  const normalise = (num: number): number => {
+    if (max - min === 0) {
+      // Avoid division by zero; could return 1 or another sensible default
+      return 1;
+    }
+    return ((num - min) / (max - min)) * 99 + 1;
+  };
+
+  const datawNew = data.map((d) => ({
+    ...d,
+    total_learners_wrote: normalise(d.total_learners_wrote),
+  }));
+
+  // console.log(data);
+
+  // const filteredData = chartData.filter((item) => {
+  //   const date = new Date(item.date);
+  //   const referenceDate = new Date("2024-06-30");
+  //   let daysToSubtract = 90;
+  //   if (timeRange === "30d") {
+  //     daysToSubtract = 30;
+  //   } else if (timeRange === "7d") {
+  //     daysToSubtract = 7;
+  //   }
+  //   const startDate = new Date(referenceDate);
+  //   startDate.setDate(startDate.getDate() - daysToSubtract);
+  //   return date >= startDate;
+  // });
+  //
   return (
     <Card className="@container/card">
       <CardHeader>
@@ -210,7 +235,7 @@ export function ChartAreaInteractive() {
           config={chartConfig}
           className="aspect-auto h-[250px] w-full"
         >
-          <AreaChart data={filteredData}>
+          <AreaChart data={datawNew}>
             <defs>
               <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
                 <stop
@@ -239,18 +264,18 @@ export function ChartAreaInteractive() {
             </defs>
             <CartesianGrid vertical={false} />
             <XAxis
-              dataKey="date"
+              dataKey="year"
               tickLine={false}
               axisLine={false}
-              tickMargin={8}
-              minTickGap={32}
-              tickFormatter={(value) => {
-                const date = new Date(value);
-                return date.toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                });
-              }}
+              // tickMargin={8}
+              // minTickGap={32}
+              // tickFormatter={(value) => {
+              //   const date = new Date(value);
+              //   return date.toLocaleDateString("en-US", {
+              //     month: "short",
+              //     day: "numeric",
+              //   });
+              // }}
             />
             <ChartTooltip
               cursor={false}
@@ -268,14 +293,14 @@ export function ChartAreaInteractive() {
               }
             />
             <Area
-              dataKey="mobile"
+              dataKey="total_learners_wrote"
               type="natural"
               fill="url(#fillMobile)"
               stroke="var(--color-mobile)"
               stackId="a"
             />
             <Area
-              dataKey="desktop"
+              dataKey="pass_rate_percent"
               type="natural"
               fill="url(#fillDesktop)"
               stroke="var(--color-desktop)"

@@ -4,19 +4,17 @@ import { SectionCards } from "~/components/section-cards";
 
 export const dynamic = "force-dynamic";
 
-// import data from "./data.json";
 import Q from "./queries";
+import { Card } from "~/components/ui/card";
 
 export default async function Page() {
-  const school_data = await Q.GetSchools();
-
   return (
     <div className="flex flex-1 flex-col">
       <div className="@container/main flex flex-1 flex-col gap-2">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           <SectionCards />
           <div className="px-4 lg:px-6">
-            <ChartAreaInteractive />
+            <ChartAreaInteractiveData />
           </div>
           {/* <DataTable data={school_data} /> */}
         </div>
@@ -24,3 +22,13 @@ export default async function Page() {
     </div>
   );
 }
+
+const ChartAreaInteractiveData = async () => {
+  const r = await Q.GetPassRateChart();
+
+  console.log(r);
+
+  if (r == null) return <Card className="@container/card"></Card>;
+
+  return <ChartAreaInteractive data={r} />;
+};

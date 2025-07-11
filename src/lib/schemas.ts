@@ -13,6 +13,12 @@ export const SchoolCountSchema = z.object({
   trend_rate_schools_2023: z.number(),
 });
 
+export const PassRateSchema = z.object({
+  year: z.number(),
+  total_learners_wrote: z.number(),
+  pass_rate_percent: z.number(),
+});
+
 export const LearnerCountSchema = z.object({
   total_learners_2023: z.number(),
   total_learners_2022: z.number(),

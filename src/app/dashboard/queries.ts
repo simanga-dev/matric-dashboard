@@ -4,6 +4,7 @@ import { sql } from "drizzle-orm";
 import {
   LearnerCountSchema,
   LearnerPassRateSchema,
+  PassRateSchema,
   SchoolCardSchema,
   SchoolCountSchema,
   SchoolSchema,
@@ -152,6 +153,38 @@ const Q = {
         return null;
       }
       return parsedSchools.data;
+    } catch (error) {
+      console.log(error);
+      return null;
+    }
+  },
+
+  GetPassRateChart: async function (): Promise<
+    z.infer<typeof PassRateSchema>[] | null
+  > {
+    try {
+      const result = await db.run(sql`
+        SELECT
+            year,
+            CAST(SUM(learners_wrote) AS INTEGER) AS total_learners_wrote,
+            CASE WHEN SUM(learners_wrote) = 0 THEN
+                0
+            ELSE
+                ROUND((SUM(learners_pass) * 100.0) / SUM(learners_wrote), 2)
+            END AS pass_rate_percent
+        FROM
+            "matric-dashboard_marks"
+        GROUP BY
+            year
+        ORDER BY
+            year;
+      `);
+
+      const row = result.rows;
+
+      console.log(row);
+      const parsed = z.array(PassRateSchema).safeParse(row);
+      return parsed.success ? parsed.data : null;
     } catch (error) {
       console.log(error);
       return null;
