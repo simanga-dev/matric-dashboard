@@ -42,6 +42,7 @@ export const marks = createTable("marks", (d) => ({
   quantile: d.integer({ mode: "number" }),
   centre_number: d.integer({ mode: "number" }),
   learners_wrote: d.integer({ mode: "number" }),
+  progressed_number: d.integer({ mode: "number" }),
   learners_pass: d.integer({ mode: "number" }),
   createdAt: d
     .integer({ mode: "timestamp" })

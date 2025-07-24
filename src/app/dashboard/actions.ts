@@ -168,3 +168,90 @@ export async function seedData2012() {
     console.error("Error processing CSV files:", error);
   }
 }
+
+export async function seedData2024() {
+  try {
+    const filePath = path.join(
+      "/home/simanga/Playground/2024-data-clean-up/2024_nsc_school_performance_report.csv",
+    );
+
+    const parser = fs.createReadStream(filePath).pipe(
+      parse({
+        // CSV options if any
+        columns: true,
+        skip_empty_lines: true,
+        // to_line: 911,
+        trim: true,
+      }),
+    );
+
+    for await (const record of parser) {
+      var find = await db
+        .select()
+        .from(school)
+        .where(
+          sql`lower(${school.natemis}) = lower(${record.emis_number}) and
+            lower(${school.province}) = lower(${record.province}) and
+            lower(${school.official_institution_name}) = lower(${record.centre_name})
+        `,
+        )
+        .limit(1);
+
+      let schoolRecord = find[0];
+
+      if (!schoolRecord) {
+        const [insertedSchool] = await db
+          .insert(school)
+          .values({
+            natemis: record.emis_number,
+            province: record.province.replace(/'/g, "''"),
+            official_institution_name: record.centre_name.replace(/'/g, "''"),
+            district_name: record.district_name.replace(/'/g, "''"),
+          })
+          .returning();
+
+        schoolRecord = insertedSchool;
+
+      }
+
+      if (schoolRecord) {
+        await db.insert(marks).values({
+          year: 2022,
+          school_id: schoolRecord.id,
+          dinaledi: record["dinaledi"],
+          quantile: record.quantile,
+          centre_number: record.centre_number,
+          progressed_number: record.progressed_number_2022,
+          learners_wrote: record.total_wrote_2022,
+          learners_pass: record.total_achieved_2022,
+        });
+
+        await db.insert(marks).values({
+          year: 2023,
+          school_id: schoolRecord.id,
+          dinaledi: record["dinaledi"],
+          quantile: record.quantile,
+          centre_number: record.centre_number,
+          progressed_number: record.progressed_number_2023,
+          learners_wrote: record.total_wrote_2023,
+          learners_pass: record.total_achieved_2023,
+        });
+
+        await db.insert(marks).values({
+          year: 2024,
+          school_id: schoolRecord.id,
+          dinaledi: record["dinaledi"],
+          quantile: record.quantile,
+          centre_number: record.centre_number,
+          progressed_number: record.progressed_number_2024,
+          learners_wrote: record.total_wrote_2024,
+          learners_pass: record.total_achieved_2024,
+        });
+
+        console.log(record);
+      }
+    }
+  } catch (error) {
+    console.error("Error processing CSV files:", error);
+  }
+}
