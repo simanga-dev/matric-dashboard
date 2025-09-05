@@ -43,7 +43,9 @@ import {
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
+  type ColumnFiltersState,
   type Row,
+  type SortingState,
   type VisibilityState,
 } from '@tanstack/react-table'
 
@@ -59,6 +61,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from '~/components/ui/chart'
+import type { ChartConfig } from '~/components/ui/chart'
 import { Checkbox } from '~/components/ui/checkbox'
 import {
   Drawer,
