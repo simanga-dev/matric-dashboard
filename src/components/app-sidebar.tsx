@@ -1,4 +1,4 @@
-import * as React from "react"
+import * as React from 'react'
 import {
   IconCamera,
   IconChartBar,
@@ -15,12 +15,13 @@ import {
   IconSearch,
   IconSettings,
   IconUsers,
-} from "@tabler/icons-react"
+} from '@tabler/icons-react'
 
-import { NavDocuments } from "~/components/nav-documents"
-import { NavMain } from "~/components/nav-main"
-import { NavSecondary } from "~/components/nav-secondary"
-import { NavUser } from "~/components/nav-user"
+import { NavDocuments } from '~/components/nav-documents'
+import { NavMain } from '~/components/nav-main'
+import { NavSecondary } from '~/components/nav-secondary'
+import { NavUser } from '~/components/nav-user'
+import { NavDevelopment } from '~/components/nav-developmet'
 import {
   Sidebar,
   SidebarContent,
@@ -29,126 +30,145 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "~/components/ui/sidebar"
+} from '~/components/ui/sidebar'
 
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    name: 'shadcn',
+    email: 'm@example.com',
+    avatar: '/avatars/shadcn.jpg',
   },
   navMain: [
     {
-      title: "Dashboard",
-      url: "#",
+      title: 'Dashboard',
+      url: '/dashboard',
       icon: IconDashboard,
     },
     {
-      title: "Lifecycle",
-      url: "#",
-      icon: IconListDetails,
-    },
-    {
-      title: "Analytics",
-      url: "#",
+      title: 'Analytic',
+      url: '/dashboard/analytic',
       icon: IconChartBar,
     },
     {
-      title: "Projects",
-      url: "#",
+      title: 'Schools',
+      url: '/dashboard/schools',
+      icon: IconListDetails,
+    },
+    {
+      title: 'Past Papers',
+      url: '/dashboard/past-papers',
       icon: IconFolder,
     },
     {
-      title: "Team",
-      url: "#",
+      title: 'Study Guide',
+      url: '/dashboard/study-guide',
       icon: IconUsers,
     },
   ],
   navClouds: [
     {
-      title: "Capture",
+      title: 'Capture',
       icon: IconCamera,
       isActive: true,
-      url: "#",
+      url: '#',
       items: [
         {
-          title: "Active Proposals",
-          url: "#",
+          title: 'Active Proposals',
+          url: '#',
         },
         {
-          title: "Archived",
-          url: "#",
+          title: 'Archived',
+          url: '#',
         },
       ],
     },
     {
-      title: "Proposal",
+      title: 'Proposal',
       icon: IconFileDescription,
-      url: "#",
+      url: '#',
       items: [
         {
-          title: "Active Proposals",
-          url: "#",
+          title: 'Active Proposals',
+          url: '#',
         },
         {
-          title: "Archived",
-          url: "#",
+          title: 'Archived',
+          url: '#',
         },
       ],
     },
     {
-      title: "Prompts",
+      title: 'Prompts',
       icon: IconFileAi,
-      url: "#",
+      url: '#',
       items: [
         {
-          title: "Active Proposals",
-          url: "#",
+          title: 'Active Proposals',
+          url: '#',
         },
         {
-          title: "Archived",
-          url: "#",
+          title: 'Archived',
+          url: '#',
         },
       ],
     },
   ],
   navSecondary: [
     {
-      title: "Settings",
-      url: "#",
+      title: 'Settings',
+      url: '#',
       icon: IconSettings,
     },
     {
-      title: "Get Help",
-      url: "#",
+      title: 'Get Help',
+      url: '#',
       icon: IconHelp,
     },
     {
-      title: "Search",
-      url: "#",
+      title: 'Search',
+      url: '#',
       icon: IconSearch,
     },
   ],
   documents: [
     {
-      name: "Data Library",
-      url: "#",
+      name: 'Data Library',
+      url: '#',
       icon: IconDatabase,
     },
     {
-      name: "Reports",
-      url: "#",
+      name: 'Reports',
+      url: '#',
       icon: IconReport,
     },
     {
-      name: "Word Assistant",
-      url: "#",
+      name: 'Word Assistant',
+      url: '#',
       icon: IconFileWord,
+    },
+  ],
+
+  navDevelopmet: [
+    {
+      title: 'Seed Data',
+      url: 'dashboard/dev-pages',
+      icon: IconSettings,
+    },
+    {
+      title: 'check API',
+      url: '#',
+      icon: IconHelp,
+    },
+    {
+      title: 'SQL Version',
+      url: '#',
+      icon: IconSearch,
     },
   ],
 }
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const isDevelopment = process.env.NODE_ENV === 'development'
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -169,6 +189,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={data.navMain} />
         <NavDocuments items={data.documents} />
+        {isDevelopment && <NavDevelopment items={data.navDevelopmet} />}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

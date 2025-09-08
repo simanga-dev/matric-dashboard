@@ -6,12 +6,13 @@ import { type Icon } from '@tabler/icons-react'
 import {
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
 } from '~/components/ui/sidebar'
 
-export function NavSecondary({
+export function NavDevelopment({
   items,
   ...props
 }: {
@@ -23,11 +24,12 @@ export function NavSecondary({
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   return (
     <SidebarGroup {...props}>
+      <SidebarGroupLabel>Development</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton asChild>
+              <SidebarMenuButton className="text-orange-600" asChild>
                 <a href={item.url}>
                   <item.icon />
                   <span>{item.title}</span>
