@@ -22,7 +22,6 @@ import { NavMain } from '~/components/nav-main'
 import { NavSecondary } from '~/components/nav-secondary'
 import { NavDevelopment } from '~/components/nav-developmet'
 import { NavUser } from '~/components/nav-user'
-import { NavUser } from '~/components/nav-user'
 import {
   Sidebar,
   SidebarContent,
@@ -152,7 +151,7 @@ const data = {
   navDevelopmet: [
     {
       title: 'Seed Data',
-      url: 'dashboard/dev-pages',
+      url: 'dashboard/seed-data',
       icon: IconSettings,
     },
     {
@@ -170,10 +169,7 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const isDevelopment = process.env.NODE_ENV === 'development'
-<<<<<<< HEAD
 
-=======
->>>>>>> d084e68
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -185,7 +181,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <a href="#">
                 <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">Acme Inc.</span>
+                <span className="text-base font-semibold">
+                  Matric Dashboard
+                </span>
               </a>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -194,7 +192,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain items={data.navMain} />
         <NavDocuments items={data.documents} />
-
 
         {isDevelopment && <NavDevelopment items={data.navDevelopmet} />}
         <NavSecondary items={data.navSecondary} className="mt-auto" />

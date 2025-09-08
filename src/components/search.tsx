@@ -14,6 +14,7 @@ import {
 import { IconSchool } from '@tabler/icons-react'
 
 import { useQuery } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 
 interface SchoolSearchResult {
   id: number
@@ -94,10 +95,8 @@ export function Search() {
             {schoolQuery.data?.map((todo) => (
               <CommandItem key={todo.id}>
                 <IconSchool />
-                <Link
-                  onClick={() => setOpen(false)}
-                  href={`/dashboard/schools/${todo.emis_number}`}
-                >
+                <Link onClick={() => setOpen(false)} to="/">
+                  {/* // to={`/dashboard/schools/${todo.emis_number}`} */}
                   {todo.centre_name}
                 </Link>
               </CommandItem>

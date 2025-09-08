@@ -11,11 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AnotherPageRouteImport } from './routes/anotherPage'
-import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as DashboardSeedDataRouteImport } from './routes/dashboard/seed-data'
 import { Route as DashboardSchoolRouteImport } from './routes/dashboard/school'
-import { Route as DashboardLayoutRouteImport } from './routes/dashboard/_layout'
 
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
@@ -25,10 +24,6 @@ const DashboardRoute = DashboardRouteImport.update({
 const AnotherPageRoute = AnotherPageRouteImport.update({
   id: '/anotherPage',
   path: '/anotherPage',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LayoutRoute = LayoutRouteImport.update({
-  id: '/_layout',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -41,37 +36,39 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardSeedDataRoute = DashboardSeedDataRouteImport.update({
+  id: '/seed-data',
+  path: '/seed-data',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardSchoolRoute = DashboardSchoolRouteImport.update({
   id: '/school',
   path: '/school',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardLayoutRoute = DashboardLayoutRouteImport.update({
-  id: '/_layout',
   getParentRoute: () => DashboardRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
-  '/dashboard': typeof DashboardLayoutRoute
+  '/dashboard': typeof DashboardRouteWithChildren
   '/dashboard/school': typeof DashboardSchoolRoute
+  '/dashboard/seed-data': typeof DashboardSeedDataRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
-  '/dashboard': typeof DashboardIndexRoute
   '/dashboard/school': typeof DashboardSchoolRoute
+  '/dashboard/seed-data': typeof DashboardSeedDataRoute
+  '/dashboard': typeof DashboardIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/_layout': typeof LayoutRoute
   '/anotherPage': typeof AnotherPageRoute
   '/dashboard': typeof DashboardRouteWithChildren
-  '/dashboard/_layout': typeof DashboardLayoutRoute
   '/dashboard/school': typeof DashboardSchoolRoute
+  '/dashboard/seed-data': typeof DashboardSeedDataRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRouteTypes {
@@ -81,23 +78,27 @@ export interface FileRouteTypes {
     | '/anotherPage'
     | '/dashboard'
     | '/dashboard/school'
+    | '/dashboard/seed-data'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/anotherPage' | '/dashboard' | '/dashboard/school'
+  to:
+    | '/'
+    | '/anotherPage'
+    | '/dashboard/school'
+    | '/dashboard/seed-data'
+    | '/dashboard'
   id:
     | '__root__'
     | '/'
-    | '/_layout'
     | '/anotherPage'
     | '/dashboard'
-    | '/dashboard/_layout'
     | '/dashboard/school'
+    | '/dashboard/seed-data'
     | '/dashboard/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  LayoutRoute: typeof LayoutRoute
   AnotherPageRoute: typeof AnotherPageRoute
   DashboardRoute: typeof DashboardRouteWithChildren
 }
@@ -118,13 +119,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnotherPageRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_layout': {
-      id: '/_layout'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof LayoutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
@@ -139,6 +133,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/seed-data': {
+      id: '/dashboard/seed-data'
+      path: '/seed-data'
+      fullPath: '/dashboard/seed-data'
+      preLoaderRoute: typeof DashboardSeedDataRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/school': {
       id: '/dashboard/school'
       path: '/school'
@@ -146,25 +147,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSchoolRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/_layout': {
-      id: '/dashboard/_layout'
-      path: ''
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardLayoutRouteImport
-      parentRoute: typeof DashboardRoute
-    }
   }
 }
 
 interface DashboardRouteChildren {
-  DashboardLayoutRoute: typeof DashboardLayoutRoute
   DashboardSchoolRoute: typeof DashboardSchoolRoute
+  DashboardSeedDataRoute: typeof DashboardSeedDataRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
-  DashboardLayoutRoute: DashboardLayoutRoute,
   DashboardSchoolRoute: DashboardSchoolRoute,
+  DashboardSeedDataRoute: DashboardSeedDataRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
 
@@ -174,7 +168,6 @@ const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  LayoutRoute: LayoutRoute,
   AnotherPageRoute: AnotherPageRoute,
   DashboardRoute: DashboardRouteWithChildren,
 }
