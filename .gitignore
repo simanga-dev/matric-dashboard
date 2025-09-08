@@ -26,5 +26,6 @@ yarn.lock
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+/meili_data
 
 app.config.timestamp_*.js
