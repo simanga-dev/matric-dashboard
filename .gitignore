@@ -47,6 +47,7 @@ node_modules
 .env
 .env*.local
 .output
+<<<<<<< HEAD
 .vercel
 .wrangler
 .DS_Store
@@ -60,3 +61,23 @@ node_modules
 build
 .DS_Store
 node_modules
+.vinxi
+.nitro
+.output
+.tanstack
+
+/build/
+/api/
+/server/build
+/public/build
+.vinxi
+
+# Sentry Config File
+.env.sentry-build-plugin
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/meili_data
+
+app.config.timestamp_*.js

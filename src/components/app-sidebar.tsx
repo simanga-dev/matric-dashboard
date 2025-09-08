@@ -22,6 +22,7 @@ import { NavMain } from '~/components/nav-main'
 import { NavSecondary } from '~/components/nav-secondary'
 import { NavDevelopment } from '~/components/nav-developmet'
 import { NavUser } from '~/components/nav-user'
+import { NavUser } from '~/components/nav-user'
 import {
   Sidebar,
   SidebarContent,
@@ -169,7 +170,10 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const isDevelopment = process.env.NODE_ENV === 'development'
+<<<<<<< HEAD
 
+=======
+>>>>>>> d084e68
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
@@ -191,8 +195,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.navMain} />
         <NavDocuments items={data.documents} />
 
-        {isDevelopment && <NavDevelopment items={data.navDevelopmet} />}
 
+        {isDevelopment && <NavDevelopment items={data.navDevelopmet} />}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
