@@ -8,7 +8,7 @@ export const Route = createFileRoute('/dashboard/seed-data')({
 })
 
 function RouteComponent() {
-  const parseCsv = useAction(api.myFunctions.parseCsv)
+  const parseCsv = useAction(api.seedDevData.seedFromFile)
   const [file, setFile] = React.useState<File | null>(null)
   const [status, setStatus] = React.useState<string>('')
 
@@ -49,7 +49,7 @@ function RouteComponent() {
         <button
           type="submit"
           disabled={!file}
-          className="px-3 py-2 rounded disabled:opacity-50"
+          className="px-3 py-2 rounded disabled:opacity-50 bg-primary text-primary-foreground border border-border"
         >
           Upload & Parse
         </button>

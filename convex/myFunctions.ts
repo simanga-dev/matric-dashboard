@@ -1,5 +1,9 @@
 import { v } from 'convex/values'
 import { query, mutation, action } from './_generated/server'
+import { promises as fs } from 'fs' // 'fs/promises' not available in node 12
+import os from 'os'
+
+import { parse } from 'csv-parse'
 import { api } from './_generated/api'
 
 // Write your Convex functions in any file inside this directory (`convex`).
@@ -73,30 +77,5 @@ export const myAction = action({
     await ctx.runMutation(api.myFunctions.addNumber, {
       value: args.first,
     })
-  },
-})
-
-// Parses CSV text and logs each record on the server
-export const parseCsv = action({
-  args: {
-    csvText: v.string(),
-  },
-  handler: async (_ctx, args) => {
-    // Dynamically import to avoid bundling issues if not installed yet
-    const mod: any = await import('csv-parse/sync')
-    const parse = mod.parse ?? mod.default ?? mod
-
-    const records = parse(args.csvText, {
-      columns: true, // treat first row as headers
-      skip_empty_lines: true,
-      trim: true,
-    }) as Array<Record<string, unknown>>
-
-    for (let i = 0; i < records.length; i++) {
-      console.log('Hello world')
-      console.log(`CSV row ${i + 1}:`, records[i])
-    }
-
-    return { rows: records.length }
   },
 })
