@@ -12,15 +12,16 @@ export default defineSchema({
 
   school: defineTable({
     natemis: v.number(),
-    quantile: v.number(),
     centre_number: v.number(),
     province: v.string(),
     official_institution_name: v.string(),
     district_name: v.string(),
+    quantile: v.optional(v.float64()),
   }).index('natemis', ['natemis']),
 
   marks: defineTable({
     year: v.number(),
+    quantile: v.optional(v.float64()),
     school_id: v.id('school'),
     number_progressed: v.number(),
     total_wrote: v.number(),

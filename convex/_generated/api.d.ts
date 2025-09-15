@@ -14,7 +14,6 @@ import type {
   FunctionReference,
 } from "convex/server";
 import type * as myFunctions from "../myFunctions.js";
-import type * as platform_fileOperations from "../platform/fileOperations.js";
 import type * as seedDevData from "../seedDevData.js";
 import type * as seedMutations from "../seedMutations.js";
 
@@ -28,7 +27,6 @@ import type * as seedMutations from "../seedMutations.js";
  */
 declare const fullApi: ApiFromModules<{
   myFunctions: typeof myFunctions;
-  "platform/fileOperations": typeof platform_fileOperations;
   seedDevData: typeof seedDevData;
   seedMutations: typeof seedMutations;
 }>;

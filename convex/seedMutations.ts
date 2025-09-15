@@ -28,10 +28,10 @@ export const insertRecords = internalMutation({
     count: v.int64(),
   },
 
+
   handler: async (ctx, args) => {
     const schoolId = await ctx.db.insert('school', {
       natemis: Number(args.emis_number),
-      quantile: Number(args.quintile),
       centre_number: Number(args.centre_number),
       province: args.province,
       official_institution_name: args.centre_name,
@@ -41,6 +41,7 @@ export const insertRecords = internalMutation({
     await ctx.db.insert('marks', {
       school_id: schoolId,
       year: 2023,
+      quantile: Number(args.quintile),
       number_progressed: Number(args.progressed_number_2023),
       total_wrote: Number(args.total_wrote_2023),
       total_archived: Number(args.total_achieved_2023),

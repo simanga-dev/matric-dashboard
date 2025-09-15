@@ -13,20 +13,18 @@ export const seedFromFile = action({
     csvText: v.string(),
   },
   handler: async (ctx, args) => {
-    // Write the CSV content to a temporary file
     await fs.writeFile(`${os.tmpdir()}/input.csv`, args.csvText, 'utf8')
 
-    // Read the content from the file
     const content = await fs.readFile(`${os.tmpdir()}/input.csv`)
-    // Use csv-parse to parse the content
     const records = []
     const parser = parse(content, {
       skip_empty_lines: true,
       trim: true,
-      columns: true, // Parse the CSV into objects with column headers as keys
+      columns: true,
     })
 
     let count = 0n
+
     for await (const record of parser) {
       const parsedRecord = {
         province: String(record.province),
