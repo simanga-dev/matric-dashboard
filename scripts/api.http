@@ -1,0 +1,55 @@
+##### first queries
+GET http://0.0.0.0:7700/tasks
+Authorization: Bearer {{MEILI_TOKEN}}
+
+
+
+##### first queries
+GET http://0.0.0.0:7700/version
+
+
+
+
+
+{"count":616,"name":"hendry","age":49}
+
+#####
+GET https://api.agify.io?name=Hendry
+
+
+
+
+### New amazing request
+GET https://jsonplaceholder.typicode.com/posts
+
+
+
+
+#### This query make sure I win
+POST http://localhost:7700/indexes/shools/search
+Content-Type: application/json
+Authorization: Bearer {{MEILI_TOKEN}}
+{
+  "q": "s"
+}
+
+
+
+##### first queries
+GET http://0.0.0.0:7700/tasks
+Authorization: Bearer {{MEILI_TOKEN}}
+
+
+##### first queries
+GET http://0.0.0.0:7700/keys
+Authorization: Bearer {{MEILI_TOKEN}}
+
+
+#######
+POST http://localhost:7700/indexes/schools/search
+Authorization: Bearer {{MEILI_TOKEN}}
+Content-Type: application/json
+
+{
+"q": "sincobi"
+}
