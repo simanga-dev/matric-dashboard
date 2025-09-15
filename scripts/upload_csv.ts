@@ -20,13 +20,13 @@ let csv = await Bun.file(process.argv[2]).text()
 
 const jsonData = csvToJson(csv)
 
-const url = 'http://0.0.0.0:7700/indexes/schools/documents?primaryKey=id'
+const url = `${process.env.MEILI_URL}/indexes/schools/documents?primaryKey=id`
 
 var x = await fetch(url, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
-    Authorization: 'Bearer ' + process.env.MEILI_TOKEN,
+    Authorization: 'Bearer ' + process.env.MEILI_MASTER_KEY,
   },
   body: jsonData,
 })
