@@ -13,8 +13,12 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AnotherPageRouteImport } from './routes/anotherPage'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as DashboardStudyGuideRouteImport } from './routes/dashboard/study-guide'
 import { Route as DashboardSeedDataRouteImport } from './routes/dashboard/seed-data'
 import { Route as DashboardSchoolRouteImport } from './routes/dashboard/school'
+import { Route as DashboardPastPapersRouteImport } from './routes/dashboard/past-papers'
+import { Route as DashboardDevPagesRouteImport } from './routes/dashboard/dev-pages'
+import { Route as DashboardAnalyticRouteImport } from './routes/dashboard/analytic'
 
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
@@ -36,6 +40,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardStudyGuideRoute = DashboardStudyGuideRouteImport.update({
+  id: '/study-guide',
+  path: '/study-guide',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardSeedDataRoute = DashboardSeedDataRouteImport.update({
   id: '/seed-data',
   path: '/seed-data',
@@ -46,20 +55,43 @@ const DashboardSchoolRoute = DashboardSchoolRouteImport.update({
   path: '/school',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardPastPapersRoute = DashboardPastPapersRouteImport.update({
+  id: '/past-papers',
+  path: '/past-papers',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardDevPagesRoute = DashboardDevPagesRouteImport.update({
+  id: '/dev-pages',
+  path: '/dev-pages',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardAnalyticRoute = DashboardAnalyticRouteImport.update({
+  id: '/analytic',
+  path: '/analytic',
+  getParentRoute: () => DashboardRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/dashboard/analytic': typeof DashboardAnalyticRoute
+  '/dashboard/dev-pages': typeof DashboardDevPagesRoute
+  '/dashboard/past-papers': typeof DashboardPastPapersRoute
   '/dashboard/school': typeof DashboardSchoolRoute
   '/dashboard/seed-data': typeof DashboardSeedDataRoute
+  '/dashboard/study-guide': typeof DashboardStudyGuideRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
+  '/dashboard/analytic': typeof DashboardAnalyticRoute
+  '/dashboard/dev-pages': typeof DashboardDevPagesRoute
+  '/dashboard/past-papers': typeof DashboardPastPapersRoute
   '/dashboard/school': typeof DashboardSchoolRoute
   '/dashboard/seed-data': typeof DashboardSeedDataRoute
+  '/dashboard/study-guide': typeof DashboardStudyGuideRoute
   '/dashboard': typeof DashboardIndexRoute
 }
 export interface FileRoutesById {
@@ -67,8 +99,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/anotherPage': typeof AnotherPageRoute
   '/dashboard': typeof DashboardRouteWithChildren
+  '/dashboard/analytic': typeof DashboardAnalyticRoute
+  '/dashboard/dev-pages': typeof DashboardDevPagesRoute
+  '/dashboard/past-papers': typeof DashboardPastPapersRoute
   '/dashboard/school': typeof DashboardSchoolRoute
   '/dashboard/seed-data': typeof DashboardSeedDataRoute
+  '/dashboard/study-guide': typeof DashboardStudyGuideRoute
   '/dashboard/': typeof DashboardIndexRoute
 }
 export interface FileRouteTypes {
@@ -77,23 +113,35 @@ export interface FileRouteTypes {
     | '/'
     | '/anotherPage'
     | '/dashboard'
+    | '/dashboard/analytic'
+    | '/dashboard/dev-pages'
+    | '/dashboard/past-papers'
     | '/dashboard/school'
     | '/dashboard/seed-data'
+    | '/dashboard/study-guide'
     | '/dashboard/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/anotherPage'
+    | '/dashboard/analytic'
+    | '/dashboard/dev-pages'
+    | '/dashboard/past-papers'
     | '/dashboard/school'
     | '/dashboard/seed-data'
+    | '/dashboard/study-guide'
     | '/dashboard'
   id:
     | '__root__'
     | '/'
     | '/anotherPage'
     | '/dashboard'
+    | '/dashboard/analytic'
+    | '/dashboard/dev-pages'
+    | '/dashboard/past-papers'
     | '/dashboard/school'
     | '/dashboard/seed-data'
+    | '/dashboard/study-guide'
     | '/dashboard/'
   fileRoutesById: FileRoutesById
 }
@@ -133,6 +181,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/study-guide': {
+      id: '/dashboard/study-guide'
+      path: '/study-guide'
+      fullPath: '/dashboard/study-guide'
+      preLoaderRoute: typeof DashboardStudyGuideRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/seed-data': {
       id: '/dashboard/seed-data'
       path: '/seed-data'
@@ -147,18 +202,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSchoolRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/past-papers': {
+      id: '/dashboard/past-papers'
+      path: '/past-papers'
+      fullPath: '/dashboard/past-papers'
+      preLoaderRoute: typeof DashboardPastPapersRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/dev-pages': {
+      id: '/dashboard/dev-pages'
+      path: '/dev-pages'
+      fullPath: '/dashboard/dev-pages'
+      preLoaderRoute: typeof DashboardDevPagesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/dashboard/analytic': {
+      id: '/dashboard/analytic'
+      path: '/analytic'
+      fullPath: '/dashboard/analytic'
+      preLoaderRoute: typeof DashboardAnalyticRouteImport
+      parentRoute: typeof DashboardRoute
+    }
   }
 }
 
 interface DashboardRouteChildren {
+  DashboardAnalyticRoute: typeof DashboardAnalyticRoute
+  DashboardDevPagesRoute: typeof DashboardDevPagesRoute
+  DashboardPastPapersRoute: typeof DashboardPastPapersRoute
   DashboardSchoolRoute: typeof DashboardSchoolRoute
   DashboardSeedDataRoute: typeof DashboardSeedDataRoute
+  DashboardStudyGuideRoute: typeof DashboardStudyGuideRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardAnalyticRoute: DashboardAnalyticRoute,
+  DashboardDevPagesRoute: DashboardDevPagesRoute,
+  DashboardPastPapersRoute: DashboardPastPapersRoute,
   DashboardSchoolRoute: DashboardSchoolRoute,
   DashboardSeedDataRoute: DashboardSeedDataRoute,
+  DashboardStudyGuideRoute: DashboardStudyGuideRoute,
   DashboardIndexRoute: DashboardIndexRoute,
 }
 
