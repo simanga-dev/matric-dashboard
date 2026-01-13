@@ -85,7 +85,7 @@ export function Search() {
         </div>
 
         <CommandList
-          className={`bg-border absolute start-0 end-0 top-10 rounded-lg ${open ? '' : 'hidden'}`}
+          className={`bg-border absolute start-0 end-0 top-10 z-50 rounded-lg ${open ? '' : 'hidden'}`}
           onBlur={() => setOpen(false)}
         >
           <CommandEmpty>No results found.</CommandEmpty>

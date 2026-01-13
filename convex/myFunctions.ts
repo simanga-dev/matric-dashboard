@@ -13,7 +13,7 @@ export const getTopSchools = query({
       totalSchools2022: v.number(),
       trendRate: v.union(v.number(), v.null()),
     }),
-    v.null()
+    v.null(),
   ),
   handler: async (ctx) => {
     const allMarks = await ctx.db.query('marks').collect()
@@ -21,13 +21,13 @@ export const getTopSchools = query({
     const perfectSchools2023 = new Set(
       allMarks
         .filter((m) => m.year === 2023 && m.total_wrote === m.total_archived)
-        .map((m) => m.school_id)
+        .map((m) => m.school_id),
     )
 
     const perfectSchools2022 = new Set(
       allMarks
         .filter((m) => m.year === 2022 && m.total_wrote === m.total_archived)
-        .map((m) => m.school_id)
+        .map((m) => m.school_id),
     )
 
     const totalSchools2023 = perfectSchools2023.size
@@ -37,7 +37,7 @@ export const getTopSchools = query({
       totalSchools2022 === 0
         ? null
         : Math.round(
-            ((totalSchools2023 - totalSchools2022) / totalSchools2022) * 100
+            ((totalSchools2023 - totalSchools2022) / totalSchools2022) * 100,
           ) / 100
 
     return {
@@ -56,16 +56,16 @@ export const getExamCenters = query({
       totalCenters2022: v.number(),
       trendRate: v.union(v.number(), v.null()),
     }),
-    v.null()
+    v.null(),
   ),
   handler: async (ctx) => {
     const allMarks = await ctx.db.query('marks').collect()
 
     const centers2023 = new Set(
-      allMarks.filter((m) => m.year === 2023).map((m) => m.school_id)
+      allMarks.filter((m) => m.year === 2023).map((m) => m.school_id),
     )
     const centers2022 = new Set(
-      allMarks.filter((m) => m.year === 2022).map((m) => m.school_id)
+      allMarks.filter((m) => m.year === 2022).map((m) => m.school_id),
     )
 
     const totalCenters2023 = centers2023.size
@@ -75,7 +75,7 @@ export const getExamCenters = query({
       totalCenters2022 === 0
         ? null
         : Math.round(
-            ((totalCenters2023 - totalCenters2022) / totalCenters2022) * 100
+            ((totalCenters2023 - totalCenters2022) / totalCenters2022) * 100,
           ) / 100
 
     return {
@@ -94,7 +94,7 @@ export const getTotalLearners = query({
       totalLearners2022: v.number(),
       trendRate: v.union(v.number(), v.null()),
     }),
-    v.null()
+    v.null(),
   ),
   handler: async (ctx) => {
     const allMarks = await ctx.db.query('marks').collect()
@@ -111,7 +111,7 @@ export const getTotalLearners = query({
       totalLearners2022 === 0
         ? null
         : Math.round(
-            ((totalLearners2023 - totalLearners2022) / totalLearners2022) * 100
+            ((totalLearners2023 - totalLearners2022) / totalLearners2022) * 100,
           ) / 100
 
     return {
@@ -130,7 +130,7 @@ export const getMatricPassRate = query({
       passRate2022: v.union(v.number(), v.null()),
       trendRate: v.union(v.number(), v.null()),
     }),
-    v.null()
+    v.null(),
   ),
   handler: async (ctx) => {
     const allMarks = await ctx.db.query('marks').collect()
@@ -141,13 +141,13 @@ export const getMatricPassRate = query({
     const totalWrote2023 = marks2023.reduce((sum, m) => sum + m.total_wrote, 0)
     const totalPassed2023 = marks2023.reduce(
       (sum, m) => sum + m.total_archived,
-      0
+      0,
     )
 
     const totalWrote2022 = marks2022.reduce((sum, m) => sum + m.total_wrote, 0)
     const totalPassed2022 = marks2022.reduce(
       (sum, m) => sum + m.total_archived,
-      0
+      0,
     )
 
     const passRate2023 =
