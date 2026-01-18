@@ -4,7 +4,6 @@ export const Route = createFileRoute('/dashboard/')({
   component: DashboardHome,
 })
 
-import data from './data.json'
 import { SectionCards } from '~/components/section-cards'
 import { ChartAreaInteractive } from '~/components/chart-area-interactive'
 import { DataTable } from '~/components/data-table'
@@ -19,7 +18,7 @@ function DashboardHome() {
           <div className="px-4 lg:px-6">
             <ChartAreaInteractive />
           </div>
-          <DataTable data={data} />
+          <DataTable />
         </div>
       </div>
     </div>
