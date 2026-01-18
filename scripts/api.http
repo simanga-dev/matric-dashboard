@@ -1,5 +1,5 @@
 @Host.Api_HostAddress = https://search.simanga.dev
-@TOKEN = {{$dotenv MEILI_TOKEN}}
+@TOKEN = {{$dotenv MEILI_MASTER_KEY }}
 
 ##### first queries
 GET {{Host.Api_HostAddress}}/tasks
@@ -25,7 +25,7 @@ GET https://jsonplaceholder.typicode.com/posts
 
 
 #### This query make sure I win
-POST {{Host.Api_HostAddress}}/indexes/shools/search
+POST {{Host.Api_HostAddress}}/indexes/schools/search
 Content-Type: application/json
 Authorization: Bearer {{MEILI_TOKEN}}
 
