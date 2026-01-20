@@ -13,6 +13,7 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as getSummaryCards from "../getSummaryCards.js";
 import type * as myFunctions from "../myFunctions.js";
 import type * as seedDevData from "../seedDevData.js";
 import type * as seedMutations from "../seedMutations.js";
@@ -26,6 +27,7 @@ import type * as seedMutations from "../seedMutations.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  getSummaryCards: typeof getSummaryCards;
   myFunctions: typeof myFunctions;
   seedDevData: typeof seedDevData;
   seedMutations: typeof seedMutations;
