@@ -7,6 +7,7 @@ import {
 import { QueryClient } from '@tanstack/react-query'
 import * as React from 'react'
 import appCss from '~/styles/app.css?url'
+import { ThemeProvider } from '~/context/theme-context'
 
 export const Route = createRootRouteWithContext<{
   queryClient: QueryClient
@@ -61,12 +62,14 @@ function RootComponent() {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html className="dark">
+    <html suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body>
-        {children}
+        <ThemeProvider defaultTheme="system" storageKey="matric-dashboard-theme">
+          {children}
+        </ThemeProvider>
         <Scripts />
       </body>
     </html>
