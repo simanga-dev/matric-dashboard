@@ -1,26 +1,31 @@
-# GEMINI.md
+# Matric Dashboard
 
-## Project Overview
+A web application for exploring South African National Senior Certificate (NSC) matric results data. Browse school performance, view top achievers, and access study resources.
 
-This is a web application built with a modern frontend stack. The project is a dashboard application that uses the following technologies:
+## Features
 
-*   **Framework:** [React](https://react.dev/)
-*   **Bundler:** [Vite](https://vitejs.dev/)
-*   **Styling:** [Tailwind CSS](https://tailwindcss.com/)
-*   **UI Components:** [Radix UI](https://www.radix-ui.com/) and [Lucide React](https://lucide.dev/guide/packages/lucide-react) for UI components, and [Recharts](https://recharts.org/) for charts.
-*   **Routing:** [TanStack Router](https://tanstack.com/router/)
-*   **Data Fetching and State Management:** [TanStack Query](https://tanstack.com/query/) and [Convex](https://www.convex.dev/)
-*   **Type Checking:** [TypeScript](https://www.typescriptlang.org/)
-*   **Schema Validation:** [Zod](https://zod.dev/)
+- **School Performance Browser** - Search and view detailed performance data for schools across all provinces
+- **Top Achievers** - Showcase of top-performing matric students by year
+- **Analytics Dashboard** - Visual insights into pass rates, provincial comparisons, and trends
+- **Past Papers** - Access to previous NSC examination papers
+- **Study Guide** - Resources to help students prepare for exams
 
-The application uses Convex for its backend and data layer, with the schema defined in `convex/schema.ts`. The frontend is built with React and Vite, with routing handled by TanStack Router. The UI is styled with Tailwind CSS and built with Radix UI and other component libraries.
+## Tech Stack
 
-## Building and Running
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 19, Vite, TypeScript |
+| Styling | Tailwind CSS v4, shadcn/ui (Radix) |
+| Routing | TanStack Router |
+| State/Data | TanStack Query, Convex |
+| Charts | Recharts |
+
+## Getting Started
 
 ### Prerequisites
 
-*   [Node.js](https://nodejs.org/) (v18 or higher)
-*   [pnpm](https://pnpm.io/)
+- Node.js v18+
+- [pnpm](https://pnpm.io/)
 
 ### Installation
 
@@ -30,30 +35,35 @@ pnpm install
 
 ### Development
 
-To start the development server, run the following command:
-
 ```bash
 pnpm dev
 ```
 
-This will start the Vite development server on `http://localhost:3000` and the Convex development server.
+Starts Vite on `http://localhost:3000` and Convex dev server concurrently.
 
 ### Build
-
-To build the project for production, run the following command:
 
 ```bash
 pnpm build
 ```
 
-This will create a `dist` directory with the production-ready assets.
+## Project Structure
 
-## Development Conventions
-
-### Formatting
-
-This project uses [Prettier](https://prettier.io/) for code formatting. To format the code, run the following command:
-
-```bash
-pnpm format
 ```
+src/
+├── routes/           # TanStack Router file-based routes
+│   └── dashboard/    # Dashboard pages (schools, analytics, top-achievers, etc.)
+├── components/       # React components (shadcn/ui in ui/)
+└── lib/              # Utilities
+convex/
+├── schema.ts         # Database schema (school, marks, top_achievers)
+└── *.ts              # Convex functions
+```
+
+## Scripts
+
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start development servers |
+| `pnpm build` | Production build + typecheck |
+| `pnpm format` | Format code with Prettier |
