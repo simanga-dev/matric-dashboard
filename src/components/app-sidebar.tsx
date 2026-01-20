@@ -6,15 +6,15 @@ import {
   IconDatabase,
   IconFileAi,
   IconFileDescription,
+  IconFilePencil,
   IconFileWord,
-  IconFolder,
   IconHelp,
   IconInnerShadowTop,
   IconListDetails,
   IconReport,
   IconSearch,
   IconSettings,
-  IconUsers,
+  IconTrophy,
 } from '@tabler/icons-react'
 
 import { NavDocuments } from '~/components/nav-documents'
@@ -55,14 +55,9 @@ const data = {
       icon: IconListDetails,
     },
     {
-      title: 'Past Papers',
-      url: '/dashboard/past-papers',
-      icon: IconFolder,
-    },
-    {
-      title: 'Study Guide',
-      url: '/dashboard/study-guide',
-      icon: IconUsers,
+      title: 'Top Achievers',
+      url: '/dashboard/top-achievers',
+      icon: IconTrophy,
     },
   ],
   navClouds: [
@@ -131,6 +126,16 @@ const data = {
     },
   ],
   documents: [
+    {
+      name: 'Past Papers',
+      url: '/dashboard/past-papers',
+      icon: IconFilePencil,
+    },
+    {
+      name: 'Study Guide',
+      url: '/dashboard/study-guide',
+      icon: IconFileDescription,
+    },
     {
       name: 'Data Library',
       url: '#',

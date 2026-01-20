@@ -28,4 +28,14 @@ export default defineSchema({
     total_archived: v.number(),
     percentage_archived: v.number(),
   }),
+
+  top_achievers: defineTable({
+    year: v.number(),
+    name: v.string(),
+    school_name: v.string(),
+    province: v.string(),
+    percentage_mark: v.number(),
+    headshot_url: v.optional(v.string()),
+    rank: v.number(),
+  }).index('by_year', ['year']),
 })

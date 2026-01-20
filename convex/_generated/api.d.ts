@@ -17,6 +17,8 @@ import type * as getSummaryCards from "../getSummaryCards.js";
 import type * as myFunctions from "../myFunctions.js";
 import type * as seedDevData from "../seedDevData.js";
 import type * as seedMutations from "../seedMutations.js";
+import type * as seedTopAchievers from "../seedTopAchievers.js";
+import type * as topAchievers from "../topAchievers.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -31,6 +33,8 @@ declare const fullApi: ApiFromModules<{
   myFunctions: typeof myFunctions;
   seedDevData: typeof seedDevData;
   seedMutations: typeof seedMutations;
+  seedTopAchievers: typeof seedTopAchievers;
+  topAchievers: typeof topAchievers;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,
