@@ -108,8 +108,10 @@ export const schoolPerformanceSchema = z.object({
   province: z.string(),
   district: z.string(),
   quintile: z.number().nullable(),
-  passRate2024: z.number().nullable(),
-  passRate2023: z.number().nullable(),
+  passRateCurrent: z.number().nullable(),
+  passRatePrevious: z.number().nullable(),
+  currentYear: z.number(),
+  previousYear: z.number(),
   totalWrote: z.number(),
   totalAchieved: z.number(),
   trend: z.number().nullable(),
@@ -240,12 +242,12 @@ const columns: ColumnDef<SchoolPerformance>[] = [
     ),
   },
   {
-    accessorKey: 'passRate2024',
+    accessorKey: 'passRateCurrent',
     header: () => <div className="w-full text-right">Pass Rate</div>,
     cell: ({ row }) => (
       <div className="text-right font-medium">
-        {row.original.passRate2024 !== null
-          ? `${row.original.passRate2024.toFixed(1)}%`
+        {row.original.passRateCurrent !== null
+          ? `${row.original.passRateCurrent.toFixed(1)}%`
           : 'N/A'}
       </div>
     ),
@@ -359,8 +361,6 @@ function DraggableRow({ row }: { row: Row<SchoolPerformance> }) {
 
 export function DataTable() {
   const schoolData = useQuery(api.myFunctions.getSchoolPerformance, {})
-
-  console.log(schoolData)
 
   const [data, setData] = React.useState<SchoolPerformance[]>([])
   const [rowSelection, setRowSelection] = React.useState({})
@@ -674,8 +674,8 @@ function TableCellViewer({ item }: { item: SchoolPerformance }) {
   const isMobile = useIsMobile()
 
   const chartData = [
-    { year: '2023', passRate: item.passRate2023 ?? 0 },
-    { year: '2024', passRate: item.passRate2024 ?? 0 },
+    { year: String(item.previousYear), passRate: item.passRatePrevious ?? 0 },
+    { year: String(item.currentYear), passRate: item.passRateCurrent ?? 0 },
   ]
 
   return (
@@ -762,18 +762,22 @@ function TableCellViewer({ item }: { item: SchoolPerformance }) {
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-1">
               <span className="text-muted-foreground text-xs">
-                Pass Rate 2024
+                Pass Rate {item.currentYear}
               </span>
               <span className="font-medium">
-                {item.passRate2024?.toFixed(1) ?? 'N/A'}%
+                {item.passRateCurrent != null
+                  ? `${item.passRateCurrent.toFixed(1)}%`
+                  : 'N/A'}
               </span>
             </div>
             <div className="flex flex-col gap-1">
               <span className="text-muted-foreground text-xs">
-                Pass Rate 2023
+                Pass Rate {item.previousYear}
               </span>
               <span className="font-medium">
-                {item.passRate2023?.toFixed(1) ?? 'N/A'}%
+                {item.passRatePrevious != null
+                  ? `${item.passRatePrevious.toFixed(1)}%`
+                  : 'N/A'}
               </span>
             </div>
           </div>

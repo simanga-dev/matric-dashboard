@@ -185,8 +185,10 @@ export const getSchoolPerformance = query({
       province: v.string(),
       district: v.string(),
       quintile: v.union(v.float64(), v.null()),
-      passRate2024: v.union(v.number(), v.null()),
-      passRate2023: v.union(v.number(), v.null()),
+      passRateCurrent: v.union(v.number(), v.null()),
+      passRatePrevious: v.union(v.number(), v.null()),
+      currentYear: v.number(),
+      previousYear: v.number(),
       totalWrote: v.number(),
       totalAchieved: v.number(),
       trend: v.union(v.number(), v.null()),
@@ -222,22 +224,22 @@ export const getSchoolPerformance = query({
         const currentMark = marks?.current
         const previousMark = marks?.previous
 
-        const passRate2024 = currentMark?.percentage_archived ?? null
-        const passRate2023 = previousMark?.percentage_archived ?? null
+        const passRateCurrent = currentMark?.percentage_archived ?? null
+        const passRatePrevious = previousMark?.percentage_archived ?? null
 
         const trend =
-          passRate2024 !== null && passRate2023 !== null
-            ? Math.round((passRate2024 - passRate2023) * 100) / 100
+          passRateCurrent !== null && passRatePrevious !== null
+            ? Math.round((passRateCurrent - passRatePrevious) * 100) / 100
             : null
 
         let status: string
-        if (passRate2024 === null) {
+        if (passRateCurrent === null) {
           status = 'No Data'
-        } else if (passRate2024 >= 90) {
+        } else if (passRateCurrent >= 90) {
           status = 'Excellent'
-        } else if (passRate2024 >= 70) {
+        } else if (passRateCurrent >= 70) {
           status = 'Good'
-        } else if (passRate2024 >= 50) {
+        } else if (passRateCurrent >= 50) {
           status = 'Average'
         } else {
           status = 'Needs Improvement'
@@ -250,8 +252,10 @@ export const getSchoolPerformance = query({
           province: school.province,
           district: school.district_name,
           quintile: school.quantile ?? null,
-          passRate2024,
-          passRate2023,
+          passRateCurrent,
+          passRatePrevious,
+          currentYear,
+          previousYear,
           totalWrote: currentMark?.total_wrote ?? 0,
           totalAchieved: currentMark?.total_archived ?? 0,
           trend,
