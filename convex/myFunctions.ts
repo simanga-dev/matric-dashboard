@@ -173,6 +173,117 @@ export const getMatricPassRate = query({
   },
 })
 
+export const getSchoolPerformance = query({
+  args: {
+    year: v.optional(v.number()),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id('school'),
+      natemis: v.number(),
+      schoolName: v.string(),
+      province: v.string(),
+      district: v.string(),
+      quintile: v.union(v.float64(), v.null()),
+      passRateCurrent: v.union(v.number(), v.null()),
+      passRatePrevious: v.union(v.number(), v.null()),
+      currentYear: v.number(),
+      previousYear: v.number(),
+      totalWrote: v.number(),
+      totalAchieved: v.number(),
+      trend: v.union(v.number(), v.null()),
+      status: v.string(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const currentYear = args.year ?? 2023
+    const previousYear = currentYear - 1
+
+    const schools = await ctx.db.query('school').collect()
+    const allMarks = await ctx.db.query('marks').collect()
+
+    const marksBySchool = new Map<
+      string,
+      { current?: (typeof allMarks)[0]; previous?: (typeof allMarks)[0] }
+    >()
+
+    for (const mark of allMarks) {
+      const schoolId = mark.school_id
+      const existing = marksBySchool.get(schoolId) || {}
+      if (mark.year === currentYear) {
+        existing.current = mark
+      } else if (mark.year === previousYear) {
+        existing.previous = mark
+      }
+      marksBySchool.set(schoolId, existing)
+    }
+
+    const results = schools
+      .map((school) => {
+        const marks = marksBySchool.get(school._id)
+        const currentMark = marks?.current
+        const previousMark = marks?.previous
+
+        const passRateCurrent = currentMark?.percentage_archived ?? null
+        const passRatePrevious = previousMark?.percentage_archived ?? null
+
+        const trend =
+          passRateCurrent !== null && passRatePrevious !== null
+            ? Math.round((passRateCurrent - passRatePrevious) * 100) / 100
+            : null
+
+        let status: string
+        if (passRateCurrent === null) {
+          status = 'No Data'
+        } else if (passRateCurrent >= 90) {
+          status = 'Excellent'
+        } else if (passRateCurrent >= 70) {
+          status = 'Good'
+        } else if (passRateCurrent >= 50) {
+          status = 'Average'
+        } else {
+          status = 'Needs Improvement'
+        }
+
+        return {
+          _id: school._id,
+          natemis: school.natemis,
+          schoolName: school.official_institution_name,
+          province: school.province,
+          district: school.district_name,
+          quintile: school.quantile ?? null,
+          passRateCurrent,
+          passRatePrevious,
+          currentYear,
+          previousYear,
+          totalWrote: currentMark?.total_wrote ?? 0,
+          totalAchieved: currentMark?.total_archived ?? 0,
+          trend,
+          status,
+        }
+      })
+      .filter((s) => s.totalWrote > 0)
+
+    return results
+  },
+})
+
+// Debug query to check data
+export const debugData = query({
+  args: {},
+  returns: v.object({
+    schoolCount: v.number(),
+    markCount: v.number(),
+    years: v.array(v.number()),
+  }),
+  handler: async (ctx) => {
+    const schools = await ctx.db.query('school').collect()
+    const marks = await ctx.db.query('marks').collect()
+    const years = [...new Set(marks.map((m) => m.year))]
+    return { schoolCount: schools.length, markCount: marks.length, years }
+  },
+})
+
 // You can read data from the database via a query:
 export const listNumbers = query({
   // Validators for arguments.
