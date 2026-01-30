@@ -1,0 +1,24 @@
+services:
+  matric-dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - VITE_CONVEX_URL=https://dazzling-dog-309.convex.cloud
+      - NODE_ENV=production
+      - PORT=3000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.matric.rule=Host(`matric.yourdomain.com`)"
+      - "traefik.http.routers.matric.entrypoints=websecure"
+      - "traefik.http.routers.matric.tls.certresolver=letsencrypt"
+      - "traefik.http.services.matric.loadbalancer.server.port=3000"
