@@ -1,4 +1,8 @@
-import { IconArrowNarrowRight, IconTrendingDown, IconTrendingUp } from '@tabler/icons-react'
+import {
+  IconArrowNarrowRight,
+  IconTrendingDown,
+  IconTrendingUp,
+} from '@tabler/icons-react'
 import { useQuery } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 
@@ -45,7 +49,7 @@ function TopSchoolCard() {
       <CardHeader>
         <CardDescription>Top School Performers</CardDescription>
         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          {data.totalSchools2025}
+          {data.totalSchoolsCurrent}
         </CardTitle>
         <CardAction>
           <Badge variant="outline">
@@ -94,14 +98,17 @@ function ExamCentreCard() {
 
   const isNullTrend = data.trendRate === null
   const isConstant = data.trendRate === 0
-  const trendDisplay = data.trendRate !== null ? `${data.trendRate > 0 ? '+' : ''}${(data.trendRate * 100).toFixed(0)}%` : 'N/A'
+  const trendDisplay =
+    data.trendRate !== null
+      ? `${data.trendRate > 0 ? '+' : ''}${(data.trendRate * 100).toFixed(0)}%`
+      : 'N/A'
 
   return (
     <Card className="@container/card">
       <CardHeader>
         <CardDescription>Exam Centers</CardDescription>
         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          {data.totalCenters2025.toLocaleString()}
+          {data.totalCentersCurrent.toLocaleString()}
         </CardTitle>
         <CardAction>
           <Badge variant="outline">
@@ -112,7 +119,11 @@ function ExamCentreCard() {
       </CardHeader>
       <CardFooter className="flex-col items-start gap-1.5 text-sm">
         <div className="line-clamp-1 flex gap-2 font-medium">
-          {isNullTrend ? 'Exam Centers' : isConstant ? 'Constant Exam Centers' : 'Exam Center Change'}{' '}
+          {isNullTrend
+            ? 'Exam Centers'
+            : isConstant
+              ? 'Constant Exam Centers'
+              : 'Exam Center Change'}{' '}
           <IconArrowNarrowRight className="size-4" />
         </div>
         <div className="text-muted-foreground">
@@ -120,7 +131,7 @@ function ExamCentreCard() {
             ? 'Not enough data to compare with last year'
             : isConstant
               ? 'The number of exam centers remains the same'
-              : `${Math.abs(data.totalCenters2025 - data.totalCenters2024)} ${data.totalCenters2025 > data.totalCenters2024 ? 'more' : 'fewer'} centers than last year`}
+              : `${Math.abs(data.totalCentersCurrent - data.totalCentersPrevious)} ${data.totalCentersCurrent > data.totalCentersPrevious ? 'more' : 'fewer'} centers than last year`}
         </div>
       </CardFooter>
     </Card>
@@ -134,7 +145,7 @@ function LearnersCountCard() {
     return (
       <Card className="@container/card animate-pulse">
         <CardHeader>
-          <CardDescription>Learners in 2025</CardDescription>
+          <CardDescription>Learners</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             —
           </CardTitle>
@@ -154,26 +165,29 @@ function LearnersCountCard() {
     : isPositive
       ? IconTrendingUp
       : IconTrendingDown
-  const trendPercent = data.trendRate !== null ? Math.abs(data.trendRate * 100).toFixed(0) : 0
+  const trendPercent =
+    data.trendRate !== null ? Math.abs(data.trendRate * 100).toFixed(0) : 0
 
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardDescription>Learners in 2025</CardDescription>
+        <CardDescription>Learners in {data.latestYear}</CardDescription>
         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          {data.totalLearners2025.toLocaleString()}
+          {data.totalLearnersCurrent.toLocaleString()}
         </CardTitle>
         <CardAction>
           <Badge variant="outline">
             <TrendIcon />
-            {data.trendRate !== null ? `${data.trendRate >= 0 ? '+' : '-'}${trendPercent}%` : 'N/A'}
+            {data.trendRate !== null
+              ? `${data.trendRate >= 0 ? '+' : '-'}${trendPercent}%`
+              : 'N/A'}
           </Badge>
         </CardAction>
       </CardHeader>
       <CardFooter className="flex-col items-start gap-1.5 text-sm">
         <div className="line-clamp-1 flex gap-2 font-medium">
           {isNullTrend
-            ? 'Learners in 2025'
+            ? `Learners in ${data.latestYear}`
             : `Learners ${isPositive ? 'increased' : 'decreased'} by ${trendPercent}%`}
           <TrendIcon className="size-4" />
         </div>
@@ -196,7 +210,7 @@ function PassRateCard() {
     return (
       <Card className="@container/card animate-pulse">
         <CardHeader>
-          <CardDescription>Pass Rate 2025</CardDescription>
+          <CardDescription>Pass Rate</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             —
           </CardTitle>
@@ -220,15 +234,15 @@ function PassRateCard() {
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardDescription>Pass Rate 2025</CardDescription>
+        <CardDescription>Pass Rate {data.latestYear}</CardDescription>
         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          {data.passRate2025 !== null ? `${data.passRate2025}%` : 'N/A'}
+          {data.passRateCurrent !== null ? `${data.passRateCurrent}%` : 'N/A'}
         </CardTitle>
         <CardAction>
           <Badge variant="outline">
             <TrendIcon />
             {data.trendRate !== null
-              ? `${data.trendRate >= 0 ? '+' : ''}${data.trendRate}pp`
+              ? `${data.trendRate >= 0 ? '+' : ''}${data.trendRate} %`
               : 'N/A'}
           </Badge>
         </CardAction>
@@ -236,7 +250,7 @@ function PassRateCard() {
       <CardFooter className="flex-col items-start gap-1.5 text-sm">
         <div className="line-clamp-1 flex gap-2 font-medium">
           {isNullTrend
-            ? 'Pass rate for 2025'
+            ? `Pass rate for ${data.latestYear}`
             : isPositive
               ? 'Trending up this year'
               : 'Trending down this year'}{' '}
@@ -245,7 +259,7 @@ function PassRateCard() {
         <div className="text-muted-foreground">
           {isNullTrend
             ? 'Not enough data to compare with last year'
-            : 'Learners who passed their Matric results in 2025'}
+            : `Learners who passed their Matric results in ${data.latestYear}`}
         </div>
       </CardFooter>
     </Card>
@@ -255,10 +269,10 @@ function PassRateCard() {
 export function SectionCards() {
   return (
     <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+      <PassRateCard />
       <TopSchoolCard />
       <ExamCentreCard />
       <LearnersCountCard />
-      <PassRateCard />
     </div>
   )
 }
