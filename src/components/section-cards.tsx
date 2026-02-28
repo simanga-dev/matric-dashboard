@@ -45,7 +45,7 @@ function TopSchoolCard() {
       <CardHeader>
         <CardDescription>Top School Performers</CardDescription>
         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          {data.totalSchools2023}
+          {data.totalSchools2025}
         </CardTitle>
         <CardAction>
           <Badge variant="outline">
@@ -101,7 +101,7 @@ function ExamCentreCard() {
       <CardHeader>
         <CardDescription>Exam Centers</CardDescription>
         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          {data.totalCenters2023.toLocaleString()}
+          {data.totalCenters2025.toLocaleString()}
         </CardTitle>
         <CardAction>
           <Badge variant="outline">
@@ -120,7 +120,7 @@ function ExamCentreCard() {
             ? 'Not enough data to compare with last year'
             : isConstant
               ? 'The number of exam centers remains the same'
-              : `${Math.abs(data.totalCenters2023 - data.totalCenters2022)} ${data.totalCenters2023 > data.totalCenters2022 ? 'more' : 'fewer'} centers than last year`}
+              : `${Math.abs(data.totalCenters2025 - data.totalCenters2024)} ${data.totalCenters2025 > data.totalCenters2024 ? 'more' : 'fewer'} centers than last year`}
         </div>
       </CardFooter>
     </Card>
@@ -134,7 +134,7 @@ function LearnersCountCard() {
     return (
       <Card className="@container/card animate-pulse">
         <CardHeader>
-          <CardDescription>Learners in 2023</CardDescription>
+          <CardDescription>Learners in 2025</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             —
           </CardTitle>
@@ -159,9 +159,9 @@ function LearnersCountCard() {
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardDescription>Learners in 2023</CardDescription>
+        <CardDescription>Learners in 2025</CardDescription>
         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          {data.totalLearners2023.toLocaleString()}
+          {data.totalLearners2025.toLocaleString()}
         </CardTitle>
         <CardAction>
           <Badge variant="outline">
@@ -173,7 +173,7 @@ function LearnersCountCard() {
       <CardFooter className="flex-col items-start gap-1.5 text-sm">
         <div className="line-clamp-1 flex gap-2 font-medium">
           {isNullTrend
-            ? 'Learners in 2023'
+            ? 'Learners in 2025'
             : `Learners ${isPositive ? 'increased' : 'decreased'} by ${trendPercent}%`}
           <TrendIcon className="size-4" />
         </div>
@@ -196,7 +196,7 @@ function PassRateCard() {
     return (
       <Card className="@container/card animate-pulse">
         <CardHeader>
-          <CardDescription>Pass Rate 2023</CardDescription>
+          <CardDescription>Pass Rate 2025</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
             —
           </CardTitle>
@@ -220,9 +220,9 @@ function PassRateCard() {
   return (
     <Card className="@container/card">
       <CardHeader>
-        <CardDescription>Pass Rate 2023</CardDescription>
+        <CardDescription>Pass Rate 2025</CardDescription>
         <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-          {data.passRate2023 !== null ? `${data.passRate2023}%` : 'N/A'}
+          {data.passRate2025 !== null ? `${data.passRate2025}%` : 'N/A'}
         </CardTitle>
         <CardAction>
           <Badge variant="outline">
@@ -236,7 +236,7 @@ function PassRateCard() {
       <CardFooter className="flex-col items-start gap-1.5 text-sm">
         <div className="line-clamp-1 flex gap-2 font-medium">
           {isNullTrend
-            ? 'Pass rate for 2023'
+            ? 'Pass rate for 2025'
             : isPositive
               ? 'Trending up this year'
               : 'Trending down this year'}{' '}
@@ -245,7 +245,7 @@ function PassRateCard() {
         <div className="text-muted-foreground">
           {isNullTrend
             ? 'Not enough data to compare with last year'
-            : 'Learners who passed their Matric results in 2023'}
+            : 'Learners who passed their Matric results in 2025'}
         </div>
       </CardFooter>
     </Card>

@@ -29,7 +29,7 @@ function RouteComponent() {
       const text = await file.text()
       setStatus('Uploading to server and parsing...')
       const res = await parseCsv({ csvText: text })
-      setStatus(`Done. Processed ${res?.rows ?? 0} rows. Check server logs.`)
+      setStatus(`Done. Processed ${res?.recordsInserted ?? 0} rows. Check server logs.`)
     } catch (err) {
       console.error(err)
       setStatus('Failed to upload/parse CSV. See console for details.')

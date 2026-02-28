@@ -25,9 +25,14 @@ export default defineSchema({
     school_id: v.id('school'),
     number_progressed: v.number(),
     total_wrote: v.number(),
-    total_archived: v.number(),
-    percentage_archived: v.number(),
-  }),
+    total_achieved: v.optional(v.number()),
+    percentage_achieved: v.optional(v.number()),
+    // TODO: remove after migration
+    total_archived: v.optional(v.number()),
+    percentage_archived: v.optional(v.number()),
+  })
+    .index('by_year', ['year'])
+    .index('by_school', ['school_id']),
 
   top_achievers: defineTable({
     year: v.number(),

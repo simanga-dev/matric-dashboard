@@ -9,40 +9,47 @@ export const getTopSchools = query({
   args: {},
   returns: v.union(
     v.object({
-      totalSchools2023: v.number(),
-      totalSchools2022: v.number(),
+      totalSchools2025: v.number(),
+      totalSchools2024: v.number(),
       trendRate: v.union(v.number(), v.null()),
     }),
     v.null(),
   ),
   handler: async (ctx) => {
-    const allMarks = await ctx.db.query('marks').collect()
+    const marks2025 = await ctx.db
+      .query('marks')
+      .withIndex('by_year', (q) => q.eq('year', 2025))
+      .collect()
+    const marks2024 = await ctx.db
+      .query('marks')
+      .withIndex('by_year', (q) => q.eq('year', 2024))
+      .collect()
 
-    const perfectSchools2023 = new Set(
-      allMarks
-        .filter((m) => m.year === 2023 && m.total_wrote === m.total_archived)
+    const perfectSchools2025 = new Set(
+      marks2025
+        .filter((m) => m.total_wrote === m.total_achieved)
         .map((m) => m.school_id),
     )
 
-    const perfectSchools2022 = new Set(
-      allMarks
-        .filter((m) => m.year === 2022 && m.total_wrote === m.total_archived)
+    const perfectSchools2024 = new Set(
+      marks2024
+        .filter((m) => m.total_wrote === m.total_achieved)
         .map((m) => m.school_id),
     )
 
-    const totalSchools2023 = perfectSchools2023.size
-    const totalSchools2022 = perfectSchools2022.size
+    const totalSchools2025 = perfectSchools2025.size
+    const totalSchools2024 = perfectSchools2024.size
 
     const trendRate =
-      totalSchools2022 === 0
+      totalSchools2024 === 0
         ? null
         : Math.round(
-            ((totalSchools2023 - totalSchools2022) / totalSchools2022) * 100,
+            ((totalSchools2025 - totalSchools2024) / totalSchools2024) * 100,
           ) / 100
 
     return {
-      totalSchools2023,
-      totalSchools2022,
+      totalSchools2025,
+      totalSchools2024,
       trendRate,
     }
   },
@@ -52,35 +59,38 @@ export const getExamCenters = query({
   args: {},
   returns: v.union(
     v.object({
-      totalCenters2023: v.number(),
-      totalCenters2022: v.number(),
+      totalCenters2025: v.number(),
+      totalCenters2024: v.number(),
       trendRate: v.union(v.number(), v.null()),
     }),
     v.null(),
   ),
   handler: async (ctx) => {
-    const allMarks = await ctx.db.query('marks').collect()
+    const marks2025 = await ctx.db
+      .query('marks')
+      .withIndex('by_year', (q) => q.eq('year', 2025))
+      .collect()
+    const marks2024 = await ctx.db
+      .query('marks')
+      .withIndex('by_year', (q) => q.eq('year', 2024))
+      .collect()
 
-    const centers2023 = new Set(
-      allMarks.filter((m) => m.year === 2023).map((m) => m.school_id),
-    )
-    const centers2022 = new Set(
-      allMarks.filter((m) => m.year === 2022).map((m) => m.school_id),
-    )
+    const centers2025 = new Set(marks2025.map((m) => m.school_id))
+    const centers2024 = new Set(marks2024.map((m) => m.school_id))
 
-    const totalCenters2023 = centers2023.size
-    const totalCenters2022 = centers2022.size
+    const totalCenters2025 = centers2025.size
+    const totalCenters2024 = centers2024.size
 
     const trendRate =
-      totalCenters2022 === 0
+      totalCenters2024 === 0
         ? null
         : Math.round(
-            ((totalCenters2023 - totalCenters2022) / totalCenters2022) * 100,
+            ((totalCenters2025 - totalCenters2024) / totalCenters2024) * 100,
           ) / 100
 
     return {
-      totalCenters2023,
-      totalCenters2022,
+      totalCenters2025,
+      totalCenters2024,
       trendRate,
     }
   },
@@ -90,33 +100,42 @@ export const getTotalLearners = query({
   args: {},
   returns: v.union(
     v.object({
-      totalLearners2023: v.number(),
-      totalLearners2022: v.number(),
+      totalLearners2025: v.number(),
+      totalLearners2024: v.number(),
       trendRate: v.union(v.number(), v.null()),
     }),
     v.null(),
   ),
   handler: async (ctx) => {
-    const allMarks = await ctx.db.query('marks').collect()
+    const marks2025 = await ctx.db
+      .query('marks')
+      .withIndex('by_year', (q) => q.eq('year', 2025))
+      .collect()
+    const marks2024 = await ctx.db
+      .query('marks')
+      .withIndex('by_year', (q) => q.eq('year', 2024))
+      .collect()
 
-    const totalLearners2023 = allMarks
-      .filter((m) => m.year === 2023)
-      .reduce((sum, m) => sum + m.total_wrote, 0)
+    const totalLearners2025 = marks2025.reduce(
+      (sum, m) => sum + m.total_wrote,
+      0,
+    )
 
-    const totalLearners2022 = allMarks
-      .filter((m) => m.year === 2022)
-      .reduce((sum, m) => sum + m.total_wrote, 0)
+    const totalLearners2024 = marks2024.reduce(
+      (sum, m) => sum + m.total_wrote,
+      0,
+    )
 
     const trendRate =
-      totalLearners2022 === 0
+      totalLearners2024 === 0
         ? null
         : Math.round(
-            ((totalLearners2023 - totalLearners2022) / totalLearners2022) * 100,
+            ((totalLearners2025 - totalLearners2024) / totalLearners2024) * 100,
           ) / 100
 
     return {
-      totalLearners2023,
-      totalLearners2022,
+      totalLearners2025,
+      totalLearners2024,
       trendRate,
     }
   },
@@ -126,48 +145,52 @@ export const getMatricPassRate = query({
   args: {},
   returns: v.union(
     v.object({
-      passRate2023: v.union(v.number(), v.null()),
-      passRate2022: v.union(v.number(), v.null()),
+      passRate2025: v.union(v.number(), v.null()),
+      passRate2024: v.union(v.number(), v.null()),
       trendRate: v.union(v.number(), v.null()),
     }),
     v.null(),
   ),
   handler: async (ctx) => {
-    const allMarks = await ctx.db.query('marks').collect()
+    const marks2025 = await ctx.db
+      .query('marks')
+      .withIndex('by_year', (q) => q.eq('year', 2025))
+      .collect()
+    const marks2024 = await ctx.db
+      .query('marks')
+      .withIndex('by_year', (q) => q.eq('year', 2024))
+      .collect()
 
-    const marks2023 = allMarks.filter((m) => m.year === 2023)
-    const marks2022 = allMarks.filter((m) => m.year === 2022)
-
-    const totalWrote2023 = marks2023.reduce((sum, m) => sum + m.total_wrote, 0)
-    const totalPassed2023 = marks2023.reduce(
-      (sum, m) => sum + m.total_archived,
+    const totalWrote2025 = marks2025.reduce((sum, m) => sum + m.total_wrote, 0)
+    const totalPassed2025 = marks2025.reduce(
+      (sum, m) => sum + (m.total_achieved ?? 0),
       0,
     )
 
-    const totalWrote2022 = marks2022.reduce((sum, m) => sum + m.total_wrote, 0)
-    const totalPassed2022 = marks2022.reduce(
-      (sum, m) => sum + m.total_archived,
+    const totalWrote2024 = marks2024.reduce((sum, m) => sum + m.total_wrote, 0)
+    const totalPassed2024 = marks2024.reduce(
+      (sum, m) => sum + (m.total_achieved ?? 0),
       0,
     )
 
-    const passRate2023 =
-      totalWrote2023 === 0
+    const passRate2025 =
+      totalWrote2025 === 0
         ? null
-        : Math.round((totalPassed2023 / totalWrote2023) * 10000) / 100
+        : Math.round((totalPassed2025 / totalWrote2025) * 10000) / 100
 
-    const passRate2022 =
-      totalWrote2022 === 0
+    const passRate2024 =
+      totalWrote2024 === 0
         ? null
-        : Math.round((totalPassed2022 / totalWrote2022) * 10000) / 100
+        : Math.round((totalPassed2024 / totalWrote2024) * 10000) / 100
 
     const trendRate =
-      passRate2023 === null || passRate2022 === null
+      passRate2025 === null || passRate2024 === null
         ? null
-        : Math.round((passRate2023 - passRate2022) * 100) / 100
+        : Math.round((passRate2025 - passRate2024) * 100) / 100
 
     return {
-      passRate2023,
-      passRate2022,
+      passRate2025,
+      passRate2024,
       trendRate,
     }
   },
@@ -196,26 +219,34 @@ export const getSchoolPerformance = query({
     }),
   ),
   handler: async (ctx, args) => {
-    const currentYear = args.year ?? 2023
+    const currentYear = args.year ?? 2025
     const previousYear = currentYear - 1
 
     const schools = await ctx.db.query('school').collect()
-    const allMarks = await ctx.db.query('marks').collect()
+    const currentMarks = await ctx.db
+      .query('marks')
+      .withIndex('by_year', (q) => q.eq('year', currentYear))
+      .collect()
+    const previousMarks = await ctx.db
+      .query('marks')
+      .withIndex('by_year', (q) => q.eq('year', previousYear))
+      .collect()
 
+    type MarkDoc = (typeof currentMarks)[0]
     const marksBySchool = new Map<
       string,
-      { current?: (typeof allMarks)[0]; previous?: (typeof allMarks)[0] }
+      { current?: MarkDoc; previous?: MarkDoc }
     >()
 
-    for (const mark of allMarks) {
-      const schoolId = mark.school_id
-      const existing = marksBySchool.get(schoolId) || {}
-      if (mark.year === currentYear) {
-        existing.current = mark
-      } else if (mark.year === previousYear) {
-        existing.previous = mark
-      }
-      marksBySchool.set(schoolId, existing)
+    for (const mark of currentMarks) {
+      const existing = marksBySchool.get(mark.school_id) || {}
+      existing.current = mark
+      marksBySchool.set(mark.school_id, existing)
+    }
+    for (const mark of previousMarks) {
+      const existing = marksBySchool.get(mark.school_id) || {}
+      existing.previous = mark
+      marksBySchool.set(mark.school_id, existing)
     }
 
     const results = schools
@@ -224,8 +255,8 @@ export const getSchoolPerformance = query({
         const currentMark = marks?.current
         const previousMark = marks?.previous
 
-        const passRateCurrent = currentMark?.percentage_archived ?? null
-        const passRatePrevious = previousMark?.percentage_archived ?? null
+        const passRateCurrent = currentMark?.percentage_achieved ?? null
+        const passRatePrevious = previousMark?.percentage_achieved ?? null
 
         const trend =
           passRateCurrent !== null && passRatePrevious !== null
@@ -257,7 +288,7 @@ export const getSchoolPerformance = query({
           currentYear,
           previousYear,
           totalWrote: currentMark?.total_wrote ?? 0,
-          totalAchieved: currentMark?.total_archived ?? 0,
+          totalAchieved: currentMark?.total_achieved ?? 0,
           trend,
           status,
         }
