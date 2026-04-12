@@ -14,7 +14,7 @@ export const getByYear = query({
       percentage_mark: v.number(),
       headshot_url: v.optional(v.string()),
       rank: v.number(),
-    })
+    }),
   ),
   handler: async (ctx, args) => {
     const achievers = await ctx.db

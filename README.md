@@ -12,13 +12,13 @@ A web application for exploring South African National Senior Certificate (NSC) 
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Frontend | React 19, Vite, TypeScript |
-| Styling | Tailwind CSS v4, shadcn/ui (Radix) |
-| Routing | TanStack Router |
-| State/Data | TanStack Query, Convex |
-| Charts | Recharts |
+| Layer      | Technology                         |
+| ---------- | ---------------------------------- |
+| Frontend   | React 19, Vite, TypeScript         |
+| Styling    | Tailwind CSS v4, shadcn/ui (Radix) |
+| Routing    | TanStack Router                    |
+| State/Data | TanStack Query, Convex             |
+| Charts     | Recharts                           |
 
 ## Getting Started
 
@@ -62,8 +62,8 @@ convex/
 
 ## Scripts
 
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start development servers |
-| `pnpm build` | Production build + typecheck |
-| `pnpm format` | Format code with Prettier |
+| Command       | Description                  |
+| ------------- | ---------------------------- |
+| `pnpm dev`    | Start development servers    |
+| `pnpm build`  | Production build + typecheck |
+| `pnpm format` | Format code with Prettier    |

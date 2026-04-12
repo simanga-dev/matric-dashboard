@@ -135,7 +135,6 @@ export function ChartAreaInteractive() {
                   stopOpacity={0.1}
                 />
               </linearGradient>
-
             </defs>
             <CartesianGrid vertical={false} />
             <XAxis

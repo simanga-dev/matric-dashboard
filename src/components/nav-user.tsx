@@ -44,6 +44,8 @@ export function NavUser() {
                 Fill in the details below to create a new account.
               </DialogDescription>
             </DialogHeader>
+            {/* TODO: Implement form submission with controlled inputs (useState or react-hook-form),
+                validation, and Convex mutation for user creation. Currently a placeholder. */}
             <form className="grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="name">Full name</Label>

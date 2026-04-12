@@ -135,7 +135,8 @@ function SchoolListingPage() {
   const getQuintileColor = (q: string) => {
     const num = parseInt(q)
     if (num <= 2) return 'bg-red-500/10 text-red-600 dark:text-red-400'
-    if (num === 3) return 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400'
+    if (num === 3)
+      return 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400'
     return 'bg-green-500/10 text-green-600 dark:text-green-400'
   }
 
@@ -156,7 +157,11 @@ function SchoolListingPage() {
           <CardHeader className="pb-2">
             <CardDescription>Total Schools</CardDescription>
             <CardTitle className="text-2xl tabular-nums">
-              {isLoading ? <Skeleton className="h-8 w-20" /> : totalHits.toLocaleString()}
+              {isLoading ? (
+                <Skeleton className="h-8 w-20" />
+              ) : (
+                totalHits.toLocaleString()
+              )}
             </CardTitle>
           </CardHeader>
         </Card>

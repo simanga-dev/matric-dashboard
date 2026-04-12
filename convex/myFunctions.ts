@@ -17,7 +17,11 @@ export const getTopSchools = query({
     v.null(),
   ),
   handler: async (ctx) => {
-    const latestMark = await ctx.db.query('marks').withIndex('by_year').order('desc').first()
+    const latestMark = await ctx.db
+      .query('marks')
+      .withIndex('by_year')
+      .order('desc')
+      .first()
     if (!latestMark) return null
     const latestYear = latestMark.year
     const previousYear = latestYear - 1
@@ -50,7 +54,9 @@ export const getTopSchools = query({
       totalSchoolsPrevious === 0
         ? null
         : Math.round(
-            ((totalSchoolsCurrent - totalSchoolsPrevious) / totalSchoolsPrevious) * 100,
+            ((totalSchoolsCurrent - totalSchoolsPrevious) /
+              totalSchoolsPrevious) *
+              100,
           ) / 100
 
     return {
@@ -74,7 +80,11 @@ export const getExamCenters = query({
     v.null(),
   ),
   handler: async (ctx) => {
-    const latestMark = await ctx.db.query('marks').withIndex('by_year').order('desc').first()
+    const latestMark = await ctx.db
+      .query('marks')
+      .withIndex('by_year')
+      .order('desc')
+      .first()
     if (!latestMark) return null
     const latestYear = latestMark.year
     const previousYear = latestYear - 1
@@ -98,7 +108,9 @@ export const getExamCenters = query({
       totalCentersPrevious === 0
         ? null
         : Math.round(
-            ((totalCentersCurrent - totalCentersPrevious) / totalCentersPrevious) * 100,
+            ((totalCentersCurrent - totalCentersPrevious) /
+              totalCentersPrevious) *
+              100,
           ) / 100
 
     return {
@@ -122,7 +134,11 @@ export const getTotalLearners = query({
     v.null(),
   ),
   handler: async (ctx) => {
-    const latestMark = await ctx.db.query('marks').withIndex('by_year').order('desc').first()
+    const latestMark = await ctx.db
+      .query('marks')
+      .withIndex('by_year')
+      .order('desc')
+      .first()
     if (!latestMark) return null
     const latestYear = latestMark.year
     const previousYear = latestYear - 1
@@ -150,7 +166,9 @@ export const getTotalLearners = query({
       totalLearnersPrevious === 0
         ? null
         : Math.round(
-            ((totalLearnersCurrent - totalLearnersPrevious) / totalLearnersPrevious) * 100,
+            ((totalLearnersCurrent - totalLearnersPrevious) /
+              totalLearnersPrevious) *
+              100,
           ) / 100
 
     return {
@@ -174,7 +192,11 @@ export const getMatricPassRate = query({
     v.null(),
   ),
   handler: async (ctx) => {
-    const latestMark = await ctx.db.query('marks').withIndex('by_year').order('desc').first()
+    const latestMark = await ctx.db
+      .query('marks')
+      .withIndex('by_year')
+      .order('desc')
+      .first()
     if (!latestMark) return null
     const latestYear = latestMark.year
     const previousYear = latestYear - 1
@@ -188,13 +210,19 @@ export const getMatricPassRate = query({
       .withIndex('by_year', (q) => q.eq('year', previousYear))
       .collect()
 
-    const totalWroteCurrent = marksCurrent.reduce((sum, m) => sum + m.total_wrote, 0)
+    const totalWroteCurrent = marksCurrent.reduce(
+      (sum, m) => sum + m.total_wrote,
+      0,
+    )
     const totalPassedCurrent = marksCurrent.reduce(
       (sum, m) => sum + (m.total_achieved ?? 0),
       0,
     )
 
-    const totalWrotePrevious = marksPrevious.reduce((sum, m) => sum + m.total_wrote, 0)
+    const totalWrotePrevious = marksPrevious.reduce(
+      (sum, m) => sum + m.total_wrote,
+      0,
+    )
     const totalPassedPrevious = marksPrevious.reduce(
       (sum, m) => sum + (m.total_achieved ?? 0),
       0,
@@ -247,8 +275,13 @@ export const getSchoolPerformance = query({
     }),
   ),
   handler: async (ctx, args) => {
-    const latestMark = await ctx.db.query('marks').withIndex('by_year').order('desc').first()
-    const currentYear = args.year ?? latestMark?.year ?? new Date().getFullYear()
+    const latestMark = await ctx.db
+      .query('marks')
+      .withIndex('by_year')
+      .order('desc')
+      .first()
+    const currentYear =
+      args.year ?? latestMark?.year ?? new Date().getFullYear()
     const previousYear = currentYear - 1
 
     const schools = await ctx.db.query('school').collect()

@@ -35,11 +35,11 @@ Save the production URL (e.g., `https://your-project-123.convex.cloud`)
 
 Add these in Dokploy → Application → Environment:
 
-| Variable | Value |
-|----------|-------|
+| Variable          | Value                                   |
+| ----------------- | --------------------------------------- |
 | `VITE_CONVEX_URL` | `https://your-project-123.convex.cloud` |
-| `NODE_ENV` | `production` |
-| `PORT` | `3000` |
+| `NODE_ENV`        | `production`                            |
+| `PORT`            | `3000`                                  |
 
 ### Build Settings
 
@@ -67,19 +67,20 @@ Certificate: Let's Encrypt (auto)
 
 Add an **A record** in your DNS provider:
 
-| Type | Name | Value | TTL |
-|------|------|-------|-----|
-| A | matric | YOUR_VPN_SERVER_IP | 300 |
+| Type | Name   | Value              | TTL |
+| ---- | ------ | ------------------ | --- |
+| A    | matric | YOUR_VPN_SERVER_IP | 300 |
 
 Or for root domain:
 
-| Type | Name | Value | TTL |
-|------|------|-------|-----|
-| A | @ | YOUR_VPN_SERVER_IP | 300 |
+| Type | Name | Value              | TTL |
+| ---- | ---- | ------------------ | --- |
+| A    | @    | YOUR_VPN_SERVER_IP | 300 |
 
 ### SSL Certificate (Let's Encrypt)
 
 Dokploy handles this automatically when you:
+
 1. Enable HTTPS on the domain
 2. Select "Let's Encrypt" as certificate provider
 3. Ensure port 80 is accessible for ACME challenge
@@ -93,9 +94,9 @@ Dokploy auto-generates Traefik labels, but if you need custom config:
 ```yaml
 # Optional: Custom headers for security
 labels:
-  - "traefik.http.middlewares.matric-headers.headers.stsSeconds=31536000"
-  - "traefik.http.middlewares.matric-headers.headers.stsIncludeSubdomains=true"
-  - "traefik.http.middlewares.matric-headers.headers.forceSTSHeader=true"
+  - 'traefik.http.middlewares.matric-headers.headers.stsSeconds=31536000'
+  - 'traefik.http.middlewares.matric-headers.headers.stsIncludeSubdomains=true'
+  - 'traefik.http.middlewares.matric-headers.headers.forceSTSHeader=true'
 ```
 
 ---
