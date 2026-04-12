@@ -9,17 +9,17 @@ import {
   IconFilePencil,
   IconFileWord,
   IconHelp,
-  IconInnerShadowTop,
   IconListDetails,
   IconReport,
   IconSearch,
   IconSettings,
   IconTrophy,
 } from '@tabler/icons-react'
+import { GalleryVerticalEnd } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
 
 import { NavDocuments } from '~/components/nav-documents'
 import { NavMain } from '~/components/nav-main'
-import { NavSecondary } from '~/components/nav-secondary'
 import { NavDevelopment } from '~/components/nav-developmet'
 import { NavUser } from '~/components/nav-user'
 import {
@@ -30,14 +30,11 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarRail,
+  SidebarSeparator,
 } from '~/components/ui/sidebar'
 
 const data = {
-  user: {
-    name: 'shadcn',
-    email: 'm@example.com',
-    avatar: '/avatars/shadcn.jpg',
-  },
   navMain: [
     {
       title: 'Dashboard',
@@ -108,23 +105,6 @@ const data = {
       ],
     },
   ],
-  navSecondary: [
-    {
-      title: 'Settings',
-      url: '#',
-      icon: IconSettings,
-    },
-    {
-      title: 'Get Help',
-      url: '#',
-      icon: IconHelp,
-    },
-    {
-      title: 'Search',
-      url: '#',
-      icon: IconSearch,
-    },
-  ],
   documents: [
     {
       name: 'Past Papers',
@@ -156,7 +136,7 @@ const data = {
   navDevelopmet: [
     {
       title: 'Seed Data',
-      url: 'dashboard/seed-data',
+      url: '/dashboard/seed-data',
       icon: IconSettings,
     },
     {
@@ -176,20 +156,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const isDevelopment = process.env.NODE_ENV === 'development'
 
   return (
-    <Sidebar collapsible="offcanvas" {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
-            >
-              <a href="/">
-                <IconInnerShadowTop className="!size-5" />
-                <span className="text-base font-semibold">
-                  Matric Dashboard
-                </span>
-              </a>
+            <SidebarMenuButton tooltip="Matric Dashboard" asChild size="lg">
+              <Link to="/" preload="render">
+                <div className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                  <GalleryVerticalEnd className="size-4" />
+                </div>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-semibold">
+                    Matric Dashboard
+                  </span>
+                  <span className="truncate text-xs">School analytics</span>
+                </div>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -198,12 +180,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.navMain} />
         <NavDocuments items={data.documents} />
 
+        <SidebarSeparator />
+
         {isDevelopment && <NavDevelopment items={data.navDevelopmet} />}
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   )
 }

@@ -21,13 +21,17 @@ export function NavDevelopment({
   }[]
 } & React.ComponentPropsWithoutRef<typeof SidebarGroup>) {
   return (
-    <SidebarGroup {...props}>
+    <SidebarGroup className="group-data-[collapsible=icon]:hidden" {...props}>
       <SidebarGroupLabel>Development</SidebarGroupLabel>
       <SidebarGroupContent>
         <SidebarMenu>
           {items.map((item) => (
             <SidebarMenuItem key={item.title}>
-              <SidebarMenuButton className="text-orange-600" asChild>
+              <SidebarMenuButton
+                tooltip={item.title}
+                className="text-sidebar-foreground/70"
+                asChild
+              >
                 <a href={item.url}>
                   <item.icon />
                   <span>{item.title}</span>
