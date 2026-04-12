@@ -17,11 +17,11 @@ export const Route = createFileRoute('/dashboard/top-achievers')({
 
 function TopAchieversPage() {
   const { data: years } = useSuspenseQuery(
-    convexQuery(api.topAchievers.getAvailableYears, {})
+    convexQuery(api.topAchievers.getAvailableYears, {}),
   )
 
   const [selectedYear, setSelectedYear] = useState<number>(
-    years[0] ?? new Date().getFullYear()
+    years[0] ?? new Date().getFullYear(),
   )
 
   const seedData = useMutation(api.seedTopAchievers.seedTopAchievers)
@@ -83,7 +83,7 @@ function TopAchieversPage() {
 
 function AchieversList({ year }: { year: number }) {
   const { data: achievers } = useSuspenseQuery(
-    convexQuery(api.topAchievers.getByYear, { year })
+    convexQuery(api.topAchievers.getByYear, { year }),
   )
 
   if (achievers.length === 0) {
@@ -114,7 +114,9 @@ function AchieversList({ year }: { year: number }) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <RankBadge rank={achiever.rank} />
-                  <span className="font-semibold truncate">{achiever.name}</span>
+                  <span className="font-semibold truncate">
+                    {achiever.name}
+                  </span>
                 </div>
                 <p className="text-sm text-muted-foreground truncate">
                   {achiever.school_name}

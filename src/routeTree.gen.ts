@@ -16,6 +16,7 @@ import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardTopAchieversRouteImport } from './routes/dashboard/top-achievers'
 import { Route as DashboardStudyGuideRouteImport } from './routes/dashboard/study-guide'
 import { Route as DashboardSeedDataRouteImport } from './routes/dashboard/seed-data'
+import { Route as DashboardSchoolsRouteImport } from './routes/dashboard/schools'
 import { Route as DashboardSchoolRouteImport } from './routes/dashboard/school'
 import { Route as DashboardPastPapersRouteImport } from './routes/dashboard/past-papers'
 import { Route as DashboardDevPagesRouteImport } from './routes/dashboard/dev-pages'
@@ -57,6 +58,11 @@ const DashboardSeedDataRoute = DashboardSeedDataRouteImport.update({
   path: '/seed-data',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardSchoolsRoute = DashboardSchoolsRouteImport.update({
+  id: '/schools',
+  path: '/schools',
+  getParentRoute: () => DashboardRoute,
+} as any)
 const DashboardSchoolRoute = DashboardSchoolRouteImport.update({
   id: '/school',
   path: '/school',
@@ -79,9 +85,9 @@ const DashboardAnalyticRoute = DashboardAnalyticRouteImport.update({
 } as any)
 const DashboardSchoolsEmisNumberRoute =
   DashboardSchoolsEmisNumberRouteImport.update({
-    id: '/schools/$emisNumber',
-    path: '/schools/$emisNumber',
-    getParentRoute: () => DashboardRoute,
+    id: '/$emisNumber',
+    path: '/$emisNumber',
+    getParentRoute: () => DashboardSchoolsRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -92,6 +98,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/dev-pages': typeof DashboardDevPagesRoute
   '/dashboard/past-papers': typeof DashboardPastPapersRoute
   '/dashboard/school': typeof DashboardSchoolRoute
+  '/dashboard/schools': typeof DashboardSchoolsRouteWithChildren
   '/dashboard/seed-data': typeof DashboardSeedDataRoute
   '/dashboard/study-guide': typeof DashboardStudyGuideRoute
   '/dashboard/top-achievers': typeof DashboardTopAchieversRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   '/dashboard/dev-pages': typeof DashboardDevPagesRoute
   '/dashboard/past-papers': typeof DashboardPastPapersRoute
   '/dashboard/school': typeof DashboardSchoolRoute
+  '/dashboard/schools': typeof DashboardSchoolsRouteWithChildren
   '/dashboard/seed-data': typeof DashboardSeedDataRoute
   '/dashboard/study-guide': typeof DashboardStudyGuideRoute
   '/dashboard/top-achievers': typeof DashboardTopAchieversRoute
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   '/dashboard/dev-pages': typeof DashboardDevPagesRoute
   '/dashboard/past-papers': typeof DashboardPastPapersRoute
   '/dashboard/school': typeof DashboardSchoolRoute
+  '/dashboard/schools': typeof DashboardSchoolsRouteWithChildren
   '/dashboard/seed-data': typeof DashboardSeedDataRoute
   '/dashboard/study-guide': typeof DashboardStudyGuideRoute
   '/dashboard/top-achievers': typeof DashboardTopAchieversRoute
@@ -136,6 +145,7 @@ export interface FileRouteTypes {
     | '/dashboard/dev-pages'
     | '/dashboard/past-papers'
     | '/dashboard/school'
+    | '/dashboard/schools'
     | '/dashboard/seed-data'
     | '/dashboard/study-guide'
     | '/dashboard/top-achievers'
@@ -149,6 +159,7 @@ export interface FileRouteTypes {
     | '/dashboard/dev-pages'
     | '/dashboard/past-papers'
     | '/dashboard/school'
+    | '/dashboard/schools'
     | '/dashboard/seed-data'
     | '/dashboard/study-guide'
     | '/dashboard/top-achievers'
@@ -163,6 +174,7 @@ export interface FileRouteTypes {
     | '/dashboard/dev-pages'
     | '/dashboard/past-papers'
     | '/dashboard/school'
+    | '/dashboard/schools'
     | '/dashboard/seed-data'
     | '/dashboard/study-guide'
     | '/dashboard/top-achievers'
@@ -227,6 +239,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSeedDataRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/dashboard/schools': {
+      id: '/dashboard/schools'
+      path: '/schools'
+      fullPath: '/dashboard/schools'
+      preLoaderRoute: typeof DashboardSchoolsRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/dashboard/school': {
       id: '/dashboard/school'
       path: '/school'
@@ -257,24 +276,35 @@ declare module '@tanstack/react-router' {
     }
     '/dashboard/schools/$emisNumber': {
       id: '/dashboard/schools/$emisNumber'
-      path: '/schools/$emisNumber'
+      path: '/$emisNumber'
       fullPath: '/dashboard/schools/$emisNumber'
       preLoaderRoute: typeof DashboardSchoolsEmisNumberRouteImport
-      parentRoute: typeof DashboardRoute
+      parentRoute: typeof DashboardSchoolsRoute
     }
   }
 }
+
+interface DashboardSchoolsRouteChildren {
+  DashboardSchoolsEmisNumberRoute: typeof DashboardSchoolsEmisNumberRoute
+}
+
+const DashboardSchoolsRouteChildren: DashboardSchoolsRouteChildren = {
+  DashboardSchoolsEmisNumberRoute: DashboardSchoolsEmisNumberRoute,
+}
+
+const DashboardSchoolsRouteWithChildren =
+  DashboardSchoolsRoute._addFileChildren(DashboardSchoolsRouteChildren)
 
 interface DashboardRouteChildren {
   DashboardAnalyticRoute: typeof DashboardAnalyticRoute
   DashboardDevPagesRoute: typeof DashboardDevPagesRoute
   DashboardPastPapersRoute: typeof DashboardPastPapersRoute
   DashboardSchoolRoute: typeof DashboardSchoolRoute
+  DashboardSchoolsRoute: typeof DashboardSchoolsRouteWithChildren
   DashboardSeedDataRoute: typeof DashboardSeedDataRoute
   DashboardStudyGuideRoute: typeof DashboardStudyGuideRoute
   DashboardTopAchieversRoute: typeof DashboardTopAchieversRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
-  DashboardSchoolsEmisNumberRoute: typeof DashboardSchoolsEmisNumberRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
@@ -282,11 +312,11 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardDevPagesRoute: DashboardDevPagesRoute,
   DashboardPastPapersRoute: DashboardPastPapersRoute,
   DashboardSchoolRoute: DashboardSchoolRoute,
+  DashboardSchoolsRoute: DashboardSchoolsRouteWithChildren,
   DashboardSeedDataRoute: DashboardSeedDataRoute,
   DashboardStudyGuideRoute: DashboardStudyGuideRoute,
   DashboardTopAchieversRoute: DashboardTopAchieversRoute,
   DashboardIndexRoute: DashboardIndexRoute,
-  DashboardSchoolsEmisNumberRoute: DashboardSchoolsEmisNumberRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(

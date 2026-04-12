@@ -9,7 +9,10 @@ export const fixMarksFieldNames = internalMutation({
     let fixed = 0
     for (const doc of docs) {
       const d = doc as any
-      if (d.percentage_archived !== undefined || d.total_archived !== undefined) {
+      if (
+        d.percentage_archived !== undefined ||
+        d.total_archived !== undefined
+      ) {
         await ctx.db.patch(doc._id, {
           percentage_achieved: d.percentage_archived ?? d.percentage_achieved,
           total_achieved: d.total_archived ?? d.total_achieved,
