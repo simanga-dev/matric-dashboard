@@ -36,7 +36,7 @@ public class ExternalAuthOptionsValidationTests
     {
         var options = new ExternalAuthOptions
         {
-            AllowedRedirectUris = ["http://localhost:5173/oauth/callback"]
+            AllowedRedirectUris = ["http://localhost:5177/oauth/callback"]
         };
 
         var results = Validate(options);
