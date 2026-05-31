@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using MatricDasbhoard.Application.Identity.Constants;
 using MatricDasbhoard.Infrastructure.Features.Authentication.Models;
 using MatricDasbhoard.Infrastructure.Persistence.Options;
@@ -18,20 +17,16 @@ namespace MatricDasbhoard.Infrastructure.Persistence.Extensions;
 public static class ApplicationBuilderExtensions
 {
     /// <summary>
-    /// Initializes the database: applies migrations (development only), seeds roles (always),
-    /// and seeds users from configuration (always - env vars gate whether any users are seeded).
+    /// Initializes the database: applies migrations, seeds roles, and seeds users from configuration
+    /// (always - env vars gate whether any users are seeded).
     /// </summary>
     /// <param name="appBuilder">The application builder.</param>
     public static async Task InitializeDatabaseAsync(this IApplicationBuilder appBuilder)
     {
         using var scope = appBuilder.ApplicationServices.CreateScope();
         var services = scope.ServiceProvider;
-        var isDevelopment = services.GetRequiredService<IHostEnvironment>().IsDevelopment();
 
-        if (isDevelopment)
-        {
-            await ApplyMigrationsAsync(services);
-        }
+        await ApplyMigrationsAsync(services);
 
         await SeedRolesAsync(services);
         await SeedRolePermissionsAsync(services);
