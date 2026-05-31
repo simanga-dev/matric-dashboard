@@ -1,0 +1,116 @@
+/* =============================================================================
+   ANIMATIONS
+   Keyframe definitions and animation utility classes.
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   Shake Animation
+   Error feedback animation for form fields.
+   ----------------------------------------------------------------------------- */
+@keyframes shake {
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+	20% {
+		transform: translateX(-10px);
+	}
+	40% {
+		transform: translateX(10px);
+	}
+	60% {
+		transform: translateX(-10px);
+	}
+	80% {
+		transform: translateX(10px);
+	}
+}
+
+.animate-shake {
+	animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* -----------------------------------------------------------------------------
+   Auth Transition Animations
+   Entrance (mount) and exit (login success) for auth pages.
+   ----------------------------------------------------------------------------- */
+@keyframes auth-enter {
+	from {
+		opacity: 0;
+		transform: translateY(8px) scale(0.97);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+
+@keyframes auth-exit {
+	from {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+	to {
+		opacity: 0;
+		transform: translateY(-8px) scale(0.97);
+	}
+}
+
+.animate-auth-enter {
+	animation: auth-enter 400ms ease-out;
+}
+
+.animate-auth-exit {
+	animation: auth-exit 400ms ease-out forwards;
+}
+
+/* -----------------------------------------------------------------------------
+   Caret Blink Animation
+   Blinking cursor for OTP input slots (shadcn InputOTP).
+   ----------------------------------------------------------------------------- */
+@keyframes caret-blink {
+	0%,
+	70%,
+	100% {
+		opacity: 1;
+	}
+	20%,
+	50% {
+		opacity: 0;
+	}
+}
+
+.animate-caret-blink {
+	animation: caret-blink 1.2s ease-out infinite;
+}
+
+/* -----------------------------------------------------------------------------
+   Status Ping Animation
+   Pulsing effects for online/offline and status indicators.
+   ----------------------------------------------------------------------------- */
+@keyframes status-ping {
+	0% {
+		transform: scale(1);
+		opacity: 0.8;
+	}
+	75%,
+	100% {
+		transform: scale(2);
+		opacity: 0;
+	}
+}
+
+/* -----------------------------------------------------------------------------
+   Reduced Motion
+   Respect user's motion preferences for accessibility.
+   ----------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+	.animate-shake,
+	.animate-auth-enter,
+	.animate-auth-exit,
+	.animate-caret-blink,
+	.status-indicator-ping,
+	.status-icon-ping {
+		animation: none;
+	}
+}

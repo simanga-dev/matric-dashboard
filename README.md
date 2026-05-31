@@ -1,69 +1,106 @@
-# Matric Dashboard
+# MatricDasbhoard
 
-A web application for exploring South African National Senior Certificate (NSC) matric results data. Browse school performance, view top achievers, and access study resources.
+Generated with [netrock](https://netrock.dev) - a .NET API project generator.
 
-## Features
+## Prerequisites
 
-- **School Performance Browser** - Search and view detailed performance data for schools across all provinces
-- **Top Achievers** - Showcase of top-performing matric students by year
-- **Analytics Dashboard** - Visual insights into pass rates, provincial comparisons, and trends
-- **Past Papers** - Access to previous NSC examination papers
-- **Study Guide** - Resources to help students prepare for exams
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
+- [Docker](https://docs.docker.com/get-docker/) (required for Aspire orchestration)
 
-## Tech Stack
+## Quick start
 
-| Layer      | Technology                         |
-| ---------- | ---------------------------------- |
-| Frontend   | React 19, Vite, TypeScript         |
-| Styling    | Tailwind CSS v4, shadcn/ui (Radix) |
-| Routing    | TanStack Router                    |
-| State/Data | TanStack Query, Convex             |
-| Charts     | Recharts                           |
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js v18+
-- [pnpm](https://pnpm.io/)
-
-### Installation
+Run the setup script to configure ports, initialize git, and verify your environment:
 
 ```bash
-pnpm install
+# macOS / Linux
+chmod +x setup.sh && ./setup.sh
+
+# Windows (PowerShell)
+.\setup.ps1
 ```
 
-### Development
+The setup script will:
+- Check prerequisites (.NET SDK, Docker)
+- Let you choose a base port for the service stack
+- Optionally initialize a git repository with an initial commit
+- Build the solution and run tests
+
+### Manual start
+
+If you prefer to skip the setup script:
 
 ```bash
-pnpm dev
+dotnet run --project src/backend/MatricDasbhoard.AppHost
 ```
 
-Starts Vite on `http://localhost:3000` and Convex dev server concurrently.
+The Aspire dashboard opens automatically. From there you can access the API, pgAdmin, Mailpit, and MinIO console.
 
-### Build
+## Run tests
 
 ```bash
-pnpm build
+dotnet test src/backend/MatricDasbhoard.slnx
 ```
 
-## Project Structure
+## What's included
+
+- **Authentication** - JWT + refresh tokens, registration, login, email verification, password reset
+- **Two-factor auth** - TOTP-based 2FA with recovery codes
+- **OAuth** - External login with Google, GitHub, Microsoft, and more
+- **Captcha** - Cloudflare Turnstile on registration and password reset
+- **Background jobs** - Hangfire scheduling with PostgreSQL storage
+- **File storage** - S3/MinIO abstraction
+- **Avatars** - User avatar uploads with image processing
+- **Audit trail** - Security event logging
+- **Admin panel** - User and role management
+- **Aspire** - .NET Aspire for local dev orchestration with OpenTelemetry
+
+## Project structure
 
 ```
-src/
-├── routes/           # TanStack Router file-based routes
-│   └── dashboard/    # Dashboard pages (schools, analytics, top-achievers, etc.)
-├── components/       # React components (shadcn/ui in ui/)
-└── lib/              # Utilities
-convex/
-├── schema.ts         # Database schema (school, marks, top_achievers)
-└── *.ts              # Convex functions
+src/backend/
+  MatricDasbhoard.Domain/           Domain entities
+  MatricDasbhoard.Shared/           Cross-cutting: Result, errors, helpers
+  MatricDasbhoard.Application/      Use cases, interfaces, DTOs
+  MatricDasbhoard.Infrastructure/   EF Core, services, external integrations
+  MatricDasbhoard.WebApi/           Controllers, middleware, configuration
+  MatricDasbhoard.ServiceDefaults/  OpenTelemetry, health checks, resilience
+  MatricDasbhoard.AppHost/          Aspire orchestration (local dev)
+  tests/                      Architecture, unit, and integration tests
 ```
 
-## Scripts
+## Configuration
 
-| Command       | Description                  |
-| ------------- | ---------------------------- |
-| `pnpm dev`    | Start development servers    |
-| `pnpm build`  | Production build + typecheck |
-| `pnpm format` | Format code with Prettier    |
+Key settings are in `src/backend/MatricDasbhoard.WebApi/appsettings.json`. Development overrides are in `appsettings.Development.json`.
+
+### Port allocation
+
+Ports are configured in `src/backend/MatricDasbhoard.AppHost/appsettings.json`. The setup script can change these for you. All infrastructure ports (pgAdmin, PostgreSQL, MinIO, Mailpit) are derived from the base port automatically.
+
+### Seed users
+
+Development seed users are configured in `appsettings.Development.json`:
+
+```json
+{
+  "Seed": {
+    "Users": [
+      { "Email": "admin@example.com", "Password": "YourPassword123!", "Role": "Superuser" }
+    ]
+  }
+}
+```
+
+## Adding migrations
+
+The project ships without EF Core migrations. On first run in development, the database schema is created automatically. When you're ready to manage schema changes:
+
+```bash
+cd src/backend
+dotnet ef migrations add Initial --project MatricDasbhoard.Infrastructure --startup-project MatricDasbhoard.WebApi
+```
+
+## Learn more
+
+- [netrock](https://github.com/fpindej/netrock) - The original template this was generated from
+- [netrock-cli](https://github.com/fpindej/netrock-cli) - The generator source code
+- [Discord](https://discord.gg/5rHquRptSh) - Community and support

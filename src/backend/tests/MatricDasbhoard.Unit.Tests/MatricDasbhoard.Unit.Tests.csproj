@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="xunit" />
+        <PackageReference Include="xunit.runner.visualstudio" />
+        <PackageReference Include="coverlet.collector" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../../MatricDasbhoard.Shared/MatricDasbhoard.Shared.csproj" />
+        <ProjectReference Include="../../MatricDasbhoard.Domain/MatricDasbhoard.Domain.csproj" />
+        <ProjectReference Include="../../MatricDasbhoard.Application/MatricDasbhoard.Application.csproj" />
+    </ItemGroup>
+
+</Project>

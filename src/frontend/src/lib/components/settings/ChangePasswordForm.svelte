@@ -1,0 +1,144 @@
+<script lang="ts">
+	import * as Card from '$lib/components/ui/card';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
+	import { FieldError } from '$lib/components/common';
+	import * as m from '$lib/paraglide/messages';
+	import { browserClient, getErrorMessage, handleMutationError } from '$lib/api';
+	import { toast } from '$lib/components/ui/sonner';
+	import { resolve } from '$app/paths';
+	import { routes } from '$lib/config';
+	import { createFieldShakes, createCooldown } from '$lib/state';
+
+	// Form state
+	let currentPassword = $state('');
+	let newPassword = $state('');
+	let confirmPassword = $state('');
+	let isLoading = $state(false);
+
+	// Field-level errors from backend validation or client-side checks
+	let fieldErrors = $state<Record<string, string>>({});
+
+	// Field-level shake animation for error feedback
+	const fieldShakes = createFieldShakes();
+	const cooldown = createCooldown();
+
+	async function handleSubmit(e: Event) {
+		e.preventDefault();
+		isLoading = true;
+		fieldErrors = {};
+
+		// Client-side validation: confirm password must match new password
+		if (newPassword !== confirmPassword) {
+			fieldErrors = { confirmPassword: m.settings_changePassword_mismatch() };
+			fieldShakes.triggerFields(['confirmPassword']);
+			isLoading = false;
+			return;
+		}
+
+		try {
+			const { response, error: apiError } = await browserClient.POST('/api/auth/password/change', {
+				body: { currentPassword, newPassword }
+			});
+
+			if (response.ok) {
+				// Hard navigation clears all client-side state (cached JWT, SvelteKit
+				// load data). The backend already revoked all refresh tokens - the
+				// first SSR load will fail to authenticate and show the login page.
+				window.location.href = `${resolve(routes.login)}?reason=password_changed`;
+			} else {
+				handleMutationError(response, apiError, {
+					cooldown,
+					fallback: m.settings_changePassword_error(),
+					onValidationError(errors) {
+						fieldErrors = errors;
+						fieldShakes.triggerFields(Object.keys(errors));
+						toast.error(getErrorMessage(apiError, m.settings_changePassword_error()));
+					},
+					onError() {
+						const description = getErrorMessage(apiError, '');
+						toast.error(
+							m.settings_changePassword_error(),
+							description ? { description } : undefined
+						);
+					}
+				});
+			}
+		} catch {
+			toast.error(m.settings_changePassword_error());
+		} finally {
+			isLoading = false;
+		}
+	}
+</script>
+
+<Card.Root class="card-hover">
+	<Card.Header>
+		<Card.Title>{m.settings_changePassword_title()}</Card.Title>
+		<Card.Description>{m.settings_changePassword_description()}</Card.Description>
+	</Card.Header>
+	<Card.Content>
+		<form onsubmit={handleSubmit}>
+			<div class="grid gap-4">
+				<div class="grid gap-2">
+					<Label for="currentPassword">{m.settings_changePassword_currentPassword()}</Label>
+					<Input
+						id="currentPassword"
+						type="password"
+						autocomplete="current-password"
+						bind:value={currentPassword}
+						required
+						class={fieldShakes.class('currentPassword')}
+						aria-invalid={!!fieldErrors.currentPassword}
+						aria-describedby={fieldErrors.currentPassword ? 'currentPassword-error' : undefined}
+					/>
+					<FieldError id="currentPassword-error" message={fieldErrors.currentPassword} />
+				</div>
+
+				<div class="grid gap-2">
+					<Label for="newPassword">{m.settings_changePassword_newPassword()}</Label>
+					<Input
+						id="newPassword"
+						type="password"
+						autocomplete="new-password"
+						bind:value={newPassword}
+						required
+						minlength={6}
+						class={fieldShakes.class('newPassword')}
+						aria-invalid={!!fieldErrors.newPassword}
+						aria-describedby={fieldErrors.newPassword ? 'newPassword-error' : undefined}
+					/>
+					<FieldError id="newPassword-error" message={fieldErrors.newPassword} />
+				</div>
+
+				<div class="grid gap-2">
+					<Label for="confirmPassword">{m.settings_changePassword_confirmPassword()}</Label>
+					<Input
+						id="confirmPassword"
+						type="password"
+						autocomplete="new-password"
+						bind:value={confirmPassword}
+						required
+						class={fieldShakes.class('confirmPassword')}
+						aria-invalid={!!fieldErrors.confirmPassword}
+						aria-describedby={fieldErrors.confirmPassword ? 'confirmPassword-error' : undefined}
+					/>
+					<FieldError id="confirmPassword-error" message={fieldErrors.confirmPassword} />
+				</div>
+
+				<div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+					<Button type="submit" class="w-full sm:w-auto" disabled={isLoading || cooldown.active}>
+						{#if cooldown.active}
+							{m.common_waitSeconds({ seconds: cooldown.remaining })}
+						{:else}
+							{isLoading
+								? m.settings_changePassword_submitting()
+								: m.settings_changePassword_submit()}
+						{/if}
+					</Button>
+				</div>
+			</div>
+		</form>
+	</Card.Content>
+</Card.Root>
