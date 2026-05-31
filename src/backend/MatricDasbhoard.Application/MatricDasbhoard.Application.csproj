@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <ProjectReference Include="../MatricDasbhoard.Domain/MatricDasbhoard.Domain.csproj"/>
+        <ProjectReference Include="../MatricDasbhoard.Shared/MatricDasbhoard.Shared.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Features/" />
+    </ItemGroup>
+
+</Project>

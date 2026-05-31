@@ -1,0 +1,26 @@
+<Solution>
+  <Folder Name="/solution items/">
+    <File Path="../../.config/dotnet-tools.json" />
+    <File Path="../../global.json" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+    <File Path="MatricDasbhoard.WebApi/Dockerfile" />
+    <File Path="nuget.config" />
+  </Folder>
+  <Project Path="MatricDasbhoard.Application/MatricDasbhoard.Application.csproj" />
+  <Project Path="MatricDasbhoard.Domain/MatricDasbhoard.Domain.csproj" />
+  <Project Path="MatricDasbhoard.Infrastructure/MatricDasbhoard.Infrastructure.csproj" />
+  <Project Path="MatricDasbhoard.Shared/MatricDasbhoard.Shared.csproj" />
+  <Project Path="MatricDasbhoard.WebApi/MatricDasbhoard.WebApi.csproj" />
+  <Project Path="MatricDasbhoard.ServiceDefaults/MatricDasbhoard.ServiceDefaults.csproj" />
+  <Project Path="MatricDasbhoard.AppHost/MatricDasbhoard.AppHost.csproj" />
+  <Folder Name="/deploy/">
+    <Project Path="HealthProbe/HealthProbe.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MatricDasbhoard.Unit.Tests/MatricDasbhoard.Unit.Tests.csproj" />
+    <Project Path="tests/MatricDasbhoard.Component.Tests/MatricDasbhoard.Component.Tests.csproj" />
+    <Project Path="tests/MatricDasbhoard.Api.Tests/MatricDasbhoard.Api.Tests.csproj" />
+    <Project Path="tests/MatricDasbhoard.Architecture.Tests/MatricDasbhoard.Architecture.Tests.csproj" />
+  </Folder>
+</Solution>

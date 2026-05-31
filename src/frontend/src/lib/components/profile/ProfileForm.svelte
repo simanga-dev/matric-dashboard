@@ -1,0 +1,174 @@
+<script lang="ts">
+	import * as Card from '$lib/components/ui/card';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Textarea } from '$lib/components/ui/textarea';
+	import { Label } from '$lib/components/ui/label';
+	import { PhoneInput } from '$lib/components/ui/phone-input';
+	import { FieldError } from '$lib/components/common';
+	import { ProfileHeader } from '$lib/components/profile';
+	import type { User } from '$lib/types';
+	import * as m from '$lib/paraglide/messages';
+	import { browserClient, getErrorMessage, handleMutationError } from '$lib/api';
+	import { toast } from '$lib/components/ui/sonner';
+	import { invalidateAll } from '$app/navigation';
+	import { createFieldShakes, createCooldown } from '$lib/state';
+
+	interface Props {
+		user: User | null | undefined;
+	}
+
+	let { user }: Props = $props();
+
+	// Form state
+	let firstName = $state('');
+	let lastName = $state('');
+	let phoneNumber = $state('');
+	let bio = $state('');
+	let isLoading = $state(false);
+
+	// Field-level errors from backend validation
+	let fieldErrors = $state<Record<string, string>>({});
+
+	// Field-level shake animation for error feedback
+	const fieldShakes = createFieldShakes();
+	const cooldown = createCooldown();
+
+	// Sync form state when user prop changes (e.g., after invalidateAll)
+	$effect(() => {
+		firstName = user?.firstName ?? '';
+		lastName = user?.lastName ?? '';
+		phoneNumber = user?.phoneNumber ?? '';
+		bio = user?.bio ?? '';
+	});
+
+	async function handleSubmit(e: Event) {
+		e.preventDefault();
+		isLoading = true;
+		fieldErrors = {};
+
+		try {
+			const { response, error: apiError } = await browserClient.PATCH('/api/users/me', {
+				body: {
+					firstName: firstName.trim() || null,
+					lastName: lastName.trim() || null,
+					phoneNumber: phoneNumber.trim() || null,
+					bio: bio.trim() || null
+				}
+			});
+
+			if (response.ok) {
+				toast.success(m.profile_personalInfo_updateSuccess());
+				await invalidateAll();
+			} else {
+				handleMutationError(response, apiError, {
+					cooldown,
+					fallback: m.profile_personalInfo_updateError(),
+					onValidationError(errors) {
+						fieldErrors = errors;
+						fieldShakes.triggerFields(Object.keys(errors));
+						toast.error(getErrorMessage(apiError, m.profile_personalInfo_updateError()));
+					},
+					onError() {
+						const description = getErrorMessage(apiError, '');
+						toast.error(
+							m.profile_personalInfo_updateError(),
+							description ? { description } : undefined
+						);
+					}
+				});
+			}
+		} catch {
+			toast.error(m.profile_personalInfo_updateError());
+		} finally {
+			isLoading = false;
+		}
+	}
+</script>
+
+<Card.Root class="card-hover">
+	<Card.Header>
+		<Card.Title>{m.profile_personalInfo_title()}</Card.Title>
+		<Card.Description>{m.profile_personalInfo_description()}</Card.Description>
+	</Card.Header>
+	<Card.Content>
+		<form onsubmit={handleSubmit} class="space-y-6">
+			<ProfileHeader {user} />
+
+			<div class="grid gap-4">
+				<div class="grid gap-2">
+					<Label for="email">{m.profile_personalInfo_email()}</Label>
+					<Input id="email" type="email" autocomplete="email" value={user?.email} disabled />
+					<p class="text-xs text-muted-foreground">
+						{m.profile_personalInfo_emailDescription()}
+					</p>
+				</div>
+
+				<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+					<div class="grid gap-2">
+						<Label for="firstName">{m.profile_personalInfo_firstName()}</Label>
+						<Input
+							id="firstName"
+							autocomplete="given-name"
+							bind:value={firstName}
+							placeholder={m.profile_personalInfo_firstNamePlaceholder()}
+							class={fieldShakes.class('firstName')}
+							aria-invalid={!!fieldErrors.firstName}
+							aria-describedby={fieldErrors.firstName ? 'firstName-error' : undefined}
+						/>
+						<FieldError id="firstName-error" message={fieldErrors.firstName} />
+					</div>
+					<div class="grid gap-2">
+						<Label for="lastName">{m.profile_personalInfo_lastName()}</Label>
+						<Input
+							id="lastName"
+							autocomplete="family-name"
+							bind:value={lastName}
+							placeholder={m.profile_personalInfo_lastNamePlaceholder()}
+							class={fieldShakes.class('lastName')}
+							aria-invalid={!!fieldErrors.lastName}
+							aria-describedby={fieldErrors.lastName ? 'lastName-error' : undefined}
+						/>
+						<FieldError id="lastName-error" message={fieldErrors.lastName} />
+					</div>
+				</div>
+
+				<div class="grid gap-2">
+					<Label for="phoneNumber">{m.profile_personalInfo_phoneNumber()}</Label>
+					<PhoneInput
+						id="phoneNumber"
+						bind:value={phoneNumber}
+						placeholder="123 456 789"
+						class={fieldShakes.class('phoneNumber')}
+						aria-invalid={!!fieldErrors.phoneNumber}
+						aria-describedby={fieldErrors.phoneNumber ? 'phoneNumber-error' : undefined}
+					/>
+					<FieldError id="phoneNumber-error" message={fieldErrors.phoneNumber} />
+				</div>
+
+				<div class="grid gap-2">
+					<Label for="bio">{m.profile_personalInfo_bio()}</Label>
+					<Textarea
+						id="bio"
+						bind:value={bio}
+						placeholder={m.profile_personalInfo_bioPlaceholder()}
+						class={fieldShakes.class('bio')}
+						aria-invalid={!!fieldErrors.bio}
+						aria-describedby={fieldErrors.bio ? 'bio-error' : undefined}
+					/>
+					<FieldError id="bio-error" message={fieldErrors.bio} />
+				</div>
+
+				<div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+					<Button type="submit" class="w-full sm:w-auto" disabled={isLoading || cooldown.active}>
+						{#if cooldown.active}
+							{m.common_waitSeconds({ seconds: cooldown.remaining })}
+						{:else}
+							{isLoading ? m.profile_personalInfo_saving() : m.profile_personalInfo_saveChanges()}
+						{/if}
+					</Button>
+				</div>
+			</div>
+		</form>
+	</Card.Content>
+</Card.Root>

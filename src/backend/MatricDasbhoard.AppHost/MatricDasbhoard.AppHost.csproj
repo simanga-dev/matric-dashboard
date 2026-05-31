@@ -1,0 +1,18 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.2.0">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+        <PackageReference Include="Aspire.Hosting.JavaScript" />
+        <PackageReference Include="CommunityToolkit.Aspire.Hosting.MailPit" />
+        <PackageReference Include="CommunityToolkit.Aspire.Hosting.Minio" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="../MatricDasbhoard.WebApi/MatricDasbhoard.WebApi.csproj" />
+    </ItemGroup>
+
+</Project>

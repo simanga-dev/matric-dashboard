@@ -1,0 +1,25 @@
+---
+description: Create a GitHub issue with labels and optional sub-issues
+user-invocable: true
+---
+
+Creates a GitHub issue.
+
+Infers type, scope, labels, and whether to split into sub-issues from context. Asks only if the user hasn't described what needs to be done.
+
+## Steps
+
+1. Determine title in Conventional Commit format: `type(scope): description`
+   - Infer type (`feat`, `fix`, `refactor`, `chore`, `docs`) and scope from the description
+2. Write a body: problem, proposed approach, affected files/areas
+3. Apply labels - all that fit: `backend`, `frontend`, `security`, `feature`, `bug`, `documentation`
+4. If the work crosses stack boundary (backend + frontend) or has multiple independent deliverables, split into sub-issues:
+   ```bash
+   gh issue create --title "..." --body "..." --label "..."
+   # Get sub-issue numeric ID
+   gh api --method GET /repos/{owner}/{repo}/issues/{sub_number} --jq '.id'
+   # Link to parent
+   gh api --method POST /repos/{owner}/{repo}/issues/{parent_number}/sub_issues --field sub_issue_id={id}
+   ```
+5. For small, tightly coupled changes - create a single issue (don't over-split)
+6. Report created URL(s)
