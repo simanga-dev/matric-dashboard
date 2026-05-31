@@ -42,7 +42,7 @@ RUN dotnet publish "MatricDasbhoard.WebApi.csproj" -c Release -o /app/publish \
     /p:UseAppHost=false /p:DebugType=None /p:DebugSymbols=false \
     /p:StripDevConfig=${STRIP_DEV_CONFIG} \
     && dotnet publish "/src/HealthProbe/HealthProbe.csproj" -c Release -o /app/healthprobe \
-    /p:UseAppHost=false /p:DebugType=None /p:DebugSymbols=false
+    /p:DebugType=None /p:DebugSymbols=false
 
 # Defense-in-depth: strip non-production config even if .csproj exclusion is bypassed
 RUN if [ "$STRIP_DEV_CONFIG" = "true" ]; then \
