@@ -28,7 +28,12 @@ function mockLoadEvent(
 		routeId?: string;
 	} = {}
 ) {
-	const { user = null, backendError = null, hadSession = false, routeId = '/(app)' } = overrides;
+	const {
+		user = null,
+		backendError = null,
+		hadSession = false,
+		routeId = '/(app)/settings'
+	} = overrides;
 
 	return createMockLoadEvent({
 		route: { id: routeId },
@@ -82,11 +87,11 @@ describe('(app) layout server load', () => {
 
 	// ── Session expired detection ───────────────────────────────────
 
-	it('no user, no prior session - redirects to /login', async () => {
+	it('no user, no prior session on protected route - redirects to /login', async () => {
 		await expectRedirect(() => load(mockLoadEvent()), 303, '/login');
 	});
 
-	it('no user, had session - redirects with session_expired reason', async () => {
+	it('no user, had session on protected route - redirects with session_expired reason', async () => {
 		await expectRedirect(
 			() => load(mockLoadEvent({ hadSession: true })),
 			303,
@@ -94,7 +99,12 @@ describe('(app) layout server load', () => {
 		);
 	});
 
-	// ── Public dashboard ────────────────────────────────────────────
+	// ── Public routes ───────────────────────────────────────────────
+
+	it('no user on root route - returns null user with sidebar state', async () => {
+		const result = await load(mockLoadEvent({ routeId: '/(app)' }));
+		expect(result).toEqual({ user: null, sidebarOpen: true });
+	});
 
 	it('no user on dashboard - returns null user with sidebar state', async () => {
 		const result = await load(mockLoadEvent({ routeId: '/(app)/dashboard' }));

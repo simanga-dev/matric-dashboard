@@ -10,9 +10,9 @@ export const load: LayoutServerLoad = async ({ parent, route, cookies }) => {
 		throw error(503, m.serverError_backendUnavailable());
 	}
 
-	const isPublicDashboard = route.id === '/(app)/dashboard';
+	const isPublicRoute = route.id === '/(app)' || route.id === '/(app)/dashboard';
 
-	if (!user && !isPublicDashboard) {
+	if (!user && !isPublicRoute) {
 		const target = hadSession ? `${routes.login}?reason=session_expired` : routes.login;
 		throw redirect(303, target);
 	}
