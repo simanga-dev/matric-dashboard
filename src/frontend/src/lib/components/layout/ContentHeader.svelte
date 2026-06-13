@@ -10,10 +10,19 @@
 	import { routes } from '$lib/config';
 	import { adminRoutes } from '$lib/config';
 	import * as m from '$lib/paraglide/messages';
-	import { Search } from '@lucide/svelte';
+	import { ThemeToggle, LanguageSelector } from '$lib/components/layout';
+	import { Search, CircleHelp } from '@lucide/svelte';
+	import type { User } from '$lib/types';
+
+	interface Props {
+		user: User | null | undefined;
+	}
+
+	let { user }: Props = $props();
 
 	const segmentLabels: Record<string, () => string> = {
 		dashboard: m.nav_dashboard,
+		overview: m.nav_overview,
 		profile: m.nav_profile,
 		settings: m.nav_settings,
 		users: m.nav_adminUsers,
@@ -24,6 +33,7 @@
 
 	const segmentHrefs: Record<string, string> = {
 		dashboard: resolve(routes.dashboard),
+		overview: resolve(routes.overview),
 		profile: resolve(routes.profile),
 		settings: resolve(routes.settings),
 		users: resolve(adminRoutes.users.path),
@@ -47,7 +57,6 @@
 		const pathname = page.url.pathname;
 		const segments = pathname.split('/').filter(Boolean);
 
-		// Filter out "admin" - it's not a navigable page
 		const meaningful = segments.filter((s) => s !== 'admin');
 
 		const result: Crumb[] = [];
@@ -75,13 +84,11 @@
 </script>
 
 <header
-	class={isDetailPage
-		? 'flex h-10 shrink-0 items-center gap-2 border-b bg-background px-4 md:h-12'
-		: 'hidden h-12 shrink-0 items-center gap-2 border-b bg-background px-4 md:flex'}
+	class="flex h-(--header-height) shrink-0 items-center gap-2 border-b px-4 lg:px-6"
 >
 	<div class="flex flex-1 items-center gap-2">
-		<SidebarTrigger class="hidden size-7 md:inline-flex" />
-		<Separator orientation="vertical" class="hidden h-4 md:block" />
+		<SidebarTrigger class="-ml-1" />
+		<Separator orientation="vertical" class="mx-2 h-4" />
 		{#key page.url.pathname}
 			<Breadcrumb.Root class="motion-safe:duration-200 motion-safe:animate-in motion-safe:fade-in">
 				<Breadcrumb.List>
@@ -101,19 +108,32 @@
 			</Breadcrumb.Root>
 		{/key}
 	</div>
-	<Button
-		variant="outline"
-		class="h-8 w-full max-w-xs justify-start gap-2 text-muted-foreground"
+
+	<button
 		onclick={() => (shortcutsState.isCommandPaletteOpen = true)}
 		aria-label={m.shortcuts_commandPalette()}
+		class="inline-flex items-center gap-1.5 rounded-lg border bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
 	>
-		<Search class="size-4" />
-		<span class="flex-1 truncate text-start">{m.commandPalette_search()}</span>
+		<Search class="size-4 shrink-0" />
+		<span class="hidden md:inline">{m.commandPalette_search()}</span>
 		<kbd
-			class="pointer-events-none ms-auto inline-flex h-5 shrink-0 items-center rounded border bg-muted px-1 font-mono text-[10px] font-medium text-muted-foreground select-none"
+			class="pointer-events-none ms-1 inline-flex h-5 shrink-0 items-center rounded border bg-background px-1 font-mono text-[10px] font-medium text-muted-foreground"
 		>
 			{getShortcutSymbol(ShortcutAction.CommandPalette)}
 		</kbd>
-	</Button>
-	<div class="flex flex-1 items-center justify-end"></div>
+	</button>
+
+	<div class="flex flex-1 items-center justify-end gap-1 lg:gap-2">
+		<LanguageSelector />
+		<ThemeToggle />
+		<Button
+			variant="ghost"
+			size="icon"
+			class="hidden sm:flex"
+			onclick={() => (shortcutsState.isHelpOpen = true)}
+			aria-label={m.shortcuts_help()}
+		>
+			<CircleHelp class="size-4" />
+		</Button>
+	</div>
 </header>

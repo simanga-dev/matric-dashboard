@@ -7,6 +7,7 @@ import { Permissions } from '$lib/utils/permissions';
  */
 export const routes = {
 	dashboard: '/dashboard',
+	overview: '/overview',
 	login: '/login',
 	register: '/register',
 	forgotPassword: '/forgot-password',

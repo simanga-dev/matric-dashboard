@@ -7,6 +7,7 @@ using MatricDasbhoard.Infrastructure.Cookies.Extensions;
 using MatricDasbhoard.Infrastructure.Identity.Extensions;
 using MatricDasbhoard.Infrastructure.Features.Admin.Extensions;
 using MatricDasbhoard.Infrastructure.Features.Audit.Extensions;
+using MatricDasbhoard.Infrastructure.Features.Dashboard.Extensions;
 using MatricDasbhoard.Infrastructure.Features.Avatar.Extensions;
 using MatricDasbhoard.Infrastructure.Features.Captcha.Extensions;
 using MatricDasbhoard.Infrastructure.Features.FileStorage.Extensions;
@@ -61,6 +62,9 @@ try
 
         Log.Debug("Adding admin services");
         builder.Services.AddAdminServices();
+
+        Log.Debug("Adding dashboard services");
+        builder.Services.AddDashboardServices();
 
         Log.Debug("Adding audit services");
         builder.Services.AddAuditServices();

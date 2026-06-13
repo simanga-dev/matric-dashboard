@@ -7,6 +7,7 @@
 	"meta_description": "A production-ready web application template.",
 
 	"nav_dashboard": "Dashboard",
+	"nav_overview": "Overview",
 	"nav_profile": "Profile",
 	"nav_settings": "Settings",
 	"nav_logout": "Logout",

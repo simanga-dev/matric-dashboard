@@ -4,6 +4,11 @@
 	"meta_dashboard_title": "Dashboard",
 	"meta_dashboard_description": "Overview of your application.",
 
+	"meta_overview_title": "Overview",
+	"meta_overview_description": "At-a-glance view of your application.",
+
+	"overview_subtitle": "Key metrics and quick access to everything that matters.",
+
 	"dashboard_welcome": "Welcome back, {name}",
 	"dashboard_welcomeGeneric": "Welcome back",
 	"dashboard_subtitle": "Your personal dashboard with quick access to key areas.",

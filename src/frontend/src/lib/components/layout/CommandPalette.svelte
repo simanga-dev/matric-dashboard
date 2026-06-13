@@ -11,6 +11,7 @@
 	import * as m from '$lib/paraglide/messages';
 	import {
 		LayoutDashboard,
+		Eye,
 		User,
 		Settings,
 		Users,
@@ -44,6 +45,14 @@
 	}
 
 	const navItems: CommandItem[] = [
+		{
+			label: m.nav_overview,
+			icon: Eye,
+			action: () => {
+				close();
+				goto(resolve(routes.overview));
+			}
+		},
 		{
 			label: m.nav_dashboard,
 			icon: LayoutDashboard,
