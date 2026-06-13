@@ -16,7 +16,7 @@
 		users: m.nav_adminUsers,
 		roles: m.nav_adminRoles,
 		jobs: m.nav_adminJobs,
-		'oauth-providers': m.nav_adminOAuthProviders,
+		'oauth-providers': m.nav_adminOAuthProviders
 	};
 
 	const segmentHrefs: Record<string, string> = {
@@ -26,7 +26,7 @@
 		users: resolve(adminRoutes.users.path),
 		roles: resolve(adminRoutes.roles.path),
 		jobs: resolve(adminRoutes.jobs.path),
-		'oauth-providers': resolve(adminRoutes.oauthProviders.path),
+		'oauth-providers': resolve(adminRoutes.oauthProviders.path)
 	};
 
 	interface Crumb {

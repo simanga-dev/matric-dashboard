@@ -1,10 +1,6 @@
 <script lang="ts">
 	import { PageHeader } from '$lib/components/common';
-	import {
-		WelcomeGuide,
-		AccountStatus,
-		QuickActions
-	} from '$lib/components/dashboard';
+	import { WelcomeGuide, AccountStatus, QuickActions } from '$lib/components/dashboard';
 	import { DeveloperGuide } from '$lib/components/dashboard';
 	import * as m from '$lib/paraglide/messages';
 	import type { PageData } from './$types';

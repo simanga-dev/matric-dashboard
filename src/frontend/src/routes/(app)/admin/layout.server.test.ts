@@ -19,12 +19,7 @@ const MOCK_ADMIN_USER = {
 	firstName: 'Admin',
 	lastName: 'User',
 	roles: ['Admin'],
-	permissions: [
-		'users.view',
-		'roles.view',
-		'jobs.view',
-		'oauth_providers.view',
-	],
+	permissions: ['users.view', 'roles.view', 'jobs.view', 'oauth_providers.view'],
 	emailConfirmed: true
 };
 

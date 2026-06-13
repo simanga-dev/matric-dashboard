@@ -30,6 +30,7 @@
 		{#if data.user && !data.user.emailConfirmed}
 			<EmailVerificationBanner />
 		{/if}
+
 		<div
 			class="flex flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-4 pb-[max(4rem,calc(env(safe-area-inset-bottom,0px)+2rem))] lg:gap-6 lg:p-6 lg:pb-[max(4rem,calc(env(safe-area-inset-bottom,0px)+2rem))]"
 		>

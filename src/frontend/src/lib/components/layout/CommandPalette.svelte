@@ -107,7 +107,7 @@
 				goto(resolve(adminRoutes.oauthProviders.path));
 			},
 			permission: adminRoutes.oauthProviders.permission
-		},
+		}
 	];
 
 	const actionItems: CommandItem[] = [

@@ -14,10 +14,13 @@
 		Package2,
 		CircleHelp,
 		Search,
+		LogIn,
 		type IconProps
 	} from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
 	import { ThemeToggle, LanguageSelector, UserNav } from '$lib/components/layout';
+	import { LoginForm } from '$lib/components/auth';
+	import * as Dialog from '$lib/components/ui/dialog';
 	import { shortcutsState, ShortcutAction, getShortcutSymbol } from '$lib/state/shortcuts.svelte';
 	import type { Component } from 'svelte';
 	import type { User } from '$lib/types';
@@ -66,12 +69,14 @@
 			href: resolve(adminRoutes.oauthProviders.path),
 			icon: KeyRound,
 			permission: adminRoutes.oauthProviders.permission
-		},
+		}
 	];
 
 	let visibleAdminItems = $derived(
-		adminItems.filter((item) => hasPermission(user, item.permission))
+		user ? adminItems.filter((item) => hasPermission(user, item.permission)) : []
 	);
+
+	let loginDialogOpen = $state(false);
 
 	function isActive(href: string): boolean {
 		const pathname = page.url.pathname;
@@ -211,5 +216,35 @@
 				</Sidebar.MenuItem>
 			</Sidebar.Menu>
 		{/if}
+		{#if !user}
+			<Sidebar.Menu>
+				<Sidebar.MenuItem>
+					<Sidebar.MenuButton
+						tooltipContent={m.auth_login_submit()}
+						onclick={() => (loginDialogOpen = true)}
+					>
+						<LogIn />
+						<span>{m.auth_login_submit()}</span>
+					</Sidebar.MenuButton>
+				</Sidebar.MenuItem>
+			</Sidebar.Menu>
+		{/if}
 	</Sidebar.Footer>
 </Sidebar.Root>
+
+<Dialog.Root bind:open={loginDialogOpen}>
+	<Dialog.Content class="sm:max-w-md">
+		<Dialog.Header>
+			<Dialog.Title>{m.auth_login_title({ name: m.app_name() })}</Dialog.Title>
+			<Dialog.Description>{m.auth_login_subtitle()}</Dialog.Description>
+		</Dialog.Header>
+		<div class="py-4">
+			<LoginForm
+				inline
+				onSuccess={() => {
+					loginDialogOpen = false;
+				}}
+			/>
+		</div>
+	</Dialog.Content>
+</Dialog.Root>

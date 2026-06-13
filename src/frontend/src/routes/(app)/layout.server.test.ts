@@ -15,7 +15,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { isHttpError, isRedirect } from '@sveltejs/kit';
 import { load } from './+layout.server';
-import { MOCK_USER, createMockLoadEvent } from '../../test-utils';
+import { MOCK_USER, createMockLoadEvent, createMockCookies } from '../../test-utils';
 
 type LoadEvent = Parameters<typeof load>[0];
 
@@ -25,12 +25,13 @@ function mockLoadEvent(
 		user?: typeof MOCK_USER | null;
 		backendError?: 'backend_unavailable' | null;
 		hadSession?: boolean;
+		routeId?: string;
 	} = {}
 ) {
-	const { user = null, backendError = null, hadSession = false } = overrides;
+	const { user = null, backendError = null, hadSession = false, routeId = '/(app)' } = overrides;
 
 	return createMockLoadEvent({
-		route: { id: '/(app)' },
+		route: { id: routeId },
 		parent: vi.fn().mockResolvedValue({ user, backendError, hadSession })
 	}) as LoadEvent;
 }
@@ -91,5 +92,22 @@ describe('(app) layout server load', () => {
 			303,
 			'/login?reason=session_expired'
 		);
+	});
+
+	// ── Public dashboard ────────────────────────────────────────────
+
+	it('no user on dashboard - returns null user with sidebar state', async () => {
+		const result = await load(mockLoadEvent({ routeId: '/(app)/dashboard' }));
+		expect(result).toEqual({ user: null, sidebarOpen: true });
+	});
+
+	it('no user on dashboard with collapsed sidebar - returns sidebarOpen false', async () => {
+		const event = createMockLoadEvent({
+			route: { id: '/(app)/dashboard' },
+			parent: vi.fn().mockResolvedValue({ user: null, backendError: null, hadSession: false }),
+			cookies: createMockCookies(() => 'false')
+		}) as LoadEvent;
+		const result = await load(event);
+		expect(result).toEqual({ user: null, sidebarOpen: false });
 	});
 });
