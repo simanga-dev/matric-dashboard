@@ -6,7 +6,7 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { breadcrumbState } from '$lib/state/breadcrumb.svelte';
-	import { shortcutsState } from '$lib/state/shortcuts.svelte';
+	import { shortcutsState, ShortcutAction, getShortcutSymbol } from '$lib/state/shortcuts.svelte';
 	import { routes } from '$lib/config';
 	import { adminRoutes } from '$lib/config';
 	import * as m from '$lib/paraglide/messages';
@@ -102,13 +102,18 @@
 		{/key}
 	</div>
 	<Button
-		variant="ghost"
-		size="icon"
-		class="size-8"
+		variant="outline"
+		class="h-8 w-full max-w-xs justify-start gap-2 text-muted-foreground"
 		onclick={() => (shortcutsState.isCommandPaletteOpen = true)}
 		aria-label={m.shortcuts_commandPalette()}
 	>
 		<Search class="size-4" />
+		<span class="flex-1 truncate text-start">{m.commandPalette_search()}</span>
+		<kbd
+			class="pointer-events-none ms-auto inline-flex h-5 shrink-0 items-center rounded border bg-muted px-1 font-mono text-[10px] font-medium text-muted-foreground select-none"
+		>
+			{getShortcutSymbol(ShortcutAction.CommandPalette)}
+		</kbd>
 	</Button>
 	<div class="flex flex-1 items-center justify-end"></div>
 </header>

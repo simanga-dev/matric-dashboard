@@ -13,7 +13,6 @@
 		KeyRound,
 		Package2,
 		CircleHelp,
-		Search,
 		LogIn,
 		type IconProps
 	} from '@lucide/svelte';
@@ -114,30 +113,6 @@
 		</Sidebar.Menu>
 	</Sidebar.Header>
 	<Sidebar.Content>
-		<Sidebar.Group class="py-0">
-			<Sidebar.GroupContent>
-				<Sidebar.Menu>
-					<Sidebar.MenuItem>
-						<Sidebar.MenuButton
-							tooltipContent={m.shortcuts_commandPalette()}
-							onclick={() => {
-								shortcutsState.isCommandPaletteOpen = true;
-								if (sidebar.isMobile) sidebar.setOpenMobile(false);
-							}}
-						>
-							<Search />
-							<span class="flex-1 truncate text-muted-foreground">{m.commandPalette_search()}</span>
-							<kbd
-								class="pointer-events-none ms-auto inline-flex h-5 shrink-0 items-center rounded border bg-muted px-1 font-mono text-[10px] font-medium text-muted-foreground select-none group-data-[collapsible=icon]:hidden"
-							>
-								{getShortcutSymbol(ShortcutAction.CommandPalette)}
-							</kbd>
-						</Sidebar.MenuButton>
-					</Sidebar.MenuItem>
-				</Sidebar.Menu>
-			</Sidebar.GroupContent>
-		</Sidebar.Group>
-		<Sidebar.Separator />
 		<Sidebar.Group>
 			<Sidebar.GroupContent>
 				<Sidebar.Menu>
