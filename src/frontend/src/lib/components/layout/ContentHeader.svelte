@@ -1,13 +1,16 @@
 <script lang="ts">
 	import { SidebarTrigger } from '$lib/components/ui/sidebar';
 	import { Separator } from '$lib/components/ui/separator';
+	import { Button } from '$lib/components/ui/button';
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb';
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { breadcrumbState } from '$lib/state/breadcrumb.svelte';
+	import { shortcutsState } from '$lib/state/shortcuts.svelte';
 	import { routes } from '$lib/config';
 	import { adminRoutes } from '$lib/config';
 	import * as m from '$lib/paraglide/messages';
+	import { Search } from '@lucide/svelte';
 
 	const segmentLabels: Record<string, () => string> = {
 		dashboard: m.nav_dashboard,
@@ -76,24 +79,36 @@
 		? 'flex h-10 shrink-0 items-center gap-2 border-b bg-background px-4 md:h-12'
 		: 'hidden h-12 shrink-0 items-center gap-2 border-b bg-background px-4 md:flex'}
 >
-	<SidebarTrigger class="hidden size-7 md:inline-flex" />
-	<Separator orientation="vertical" class="hidden h-4 md:block" />
-	{#key page.url.pathname}
-		<Breadcrumb.Root class="motion-safe:duration-200 motion-safe:animate-in motion-safe:fade-in">
-			<Breadcrumb.List>
-				{#each crumbs as crumb, i (crumb.href ?? crumb.label)}
-					<Breadcrumb.Item>
-						{#if crumb.href}
-							<Breadcrumb.Link href={crumb.href}>{crumb.label}</Breadcrumb.Link>
-						{:else}
-							<Breadcrumb.Page>{crumb.label}</Breadcrumb.Page>
+	<div class="flex flex-1 items-center gap-2">
+		<SidebarTrigger class="hidden size-7 md:inline-flex" />
+		<Separator orientation="vertical" class="hidden h-4 md:block" />
+		{#key page.url.pathname}
+			<Breadcrumb.Root class="motion-safe:duration-200 motion-safe:animate-in motion-safe:fade-in">
+				<Breadcrumb.List>
+					{#each crumbs as crumb, i (crumb.href ?? crumb.label)}
+						<Breadcrumb.Item>
+							{#if crumb.href}
+								<Breadcrumb.Link href={crumb.href}>{crumb.label}</Breadcrumb.Link>
+							{:else}
+								<Breadcrumb.Page>{crumb.label}</Breadcrumb.Page>
+							{/if}
+						</Breadcrumb.Item>
+						{#if i < crumbs.length - 1}
+							<Breadcrumb.Separator />
 						{/if}
-					</Breadcrumb.Item>
-					{#if i < crumbs.length - 1}
-						<Breadcrumb.Separator />
-					{/if}
-				{/each}
-			</Breadcrumb.List>
-		</Breadcrumb.Root>
-	{/key}
+					{/each}
+				</Breadcrumb.List>
+			</Breadcrumb.Root>
+		{/key}
+	</div>
+	<Button
+		variant="ghost"
+		size="icon"
+		class="size-8"
+		onclick={() => (shortcutsState.isCommandPaletteOpen = true)}
+		aria-label={m.shortcuts_commandPalette()}
+	>
+		<Search class="size-4" />
+	</Button>
+	<div class="flex flex-1 items-center justify-end"></div>
 </header>
