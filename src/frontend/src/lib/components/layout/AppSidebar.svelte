@@ -171,6 +171,13 @@
 				<div class="flex-1 group-data-[collapsible=icon]:hidden"></div>
 				{#if user}
 					<UserNav {user} />
+				{:else}
+					<Sidebar.MenuButton
+						tooltipContent={m.auth_login_submit()}
+						onclick={() => (loginDialogOpen = true)}
+					>
+						<LogIn class="size-5" />
+					</Sidebar.MenuButton>
 				{/if}
 			</div>
 			<Sidebar.Separator />
@@ -190,8 +197,7 @@
 					</Sidebar.MenuButton>
 				</Sidebar.MenuItem>
 			</Sidebar.Menu>
-		{/if}
-		{#if !user}
+		{:else if !user}
 			<Sidebar.Menu>
 				<Sidebar.MenuItem>
 					<Sidebar.MenuButton
