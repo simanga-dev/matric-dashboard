@@ -9,7 +9,7 @@ export async function fetchDashboardStats(): Promise<DashboardStats> {
 
 export async function fetchPassRateTrends(years?: string): Promise<PassRateTrend[]> {
 	const { data, error } = await browserClient.GET('/api/v1/dashboard/pass-rate-trends', {
-		params: { query: years ? { years } as never : undefined }
+		params: { query: years ? ({ years } as never) : undefined }
 	});
 	if (error) throw new Error('Failed to fetch pass rate trends');
 	return data as unknown as PassRateTrend[];

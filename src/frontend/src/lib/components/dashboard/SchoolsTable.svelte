@@ -63,7 +63,13 @@
 					class="h-8 w-48"
 					onkeydown={(e) => e.key === 'Enter' && handleSearch()}
 				/>
-				<Button variant="outline" size="icon" class="h-8 w-8" onclick={handleSearch} disabled={loading}>
+				<Button
+					variant="outline"
+					size="icon"
+					class="h-8 w-8"
+					onclick={handleSearch}
+					disabled={loading}
+				>
 					<Search class="size-3" />
 				</Button>
 			</div>
@@ -83,7 +89,7 @@
 						<Table.Head class="text-right">Wrote</Table.Head>
 						<Table.Head class="text-right">Passed</Table.Head>
 						<Table.Head class="text-right">Pass Rate</Table.Head>
-						<Table.Head class="hidden lg:table-cell text-right">Bachelor</Table.Head>
+						<Table.Head class="hidden text-right lg:table-cell">Bachelor</Table.Head>
 					</Table.Row>
 				</Table.Header>
 				<Table.Body>
@@ -91,10 +97,16 @@
 						<Table.Row>
 							<Table.Cell class="font-medium">{school.name}</Table.Cell>
 							<Table.Cell class="hidden md:table-cell">{school.province}</Table.Cell>
-							<Table.Cell class="text-right tabular-nums">{school.totalWrote.toLocaleString()}</Table.Cell>
-							<Table.Cell class="text-right tabular-nums">{school.totalPassed.toLocaleString()}</Table.Cell>
-							<Table.Cell class="text-right tabular-nums font-medium">{formatPassRate(school.passRate)}</Table.Cell>
-							<Table.Cell class="hidden lg:table-cell text-right tabular-nums">
+							<Table.Cell class="text-right tabular-nums"
+								>{school.totalWrote.toLocaleString()}</Table.Cell
+							>
+							<Table.Cell class="text-right tabular-nums"
+								>{school.totalPassed.toLocaleString()}</Table.Cell
+							>
+							<Table.Cell class="text-right font-medium tabular-nums"
+								>{formatPassRate(school.passRate)}</Table.Cell
+							>
+							<Table.Cell class="hidden text-right tabular-nums lg:table-cell">
 								{school.totalAchieved?.toLocaleString() ?? '-'}
 							</Table.Cell>
 						</Table.Row>

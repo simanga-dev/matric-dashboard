@@ -83,9 +83,7 @@
 	});
 </script>
 
-<header
-	class="flex h-(--header-height) shrink-0 items-center gap-2 border-b px-4 lg:px-6"
->
+<header class="flex h-(--header-height) shrink-0 items-center gap-2 border-b px-4 lg:px-6">
 	<div class="flex flex-1 items-center gap-2">
 		<SidebarTrigger class="-ml-1" />
 		<Separator orientation="vertical" class="mx-2 h-4" />

@@ -3,7 +3,13 @@
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { Badge } from '$lib/components/ui/badge';
 	import { fetchSchools } from '$lib/api/dashboard';
-	import { ChevronRight, ChevronDown, School as SchoolIcon, Building2, MapPin } from '@lucide/svelte';
+	import {
+		ChevronRight,
+		ChevronDown,
+		School as SchoolIcon,
+		Building2,
+		MapPin
+	} from '@lucide/svelte';
 	import { onMount } from 'svelte';
 	import type { School } from '$lib/types/dashboard';
 
@@ -88,7 +94,7 @@
 			</div>
 		{:else}
 			<div class="divide-y p-0">
-					{#each [...grouped.entries()] as [province, circuits]}
+				{#each [...grouped.entries()] as [province, circuits]}
 					<div>
 						<button
 							onclick={() => {
@@ -96,10 +102,10 @@
 								selectProvince(province);
 							}}
 							data-selected={selectedProvince === province}
-							class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium hover:bg-muted/50 transition-colors data-[selected=true]:bg-primary/10 data-[selected=true]:text-primary"
+							class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium transition-colors hover:bg-muted/50 data-[selected=true]:bg-primary/10 data-[selected=true]:text-primary"
 						>
-						{#if expandedProvinces.has(province)}
-							<ChevronDown class="size-3.5 shrink-0 text-muted-foreground" />
+							{#if expandedProvinces.has(province)}
+								<ChevronDown class="size-3.5 shrink-0 text-muted-foreground" />
 							{:else}
 								<ChevronRight class="size-3.5 shrink-0 text-muted-foreground" />
 							{/if}
@@ -110,12 +116,12 @@
 							</Badge>
 						</button>
 						{#if expandedProvinces.has(province)}
-							<div class="border-l-2 border-muted ml-5">
+							<div class="ml-5 border-l-2 border-muted">
 								{#each [...circuits.entries()] as [circuit, schoolList]}
 									<div>
 										<button
 											onclick={() => toggleCircuit(circuit)}
-											class="flex w-full items-center gap-2 py-1.5 pr-4 pl-3 text-left text-xs text-muted-foreground hover:bg-muted/50 transition-colors"
+											class="flex w-full items-center gap-2 py-1.5 pr-4 pl-3 text-left text-xs text-muted-foreground transition-colors hover:bg-muted/50"
 										>
 											{#if expandedCircuits.has(circuit)}
 												<ChevronDown class="size-3 shrink-0" />
@@ -123,17 +129,17 @@
 												<ChevronRight class="size-3 shrink-0" />
 											{/if}
 											<span class="truncate">{circuit}</span>
-											<Badge variant="outline" class="ml-auto shrink-0 text-[10px] px-1.5">
+											<Badge variant="outline" class="ml-auto shrink-0 px-1.5 text-[10px]">
 												{schoolList.length}
 											</Badge>
 										</button>
 										{#if expandedCircuits.has(circuit)}
-											<div class="border-l border-muted ml-3">
+											<div class="ml-3 border-l border-muted">
 												{#each schoolList as school}
 													<button
 														onclick={() => selectSchool(school)}
 														data-selected={selectedSchoolId === school.id}
-														class="flex w-full items-center gap-2 px-4 py-1.5 text-left text-xs hover:bg-muted/50 transition-colors data-[selected=true]:bg-primary/10 data-[selected=true]:text-primary"
+														class="flex w-full items-center gap-2 px-4 py-1.5 text-left text-xs transition-colors hover:bg-muted/50 data-[selected=true]:bg-primary/10 data-[selected=true]:text-primary"
 													>
 														<SchoolIcon class="size-3 shrink-0 text-muted-foreground" />
 														<span class="truncate">{school.name}</span>
@@ -146,7 +152,7 @@
 							</div>
 						{/if}
 					</div>
-					{/each}
+				{/each}
 			</div>
 		{/if}
 	</CardContent>

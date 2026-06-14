@@ -33,8 +33,8 @@
 	class={cn(
 		'relative flex items-center justify-center bg-transparent transition-colors hover:bg-accent/50',
 		ctx.direction === 'horizontal'
-			? 'w-2 cursor-col-resize shrink-0'
-			: 'h-2 cursor-row-resize shrink-0',
+			? 'w-2 shrink-0 cursor-col-resize'
+			: 'h-2 shrink-0 cursor-row-resize',
 		className
 	)}
 	data-resizable-handle
@@ -46,10 +46,8 @@
 	{:else}
 		<div
 			class={cn(
-				'z-10 flex items-center justify-center rounded-sm bg-border group-hover:bg-accent-foreground/20 transition-colors',
-				ctx.direction === 'horizontal'
-					? 'h-8 w-1'
-					: 'h-1 w-8'
+				'z-10 flex items-center justify-center rounded-sm bg-border transition-colors group-hover:bg-accent-foreground/20',
+				ctx.direction === 'horizontal' ? 'h-8 w-1' : 'h-1 w-8'
 			)}
 		>
 			{#if ctx.direction === 'horizontal'}

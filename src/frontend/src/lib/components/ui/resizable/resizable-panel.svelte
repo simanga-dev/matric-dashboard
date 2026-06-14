@@ -15,6 +15,6 @@
 	let style = $derived(ctx.getPanelStyle(index));
 </script>
 
-<div style={style} data-resizable-panel-index={index}>
+<div {style} data-resizable-panel-index={index}>
 	{@render children()}
 </div>

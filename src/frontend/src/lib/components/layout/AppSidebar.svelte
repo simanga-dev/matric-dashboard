@@ -104,7 +104,6 @@
 		}
 	];
 
-
 	let visibleAdminItems = $derived(
 		user ? adminItems.filter((item) => hasPermission(user, item.permission)) : []
 	);
@@ -113,10 +112,7 @@
 
 	function isActive(href: string): boolean {
 		const pathname = page.url.pathname;
-		if (
-			href === resolve(routes.dashboard) ||
-			href === resolve(routes.overview)
-		) {
+		if (href === resolve(routes.dashboard) || href === resolve(routes.overview)) {
 			return pathname === href;
 		}
 		return pathname.startsWith(href);
@@ -221,7 +217,6 @@
 				</Sidebar.Menu>
 			</Sidebar.Group>
 		{/if}
-
 	</Sidebar.Content>
 	<Sidebar.Footer class="pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
 		{#if !sidebar.isMobile}

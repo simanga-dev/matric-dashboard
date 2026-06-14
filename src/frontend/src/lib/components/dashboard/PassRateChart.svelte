@@ -1,5 +1,11 @@
 <script lang="ts">
-	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
+	import {
+		Card,
+		CardContent,
+		CardDescription,
+		CardHeader,
+		CardTitle
+	} from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import { onMount } from 'svelte';
 	import type { PassRateTrend } from '$lib/types/dashboard';
@@ -50,7 +56,9 @@
 	let plotHeight = $derived(CHART_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom);
 
 	let minYear = $derived(filteredData.length > 0 ? filteredData[0].year : 2008);
-	let maxYear = $derived(filteredData.length > 0 ? filteredData[filteredData.length - 1].year : 2024);
+	let maxYear = $derived(
+		filteredData.length > 0 ? filteredData[filteredData.length - 1].year : 2024
+	);
 	let minPassRate = $derived(
 		filteredData.length > 0 ? Math.min(...filteredData.map((d) => d.passRate)) - 5 : 50
 	);
@@ -63,10 +71,16 @@
 	}
 
 	function yScale(passRate: number): number {
-		return CHART_PADDING.top + plotHeight - ((passRate - minPassRate) / (maxPassRate - minPassRate || 1)) * plotHeight;
+		return (
+			CHART_PADDING.top +
+			plotHeight -
+			((passRate - minPassRate) / (maxPassRate - minPassRate || 1)) * plotHeight
+		);
 	}
 
-	let points = $derived(filteredData.map((d) => `${xScale(d.year)},${yScale(d.passRate)}`).join(' '));
+	let points = $derived(
+		filteredData.map((d) => `${xScale(d.year)},${yScale(d.passRate)}`).join(' ')
+	);
 	let areaPoints = $derived(
 		`${xScale(minYear)},${yScale(minPassRate)} ${points} ${xScale(maxYear)},${yScale(minPassRate)}`
 	);
@@ -180,7 +194,7 @@
 				<polygon points={areaPoints} fill="url(#areaGradient)" />
 
 				<!-- Line -->
-				<polyline points={points} fill="none" stroke="hsl(var(--primary))" stroke-width="2" />
+				<polyline {points} fill="none" stroke="hsl(var(--primary))" stroke-width="2" />
 
 				<!-- Data dots -->
 				{#each filteredData as d}

@@ -4,7 +4,14 @@
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { fetchSchools } from '$lib/api/dashboard';
 	import { onMount } from 'svelte';
-	import { School as SchoolIcon, Users, GraduationCap, Award, TrendingUp, MapPin } from '@lucide/svelte';
+	import {
+		School as SchoolIcon,
+		Users,
+		GraduationCap,
+		Award,
+		TrendingUp,
+		MapPin
+	} from '@lucide/svelte';
 	import type { School } from '$lib/types/dashboard';
 
 	let {
@@ -99,8 +106,11 @@
 						class="rounded-lg border p-3 text-left transition-colors hover:border-primary/50 hover:bg-muted/40 data-[selected=true]:border-primary data-[selected=true]:bg-primary/10"
 					>
 						<div class="flex items-center justify-between gap-2">
-							<span class="text-sm font-medium truncate">{province.province}</span>
-							<Badge variant={selectedProvince === province.province ? 'default' : 'secondary'} class="shrink-0 text-xs">
+							<span class="truncate text-sm font-medium">{province.province}</span>
+							<Badge
+								variant={selectedProvince === province.province ? 'default' : 'secondary'}
+								class="shrink-0 text-xs"
+							>
 								{province.schools}
 							</Badge>
 						</div>
@@ -111,15 +121,10 @@
 
 			<div class="space-y-2">
 				{#each displaySchools as school}
-					<div
-						class="rounded-lg border p-3 transition-colors hover:border-primary/50"
-					>
+					<div class="rounded-lg border p-3 transition-colors hover:border-primary/50">
 						<div class="flex items-start justify-between gap-2">
-							<span class="text-sm font-medium leading-tight">{school.name}</span>
-							<Badge
-								variant="secondary"
-								class="shrink-0 {passRateColor(school.passRate)}"
-							>
+							<span class="text-sm leading-tight font-medium">{school.name}</span>
+							<Badge variant="secondary" class="shrink-0 {passRateColor(school.passRate)}">
 								{formatPassRate(school.passRate)}
 							</Badge>
 						</div>
@@ -147,11 +152,15 @@
 							<div class="mt-2 flex items-center gap-2">
 								<div class="h-1.5 flex-1 rounded-full bg-muted">
 									<div
-										class="h-full rounded-full {school.passRate >= 80 ? 'bg-green-500' : school.passRate >= 60 ? 'bg-amber-500' : 'bg-red-500'}"
+										class="h-full rounded-full {school.passRate >= 80
+											? 'bg-green-500'
+											: school.passRate >= 60
+												? 'bg-amber-500'
+												: 'bg-red-500'}"
 										style="width: {school.passRate}%"
 									></div>
 								</div>
-								<span class="text-[10px] tabular-nums text-muted-foreground">
+								<span class="text-[10px] text-muted-foreground tabular-nums">
 									<TrendingUp class="inline size-3 align-text-bottom" />
 									{formatPassRate(school.passRate)}
 								</span>

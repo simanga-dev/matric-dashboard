@@ -41,10 +41,10 @@
 			{#if statsLoading}
 				<div class="grid grid-cols-1 gap-4 px-4 lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
 					{#each [1, 2, 3, 4] as _}
-						<div class="rounded-xl border bg-card p-6 animate-pulse">
-							<div class="h-4 w-24 bg-muted rounded mb-3"></div>
-							<div class="h-8 w-20 bg-muted rounded mb-4"></div>
-							<div class="h-3 w-32 bg-muted rounded"></div>
+						<div class="animate-pulse rounded-xl border bg-card p-6">
+							<div class="mb-3 h-4 w-24 rounded bg-muted"></div>
+							<div class="mb-4 h-8 w-20 rounded bg-muted"></div>
+							<div class="h-3 w-32 rounded bg-muted"></div>
 						</div>
 					{/each}
 				</div>
@@ -53,7 +53,9 @@
 					<div class="rounded-xl border bg-card p-6 text-destructive">{statsError}</div>
 				</div>
 			{:else if stats}
-				<div class="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
+				<div
+					class="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card"
+				>
 					<StatCard
 						title="Top School Performers"
 						value={stats.topSchools.total.toLocaleString()}

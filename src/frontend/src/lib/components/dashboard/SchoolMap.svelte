@@ -18,10 +18,10 @@
 		'Western Cape': 'WC',
 		'Eastern Cape': 'EC',
 		'Free State': 'FS',
-		'Gauteng': 'GT',
+		Gauteng: 'GT',
 		'KwaZulu-Natal': 'KZ',
-		'Limpopo': 'NP',
-		'Mpumalanga': 'MP',
+		Limpopo: 'NP',
+		Mpumalanga: 'MP',
 		'Northern Cape': 'NC',
 		'North West': 'NW'
 	};
@@ -72,7 +72,11 @@
 	});
 
 	let provinceLookup = $derived.by(
-		() => Object.fromEntries(provinces.map((province) => [province.name, province])) as Record<string, ProvinceData>
+		() =>
+			Object.fromEntries(provinces.map((province) => [province.name, province])) as Record<
+				string,
+				ProvinceData
+			>
 	);
 
 	let overallPassRate = $derived.by(() => {
@@ -104,7 +108,8 @@
 			const path = svg.querySelector<SVGPathElement>(`#${id}`);
 			if (!path) continue;
 			path.style.fill = provinceFill(id);
-			path.style.opacity = selectedProvince && selectedProvince !== provinceNamesById[id] ? '0.45' : '1';
+			path.style.opacity =
+				selectedProvince && selectedProvince !== provinceNamesById[id] ? '0.45' : '1';
 			path.style.strokeWidth = selectedProvince === provinceNamesById[id] ? '4' : '2';
 			path.style.cursor = 'pointer';
 		}
@@ -154,7 +159,10 @@
 					tabindex="0"
 					aria-label="South Africa provinces map"
 				>
-					{@html svgMarkup.replace('<svg', '<svg class="h-auto w-full" style="width:100%;height:auto" role="img" aria-label="South Africa provinces map"')}
+					{@html svgMarkup.replace(
+						'<svg',
+						'<svg class="h-auto w-full" style="width:100%;height:auto" role="img" aria-label="South Africa provinces map"'
+					)}
 				</div>
 			</div>
 

@@ -9,11 +9,7 @@
 		class?: string;
 	}
 
-	let {
-		children,
-		orientation = 'horizontal',
-		class: className
-	}: Props = $props();
+	let { children, orientation = 'horizontal', class: className }: Props = $props();
 
 	let sizes = $state<number[]>([]);
 	let isResizing = $state(false);
@@ -122,9 +118,15 @@
 	}
 
 	const context: ResizableContext = {
-		get sizes() { return sizes; },
-		get direction() { return orientation; },
-		get isResizing() { return isResizing; },
+		get sizes() {
+			return sizes;
+		},
+		get direction() {
+			return orientation;
+		},
+		get isResizing() {
+			return isResizing;
+		},
 		registerPanel,
 		getPanelStyle,
 		startResize

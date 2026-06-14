@@ -1,5 +1,11 @@
 <script lang="ts">
-	import { Card, CardDescription, CardFooter, CardHeader, CardTitle } from '$lib/components/ui/card';
+	import {
+		Card,
+		CardDescription,
+		CardFooter,
+		CardHeader,
+		CardTitle
+	} from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import { ArrowUpRight, ArrowDownRight, Minus } from '@lucide/svelte';
 	import type { Component } from 'svelte';
@@ -45,7 +51,11 @@
 			{trendLabel}
 		</Badge>
 		<div class="text-muted-foreground">
-			{isNeutral ? 'No trend data available' : isPositive ? 'Up from last year' : 'Down from last year'}
+			{isNeutral
+				? 'No trend data available'
+				: isPositive
+					? 'Up from last year'
+					: 'Down from last year'}
 		</div>
 	</CardFooter>
 </Card>
