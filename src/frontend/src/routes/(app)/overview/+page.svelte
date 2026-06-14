@@ -17,6 +17,7 @@
 	);
 
 	let selectedSchoolId: number | null = $state(null);
+	let selectedProvince: string | null = $state(null);
 </script>
 
 <svelte:head>
@@ -24,19 +25,16 @@
 	<meta name="description" content={m.meta_overview_description()} />
 </svelte:head>
 
-<ResizablePanelGroup orientation="horizontal" class="h-[calc(100vh-12rem)] rounded-lg border">
-	<ResizablePanel defaultSize={15}>
-			<SchoolTree bind:selectedSchoolId />
+<ResizablePanelGroup orientation="horizontal" class="h-[calc(100vh-12rem)] rounded-lg">
+	<ResizablePanel defaultSize={18}>
+		<SchoolTree bind:selectedSchoolId bind:selectedProvince />
 	</ResizablePanel>
 	<ResizableHandle />
-
-		<ResizablePanel defaultSize={60}>
-			<SchoolMap />
-		</ResizablePanel>
-
-		<ResizableHandle />
-		<ResizablePanel defaultSize={15}>
-				<SchoolCards bind:selectedSchoolId />
-		</ResizablePanel>
-</ResizablePanelGroup
->
+	<ResizablePanel defaultSize={54}>
+		<SchoolMap bind:selectedProvince />
+	</ResizablePanel>
+	<ResizableHandle />
+	<ResizablePanel defaultSize={28}>
+		<SchoolCards bind:selectedSchoolId bind:selectedProvince />
+	</ResizablePanel>
+</ResizablePanelGroup>

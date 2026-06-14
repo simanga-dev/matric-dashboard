@@ -7,7 +7,10 @@
 	import { onMount } from 'svelte';
 	import type { School } from '$lib/types/dashboard';
 
-	let { selectedSchoolId = $bindable(null) }: { selectedSchoolId?: number | null } = $props();
+	let {
+		selectedSchoolId = $bindable(null),
+		selectedProvince = $bindable(null)
+	}: { selectedSchoolId?: number | null; selectedProvince?: string | null } = $props();
 
 	let schools: School[] = $state([]);
 	let loading = $state(true);
@@ -63,6 +66,10 @@
 	function selectSchool(school: School) {
 		selectedSchoolId = selectedSchoolId === school.id ? null : school.id;
 	}
+
+	function selectProvince(province: string) {
+		selectedProvince = selectedProvince === province ? null : province;
+	}
 </script>
 
 <Card class="h-full">
@@ -80,15 +87,19 @@
 				<Skeleton class="h-5 w-5/6" />
 			</div>
 		{:else}
-			<div class="divide-y">
-				{#each [...grouped.entries()] as [province, circuits]}
+			<div class="divide-y p-0">
+					{#each [...grouped.entries()] as [province, circuits]}
 					<div>
 						<button
-							onclick={() => toggleProvince(province)}
-							class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium hover:bg-muted/50 transition-colors"
+							onclick={() => {
+								toggleProvince(province);
+								selectProvince(province);
+							}}
+							data-selected={selectedProvince === province}
+							class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm font-medium hover:bg-muted/50 transition-colors data-[selected=true]:bg-primary/10 data-[selected=true]:text-primary"
 						>
-							{#if expandedProvinces.has(province)}
-								<ChevronDown class="size-3.5 shrink-0 text-muted-foreground" />
+						{#if expandedProvinces.has(province)}
+							<ChevronDown class="size-3.5 shrink-0 text-muted-foreground" />
 							{:else}
 								<ChevronRight class="size-3.5 shrink-0 text-muted-foreground" />
 							{/if}
@@ -135,7 +146,7 @@
 							</div>
 						{/if}
 					</div>
-				{/each}
+					{/each}
 			</div>
 		{/if}
 	</CardContent>

@@ -7,10 +7,32 @@
 	import { School as SchoolIcon, Users, GraduationCap, Award, TrendingUp, MapPin } from '@lucide/svelte';
 	import type { School } from '$lib/types/dashboard';
 
-	let { selectedSchoolId = $bindable(null) }: { selectedSchoolId?: number | null } = $props();
+	let {
+		selectedSchoolId = $bindable(null),
+		selectedProvince = $bindable(null)
+	}: { selectedSchoolId?: number | null; selectedProvince?: string | null } = $props();
 
 	let schools: School[] = $state([]);
 	let loading = $state(true);
+
+	let provinceSummaries = $derived.by(() => {
+		const grouped = new Map<string, School[]>();
+		for (const school of schools) {
+			const list = grouped.get(school.province) ?? [];
+			list.push(school);
+			grouped.set(school.province, list);
+		}
+
+		return [...grouped.entries()].map(([province, list]) => {
+			const totalWrote = list.reduce((sum, school) => sum + school.totalWrote, 0);
+			const totalPassed = list.reduce((sum, school) => sum + school.totalPassed, 0);
+			return {
+				province,
+				schools: list.length,
+				avgPassRate: totalWrote > 0 ? Math.round((totalPassed / totalWrote) * 1000) / 10 : 0
+			};
+		});
+	});
 
 	onMount(async () => {
 		try {
@@ -24,9 +46,19 @@
 	});
 
 	let displaySchools = $derived(
-		selectedSchoolId
-			? schools.filter((s) => s.id === selectedSchoolId)
-			: schools.slice(0, 10)
+		selectedProvince
+			? schools.filter((s) => s.province === selectedProvince)
+			: selectedSchoolId
+				? schools.filter((s) => s.id === selectedSchoolId)
+				: schools.slice(0, 10)
+	);
+
+	let title = $derived(
+		selectedProvince
+			? `Schools in ${selectedProvince}`
+			: selectedSchoolId
+				? 'School Details'
+				: 'Top Schools'
 	);
 
 	function formatPassRate(rate: number): string {
@@ -38,13 +70,17 @@
 		if (rate >= 60) return 'text-amber-600';
 		return 'text-red-600';
 	}
+
+	function selectProvince(province: string) {
+		selectedProvince = selectedProvince === province ? null : province;
+	}
 </script>
 
 <Card class="h-full">
 	<CardHeader class="pb-3">
 		<CardTitle class="flex items-center gap-2 text-base">
 			<SchoolIcon class="size-4" />
-			{selectedSchoolId ? 'School Details' : 'Top Schools'}
+			{title}
 		</CardTitle>
 	</CardHeader>
 	<CardContent class="overflow-y-auto">
@@ -55,6 +91,24 @@
 				<Skeleton class="h-28 w-full" />
 			</div>
 		{:else}
+			<div class="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+				{#each provinceSummaries as province}
+					<button
+						onclick={() => selectProvince(province.province)}
+						data-selected={selectedProvince === province.province}
+						class="rounded-lg border p-3 text-left transition-colors hover:border-primary/50 hover:bg-muted/40 data-[selected=true]:border-primary data-[selected=true]:bg-primary/10"
+					>
+						<div class="flex items-center justify-between gap-2">
+							<span class="text-sm font-medium truncate">{province.province}</span>
+							<Badge variant={selectedProvince === province.province ? 'default' : 'secondary'} class="shrink-0 text-xs">
+								{province.schools}
+							</Badge>
+						</div>
+						<div class="mt-1 text-xs text-muted-foreground">Avg pass {province.avgPassRate}%</div>
+					</button>
+				{/each}
+			</div>
+
 			<div class="space-y-2">
 				{#each displaySchools as school}
 					<div
