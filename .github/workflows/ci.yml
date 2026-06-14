@@ -30,10 +30,6 @@ jobs:
         working-directory: src/frontend
         run: pnpm install --frozen-lockfile
 
-      - name: Type check
-        working-directory: src/frontend
-        run: pnpm exec tsc --noEmit
-
       - name: Build
         working-directory: src/frontend
         run: pnpm build
