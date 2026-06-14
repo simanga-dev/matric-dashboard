@@ -23,9 +23,11 @@
 	interface Props {
 		apiUrl?: string;
 		prefillEmail?: string;
+		onSuccess?: () => void | Promise<void>;
+		inline?: boolean;
 	}
 
-	let { apiUrl, prefillEmail }: Props = $props();
+	let { apiUrl, prefillEmail, onSuccess, inline = false }: Props = $props();
 
 	const shake = createShake();
 	const cooldown = createCooldown();
@@ -107,7 +109,11 @@
 			await new Promise((r) => setTimeout(r, 400));
 		}
 		await invalidateAll();
-		await goto(resolve(routes.dashboard));
+		if (onSuccess) {
+			await onSuccess();
+		} else {
+			await goto(resolve(routes.dashboard));
+		}
 	}
 
 	function handleTwoFactorBack() {
@@ -116,20 +122,7 @@
 	}
 </script>
 
-<AuthShell
-	cardClass={cn(shake.active && 'animate-shake border-destructive')}
-	success={loginSuccess}
->
-	{#snippet extras()}
-		<div
-			class="group absolute start-[max(1rem,env(safe-area-inset-left,0px))] bottom-[max(1rem,env(safe-area-inset-bottom,0px))] flex cursor-default items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-muted-foreground/60 transition-all hover:bg-muted/50 hover:text-muted-foreground"
-			title={apiUrl}
-		>
-			<StatusIndicator status={isApiOnline ? 'online' : 'offline'} size="sm" />
-			<span class="hidden group-hover:inline">{apiUrl ?? 'API'}</span>
-		</div>
-	{/snippet}
-
+{#snippet loginContent()}
 	{#if requiresTwoFactor}
 		<TwoFactorStep {challengeToken} onSuccess={completeLogin} onBack={handleTwoFactorBack} />
 	{:else}
@@ -224,4 +217,27 @@
 			</div>
 		</div>
 	{/if}
-</AuthShell>
+{/snippet}
+
+{#if inline}
+	<div class={cn('flex flex-col', shake.active && 'animate-shake')}>
+		{@render loginContent()}
+	</div>
+{:else}
+	<AuthShell
+		cardClass={cn(shake.active && 'animate-shake border-destructive')}
+		success={loginSuccess}
+	>
+		{#snippet extras()}
+			<div
+				class="group absolute start-[max(1rem,env(safe-area-inset-left,0px))] bottom-[max(1rem,env(safe-area-inset-bottom,0px))] flex cursor-default items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-muted-foreground/60 transition-all hover:bg-muted/50 hover:text-muted-foreground"
+				title={apiUrl}
+			>
+				<StatusIndicator status={isApiOnline ? 'online' : 'offline'} size="sm" />
+				<span class="hidden group-hover:inline">{apiUrl ?? 'API'}</span>
+			</div>
+		{/snippet}
+
+		{@render loginContent()}
+	</AuthShell>
+{/if}

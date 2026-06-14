@@ -15,9 +15,9 @@
 
 	let { data }: { data: PageData } = $props();
 
-	let twoFactorEnabled = $state(data.user.twoFactorEnabled ?? false);
-	let hasPassword = $state(data.user.hasPassword !== false);
-	let linkedProviders = $state(data.user.linkedProviders ?? []);
+	let twoFactorEnabled = $state(data.user?.twoFactorEnabled ?? false);
+	let hasPassword = $state(data.user?.hasPassword !== false);
+	let linkedProviders = $state(data.user?.linkedProviders ?? []);
 	let deleteDialogOpen = $state(false);
 </script>
 

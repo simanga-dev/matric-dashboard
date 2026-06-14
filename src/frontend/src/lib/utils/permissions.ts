@@ -31,7 +31,7 @@ export const Permissions = {
 	OAuthProviders: {
 		View: 'oauth_providers.view',
 		Manage: 'oauth_providers.manage'
-	},
+	}
 } as const;
 
 /** Returns true if the user is a Superuser (implicit all permissions). */

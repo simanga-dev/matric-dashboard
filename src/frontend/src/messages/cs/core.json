@@ -7,6 +7,7 @@
 	"meta_description": "Produkční šablona webové aplikace.",
 
 	"nav_dashboard": "Nástěnka",
+	"nav_overview": "Přehled",
 	"nav_profile": "Profil",
 	"nav_settings": "Nastavení",
 	"nav_logout": "Odhlásit se",

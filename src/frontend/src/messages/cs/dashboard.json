@@ -4,6 +4,11 @@
 	"meta_dashboard_title": "Nástěnka",
 	"meta_dashboard_description": "Přehled aplikace.",
 
+	"meta_overview_title": "Přehled",
+	"meta_overview_description": "Rychlý přehled vaší aplikace.",
+
+	"overview_subtitle": "Klíčové metriky a rychlý přístup ke všemu důležitému.",
+
 	"dashboard_welcome": "Vítejte zpět, {name}",
 	"dashboard_welcomeGeneric": "Vítejte zpět",
 	"dashboard_subtitle": "Váš osobní přehled s rychlým přístupem k hlavním oblastem.",
