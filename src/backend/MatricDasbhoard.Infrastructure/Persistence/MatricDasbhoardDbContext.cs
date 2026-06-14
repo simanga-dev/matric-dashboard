@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using MatricDasbhoard.Domain.Entities;
 using MatricDasbhoard.Infrastructure.Features.Audit.Models;
 using MatricDasbhoard.Infrastructure.Features.Authentication.Models;
 using MatricDasbhoard.Infrastructure.Features.Jobs.Models;
@@ -47,6 +48,16 @@ internal class MatricDasbhoardDbContext(DbContextOptions<MatricDasbhoardDbContex
     /// Gets or sets the external provider configurations for admin-managed OAuth credentials.
     /// </summary>
     public DbSet<ExternalProviderConfig> ExternalProviderConfigs { get; set; }
+
+    /// <summary>
+    /// Gets or sets the schools table for matric examination centres.
+    /// </summary>
+    public DbSet<School> Schools { get; set; }
+
+    /// <summary>
+    /// Gets or sets the school performance records table for yearly NSC results.
+    /// </summary>
+    public DbSet<SchoolPerformance> SchoolPerformances { get; set; }
 
     /// <summary>
     /// Configures the model by applying all entity configurations from this assembly
