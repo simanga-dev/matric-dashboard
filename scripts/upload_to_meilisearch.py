@@ -100,6 +100,8 @@ def upload_documents(documents: list[dict], api_key: str) -> None:
     total = len(documents)
     uploaded = 0
 
+    task_uids = []
+
     for start in range(0, total, BATCH_SIZE):
         batch = documents[start : start + BATCH_SIZE]
         payload = json.dumps(batch)
@@ -109,8 +111,26 @@ def upload_documents(documents: list[dict], api_key: str) -> None:
         result = resp.json()
 
         uploaded += len(batch)
-        task_uid = result.get("taskUid", "?")
+        task_uid = result.get("taskUid")
+        if task_uid is not None:
+            task_uids.append(task_uid)
         print(f"  [{uploaded}/{total}] Batch uploaded — taskUid: {task_uid}")
+
+    # Wait for all tasks to complete
+    for task_uid in task_uids:
+        status_url = f"{MEILI_URL}/tasks/{task_uid}"
+        while True:
+            status_resp = requests.get(status_url, headers=headers, timeout=30)
+            status_resp.raise_for_status()
+            task = status_resp.json()
+            if task.get("status") == "succeeded":
+                print(f"  Task {task_uid} completed successfully")
+                break
+            if task.get("status") == "failed":
+                error = task.get("error", {}).get("message", "unknown error")
+                raise RuntimeError(f"Task {task_uid} failed: {error}")
+            import time
+            time.sleep(0.5)
 
 
 def configure_index(api_key: str) -> None:
@@ -187,7 +207,11 @@ def main():
     try:
         configure_index(api_key)
     except requests.RequestException as e:
-        print(f"Warning: Could not configure index settings: {e}")
+        print(f"ERROR: Could not configure index settings: {e}")
+        if hasattr(e, "response") and e.response is not None:
+            print(f"  Status: {e.response.status_code}")
+            print(f"  Body: {e.response.text[:500]}")
+        sys.exit(1)
 
     print(f"Uploading to MeiliSearch index '{INDEX_NAME}'...")
     try:

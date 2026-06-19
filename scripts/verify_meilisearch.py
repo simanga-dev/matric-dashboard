@@ -1,19 +1,20 @@
 """Verify MeiliSearch data was uploaded correctly."""
 import csv, json, os, sys
-
-MEILI_KEY = os.environ["MEILI_KEY"]
-
-# Quick check: search a known school
 import urllib.request
 
-url = "https://search.matrictrend.app/indexes/schools/search"
+MEILI_URL = os.environ.get("MEILI_URL", "https://search.matrictrend.app")
+INDEX_NAME = "schools"
+MEILI_MASTER_KEY = os.environ["MEILI_MASTER_KEY"]
+
+# Quick check: search a known school
+url = f"{MEILI_URL}/indexes/{INDEX_NAME}/search"
 payload = json.dumps({"q": "baleni", "limit": 2}).encode()
 req = urllib.request.Request(
     url,
     data=payload,
     headers={
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {MEILI_KEY}",
+        "Authorization": f"Bearer {MEILI_MASTER_KEY}",
     },
     method="POST",
 )
@@ -32,13 +33,13 @@ for hit in data.get("hits", []):
     print(f"  2024 Pass %: {hit.get('percent_achieved_2024')}")
 
 # Stats
-stats_url = "https://search.matrictrend.app/indexes/schools/stats"
+stats_url = f"{MEILI_URL}/indexes/{INDEX_NAME}/stats"
 stats_req = urllib.request.Request(
     stats_url,
-    headers={"Authorization": f"Bearer {MEILI_KEY}"},
+    headers={"Authorization": f"Bearer {MEILI_MASTER_KEY}"},
 )
 stats_resp = urllib.request.urlopen(stats_req, timeout=15)
 stats = json.loads(stats_resp.read())
-print(f"\nIndex stats:")
+print("\nIndex stats:")
 print(f"  Number of documents: {stats.get('numberOfDocuments', '?')}")
 print(f"  Database size: {stats.get('databaseSize', '?')} bytes")
