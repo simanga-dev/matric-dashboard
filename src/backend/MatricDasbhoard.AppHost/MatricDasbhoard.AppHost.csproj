@@ -9,6 +9,7 @@
         <PackageReference Include="Aspire.Hosting.JavaScript" />
         <PackageReference Include="CommunityToolkit.Aspire.Hosting.MailPit" />
         <PackageReference Include="CommunityToolkit.Aspire.Hosting.Minio" />
+        <PackageReference Include="CommunityToolkit.Aspire.Hosting.Meilisearch" />
     </ItemGroup>
 
     <ItemGroup>
