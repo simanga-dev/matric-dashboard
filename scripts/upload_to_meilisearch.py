@@ -17,6 +17,7 @@ import json
 import os
 import sys
 import argparse
+import time
 
 import requests
 
@@ -116,10 +117,11 @@ def upload_documents(documents: list[dict], api_key: str) -> None:
             task_uids.append(task_uid)
         print(f"  [{uploaded}/{total}] Batch uploaded — taskUid: {task_uid}")
 
-    # Wait for all tasks to complete
+    # Wait for all tasks to complete (max 120 seconds per task)
     for task_uid in task_uids:
         status_url = f"{MEILI_URL}/tasks/{task_uid}"
-        while True:
+        max_retries = 240  # 240 * 0.5s = 120s timeout
+        for _ in range(max_retries):
             status_resp = requests.get(status_url, headers=headers, timeout=30)
             status_resp.raise_for_status()
             task = status_resp.json()
@@ -129,8 +131,9 @@ def upload_documents(documents: list[dict], api_key: str) -> None:
             if task.get("status") == "failed":
                 error = task.get("error", {}).get("message", "unknown error")
                 raise RuntimeError(f"Task {task_uid} failed: {error}")
-            import time
             time.sleep(0.5)
+        else:
+            raise RuntimeError(f"Task {task_uid} did not complete within 120 seconds")
 
 
 def configure_index(api_key: str) -> None:

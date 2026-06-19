@@ -23,7 +23,7 @@ var pgPassword = builder.AddParameter("postgres-password", secret: true);
 var storageUser = builder.AddParameter("storage-user");
 var storagePassword = builder.AddParameter("storage-password", secret: true);
 var jwtSecret = builder.AddParameter("jwt-secret", secret: true);
-var meilisearchMasterKey = builder.AddParameter("meilisearch-master-key");
+var meilisearchMasterKey = builder.AddParameter("meilisearch-master-key", secret: true);
 
 var postgres = builder.AddPostgres("db", password: pgPassword)
     .WithEndpoint("tcp", e => e.Port = postgresPort)
