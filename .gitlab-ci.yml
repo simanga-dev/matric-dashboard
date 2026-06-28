@@ -1,0 +1,81 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+
+stages:
+  - build
+  - test
+  - frontend
+
+variables:
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "1"
+  DOTNET_NOLOGO: "1"
+  NUGET_PACKAGES_DIRECTORY: ".nuget/packages"
+
+cache:
+  key: "${CI_COMMIT_REF_SLUG}"
+  paths:
+    - .nuget/packages/
+    - src/frontend/node_modules/
+    - src/frontend/.svelte-kit/
+
+build-backend:
+  stage: build
+  image: mcr.microsoft.com/dotnet/sdk:10.0
+  script:
+    - dotnet restore src/backend/MatricDasbhoard.slnx
+    - dotnet build src/backend/MatricDasbhoard.slnx --no-restore -c Release
+  artifacts:
+    paths:
+      - src/backend/**/bin/Release/
+      - src/backend/**/obj/Release/
+    expire_in: 1 hour
+
+test-backend:
+  stage: test
+  image: mcr.microsoft.com/dotnet/sdk:10.0
+  needs: [build-backend]
+  script:
+    - dotnet test src/backend/MatricDasbhoard.slnx --no-build -c Release --logger "console;verbosity=normal"
+  coverage: '/Total\s+\d+\s+\d+\s+\d+\s+(\d+\.\d+)%/'
+
+build-frontend:
+  stage: frontend
+  image: node:22-alpine
+  script:
+    - corepack enable pnpm
+    - cd src/frontend && pnpm install --frozen-lockfile
+    - cd src/frontend && pnpm build
+  artifacts:
+    paths:
+      - src/frontend/build/
+      - src/frontend/.svelte-kit/
+    expire_in: 1 hour
+
+format-check-frontend:
+  stage: frontend
+  image: node:22-alpine
+  script:
+    - corepack enable pnpm
+    - cd src/frontend && pnpm install --frozen-lockfile
+    - cd src/frontend && pnpm exec prettier --check .
+
+docker-build-backend:
+  stage: build
+  image: docker:27
+  services:
+    - docker:27-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  script:
+    - docker build -t matric-dashboard-api:latest -f src/backend/MatricDasbhoard.WebApi/Dockerfile src/backend/
+
+docker-build-frontend:
+  stage: frontend
+  image: docker:27
+  services:
+    - docker:27-dind
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  script:
+    - docker build -t matric-dashboard-frontend:latest -f src/frontend/Dockerfile src/frontend/
