@@ -70,7 +70,8 @@ docker-build-backend:
   services:
     - docker:27-dind
   variables:
-    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
   script:
     - docker build -t matric-dashboard-api:latest -f src/backend/MatricDasbhoard.WebApi/Dockerfile src/backend/
 
@@ -80,6 +81,7 @@ docker-build-frontend:
   services:
     - docker:27-dind
   variables:
-    DOCKER_TLS_CERTDIR: "/certs"
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
   script:
     - docker build -t matric-dashboard-frontend:latest -f src/frontend/Dockerfile src/frontend/
