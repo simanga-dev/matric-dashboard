@@ -1,4 +1,4 @@
-wrkflow:
+workflow:
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
 
@@ -25,7 +25,6 @@ cache:
 
 build-backend:
   stage: build
-  image: mcr.microsoft.com/dotnet/sdk:10.0
   script:
     - dotnet restore src/backend/MatricDasbhoard.slnx
     - dotnet build src/backend/MatricDasbhoard.slnx --no-restore -c Release
@@ -37,7 +36,6 @@ build-backend:
 
 test-backend:
   stage: test
-  image: mcr.microsoft.com/dotnet/sdk:10.0
   needs: [build-backend]
   script:
     - dotnet test src/backend/MatricDasbhoard.slnx --no-build -c Release --logger "console;verbosity=normal"
@@ -45,7 +43,6 @@ test-backend:
 
 build-frontend:
   stage: frontend
-  image: node:22-alpine
   script:
     - corepack enable pnpm
     - cd src/frontend && pnpm install --frozen-lockfile
@@ -58,7 +55,6 @@ build-frontend:
 
 format-check-frontend:
   stage: frontend
-  image: node:22-alpine
   script:
     - corepack enable pnpm
     - cd src/frontend && pnpm install --frozen-lockfile
@@ -66,12 +62,12 @@ format-check-frontend:
 
 docker-build-backend:
   stage: build
-  image: docker:27
+  needs: [build-backend]
   script:
     - docker build -t matric-dashboard-api:latest -f src/backend/MatricDasbhoard.WebApi/Dockerfile src/backend/
 
 docker-build-frontend:
   stage: frontend
-  image: docker:27
+  needs: [build-frontend]
   script:
     - docker build -t matric-dashboard-frontend:latest -f src/frontend/Dockerfile src/frontend/
