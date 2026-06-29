@@ -27,7 +27,7 @@ RUN dotnet restore "MatricDasbhoard.WebApi/MatricDasbhoard.WebApi.csproj" \
 # Copy the entire source code
 COPY . .
 
-# Build the application
+# Build the application.
 WORKDIR "/src/MatricDasbhoard.WebApi"
 RUN dotnet build "MatricDasbhoard.WebApi.csproj" -c Release
 
