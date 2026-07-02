@@ -6,12 +6,15 @@
 	import type { DashboardStats } from '$lib/types/dashboard';
 	import { GraduationCap, Building2, Users, Percent } from '@lucide/svelte';
 	import type { PageData } from './$types';
+	import { page } from '$app/state';
 
 	let { data }: { data: PageData } = $props();
 
 	let stats: DashboardStats | null = $state(null);
 	let statsLoading = $state(true);
 	let statsError = $state<string | null>(null);
+
+	let externalSearch = $derived(page.url.searchParams.get('search') ?? undefined);
 
 	onMount(() => {
 		loadStats();
@@ -88,7 +91,7 @@
 			</div>
 
 			<div class="px-4 lg:px-6">
-				<SchoolsTable />
+				<SchoolsTable externalSearch={externalSearch} />
 			</div>
 		</div>
 	</div>

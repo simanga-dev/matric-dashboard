@@ -8,10 +8,16 @@
 	import { fetchSchools } from '$lib/api/dashboard';
 	import type { School, SchoolList } from '$lib/types/dashboard';
 
+	interface Props {
+		externalSearch?: string;
+	}
+
+	let { externalSearch }: Props = $props();
+
 	let schoolData: SchoolList | null = $state(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
-	let searchQuery = $state('');
+	let searchQuery = $state(externalSearch ?? '');
 	let page = $state(1);
 	const pageSize = 10;
 
