@@ -91,7 +91,7 @@
 			</div>
 
 			<div class="px-4 lg:px-6">
-				<SchoolsTable externalSearch={externalSearch} />
+				<SchoolsTable {externalSearch} />
 			</div>
 		</div>
 	</div>

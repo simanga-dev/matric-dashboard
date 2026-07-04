@@ -108,13 +108,11 @@
 
 	{#if open}
 		<div
-			class="absolute left-0 top-full z-50 mt-1 w-80 rounded-lg border bg-popover p-1 shadow-lg md:w-96"
+			class="absolute top-full left-0 z-50 mt-1 w-80 rounded-lg border bg-popover p-1 shadow-lg md:w-96"
 			role="listbox"
 		>
 			{#if results.length === 0 && !loading}
-				<div class="px-3 py-6 text-center text-sm text-muted-foreground">
-					No schools found
-				</div>
+				<div class="px-3 py-6 text-center text-sm text-muted-foreground">No schools found</div>
 			{:else}
 				{#each results as school, i (school.id)}
 					<button
