@@ -10,8 +10,8 @@
 	import { routes } from '$lib/config';
 	import { adminRoutes } from '$lib/config';
 	import * as m from '$lib/paraglide/messages';
-	import { ThemeToggle, LanguageSelector } from '$lib/components/layout';
-	import { Search, CircleHelp } from '@lucide/svelte';
+	import { ThemeToggle, LanguageSelector, SchoolSearch } from '$lib/components/layout';
+	import { CircleHelp } from '@lucide/svelte';
 	import type { User } from '$lib/types';
 
 	interface Props {
@@ -107,15 +107,15 @@
 		{/key}
 	</div>
 
+	<SchoolSearch />
+
 	<button
 		onclick={() => (shortcutsState.isCommandPaletteOpen = true)}
 		aria-label={m.shortcuts_commandPalette()}
-		class="inline-flex items-center gap-1.5 rounded-lg border bg-muted/50 px-3 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+		class="inline-flex items-center gap-1.5 rounded-lg px-1.5 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
 	>
-		<Search class="size-4 shrink-0" />
-		<span class="hidden md:inline">{m.commandPalette_search()}</span>
 		<kbd
-			class="pointer-events-none ms-1 inline-flex h-5 shrink-0 items-center rounded border bg-background px-1 font-mono text-[10px] font-medium text-muted-foreground"
+			class="pointer-events-none inline-flex h-5 shrink-0 items-center rounded border bg-background px-1 font-mono text-[10px] font-medium text-muted-foreground"
 		>
 			{getShortcutSymbol(ShortcutAction.CommandPalette)}
 		</kbd>

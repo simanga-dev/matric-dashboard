@@ -103,9 +103,9 @@ public class SetPermissionsRequestValidatorTests
     [Fact]
     public void TooManyPermissions_ShouldFail() =>
         _validator.TestValidate(new SetPermissionsRequest
-            {
-                Permissions = Enumerable.Range(0, 51).Select(i => $"perm.{i}").ToList()
-            })
+        {
+            Permissions = Enumerable.Range(0, 51).Select(i => $"perm.{i}").ToList()
+        })
             .ShouldHaveValidationErrorFor(x => x.Permissions);
 
     [Theory]
