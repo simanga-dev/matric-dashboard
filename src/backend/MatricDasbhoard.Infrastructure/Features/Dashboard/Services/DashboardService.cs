@@ -1,11 +1,12 @@
+using System.Text.Json.Serialization;
 using MatricDasbhoard.Application.Features.Dashboard;
 using MatricDasbhoard.Application.Features.Dashboard.Dtos;
+using MatricDasbhoard.Shared;
+using Meilisearch;
 
 namespace MatricDasbhoard.Infrastructure.Features.Dashboard.Services;
 
-/// <summary>
-/// Returns mock dashboard data for the frontend overview page.
-/// Replace with real database queries once the data model is available.
+/// Returns paginated school data from the Meilisearch "schools" index.
 /// </summary>
 internal sealed class DashboardService : IDashboardService
 {
@@ -30,7 +31,14 @@ internal sealed class DashboardService : IDashboardService
         new(2024, 87.3, 737472)
     };
 
-    private static readonly IReadOnlyList<SchoolOutput> AllSchools = GenerateSchools();
+    private const string SchoolsIndex = "schools";
+
+    private readonly MeilisearchClient _meilisearchClient;
+
+    public DashboardService(MeilisearchClient meilisearchClient)
+    {
+        _meilisearchClient = meilisearchClient;
+    }
 
     public Task<DashboardStatsOutput> GetStatsAsync()
     {
@@ -54,83 +62,91 @@ internal sealed class DashboardService : IDashboardService
         return Task.FromResult<IReadOnlyList<PassRateTrendOutput>>(data);
     }
 
-    public Task<SchoolListOutput> GetSchoolsAsync(int pageNumber, int pageSize, string? search = null)
+    public async Task<SchoolListOutput> GetSchoolsAsync(int pageNumber, int pageSize, string? search = null)
     {
-        var filtered = AllSchools.AsEnumerable();
+        var index = _meilisearchClient.Index(SchoolsIndex);
+        var searchText = string.IsNullOrWhiteSpace(search) ? string.Empty : search;
 
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            filtered = filtered.Where(s =>
-                s.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                s.Province.Contains(search, StringComparison.OrdinalIgnoreCase));
-        }
+        var result = await index.SearchAsync<MeilisearchSchool>(
+            searchText,
+            new SearchQuery
+            {
+                Limit = pageSize,
+                Offset = (pageNumber - 1) * pageSize
+            });
 
-        var items = filtered.ToList();
-        var totalCount = items.Count;
-        var paged = items
-            .Skip((pageNumber - 1) * pageSize)
-            .Take(pageSize)
-            .ToList();
+        var schools = result.Hits.Select(hit => ToSchoolOutput(hit)).ToList();
 
-        return Task.FromResult(new SchoolListOutput(paged, totalCount, pageNumber, pageSize));
+        return new SchoolListOutput(schools, result.Hits.Count, pageNumber, pageSize);
     }
 
-    private static IReadOnlyList<SchoolOutput> GenerateSchools()
+    public async Task<MatricDasbhoard.Shared.Result<SchoolOutput>> GetSchoolByIdAsync(
+        string id,
+        CancellationToken cancellationToken = default)
     {
-        var provinces = new[] { "Gauteng", "KwaZulu-Natal", "Western Cape", "Eastern Cape", "Limpopo", "Mpumalanga", "North West", "Free State", "Northern Cape" };
-        var circuits = new[] { "Tshwane South", "Johannesburg East", "Ethekwini North", "Cape Town Metro", "Nelson Mandela Bay", "Mangaung", "Rustenburg", "Polokwane", "Mbombela" };
-
-        var names = new[]
+        if (string.IsNullOrWhiteSpace(id))
         {
-            "Pretoria High School for Girls", "Parktown Boys' High School", "Rondebosch Boys' High",
-            "Wynberg Girls' High School", "Maritzburg College", "Hilton College",
-            "St. Andrew's College", "Diocesan School for Girls", "St. Mary's Waverley",
-            "King Edward VII School", "Jeppe High School for Boys", "Sandown High School",
-            "Hoërskool Waterkloof", "Hoërskool Menlopark", "Hoërskool Garsfontein",
-            "Brescia House School", "St. Stithians College", "Roedean School",
-            "Sacred Heart College", "St. John's College", "St. Mary's School",
-            "Crawford College Lonehill", "St. Peter's College", "St. David's Marist Inanda",
-            "Deutsche Schule Johannesburg", "American International School", "British International College",
-            "Pinnacle College Kyalami", "Trinityhouse Randpark Ridge", "Steyn City School",
-            "Curro Aurora", "Curro Hazeldean", "Curro Mossel Bay",
-            "Reddam House Umhlanga", "Reddam House Durbanville", "Reddam House Bedfordview",
-            "HeronBridge College", "Kearsney College", "Michaelhouse",
-            "Clifton College", "St. Henry's Marist College", "Thomas More College",
-            "Crawford College North Coast", "Crawford College La Lucia", "Our Lady of Fatima",
-            "Holy Family College", "St. Benedict's College", "St. Dunstan's College",
-            "Kingswood College", "St. Andrew's School", "St. James School",
-            "Somerset College", "St. George's Grammar School", "St. Cyprian's School",
-            "Bishops Diocesan College", "Herschel Girls' School", "Rustenburg Girls' High",
-            "Springfield Convent", "Swellendam Secondary School", "Outeniqua High School",
-            "Pearson High School", "Grey High School", "Grey College",
-            "St. Michael's School", "Eunice High School", "St. Mary's DSG",
-            "St. Anne's Diocesan College", "Wykeham Collegiate", "Epworth High School",
-            "Cordwalles Preparatory School", "Cowies Hill Primary School", "Clifton Preparatory School",
-            "Berea Primary School", "Glenwood Preparatory School", "Durban Preparatory School",
-            "Westville Senior Primary School", "Northlands Primary School", "Umhlanga Preparatory School"
-        };
+            return MatricDasbhoard.Shared.Result<SchoolOutput>.Failure(
+                ErrorMessages.Dashboard.SchoolNotFound, ErrorType.NotFound);
+        }
 
-        var rand = new Random(42);
-        var schools = names.Select((name, i) =>
+        var index = _meilisearchClient.Index(SchoolsIndex);
+        MeilisearchSchool? document;
+        try
         {
-            var totalWrote = rand.Next(80, 350);
-            var passRate = Math.Round(rand.NextDouble() * 40 + 55, 1);
-            var totalPassed = (int)Math.Round(totalWrote * passRate / 100);
-            var hasBachelors = rand.NextDouble() > 0.3;
-            var totalAchieved = hasBachelors ? (int?)rand.Next((int)(totalPassed * 0.3), totalPassed) : null;
+            document = await index.GetDocumentAsync<MeilisearchSchool>(id, cancellationToken: cancellationToken);
+        }
+        catch (MeilisearchApiError)
+        {
+            return MatricDasbhoard.Shared.Result<SchoolOutput>.Failure(
+                ErrorMessages.Dashboard.SchoolNotFound, ErrorType.NotFound);
+        }
 
-            return new SchoolOutput(
-                i + 1,
-                name,
-                provinces[i % provinces.Length],
-                circuits[i % circuits.Length],
-                totalWrote,
-                totalPassed,
-                passRate,
-                totalAchieved
-            );
-        }).ToList();
+        if (document is null)
+        {
+            return MatricDasbhoard.Shared.Result<SchoolOutput>.Failure(
+                ErrorMessages.Dashboard.SchoolNotFound, ErrorType.NotFound);
+        }
 
-        return schools;
+        return MatricDasbhoard.Shared.Result<SchoolOutput>.Success(ToSchoolOutput(document));
+    }
+
+    private static SchoolOutput ToSchoolOutput(MeilisearchSchool hit) => new(
+        Id: hit.Id ?? string.Empty,
+        Name: hit.CentreName ?? "Unknown",
+        Province: hit.Province ?? string.Empty,
+        Circuit: hit.DistrictName ?? string.Empty,
+        TotalWrote: (int)(hit.TotalWrote ?? 0),
+        TotalPassed: (int)(hit.TotalAchieved ?? 0),
+        PassRate: hit.PercentAchieved ?? 0,
+        TotalAchieved: null
+    );
+
+    /// <summary>
+    /// Maps to the Meilisearch school document schema (snake_case field names, per-year metrics).
+    /// The <c>id</c> field is the EMIS number, set as the index primary key by the upload script.
+    /// </summary>
+    private sealed class MeilisearchSchool
+    {
+        [JsonPropertyName("id")]
+        public string? Id { get; set; }
+
+        [JsonPropertyName("centre_name")]
+        public string? CentreName { get; set; }
+
+        [JsonPropertyName("province")]
+        public string? Province { get; set; }
+
+        [JsonPropertyName("district_name")]
+        public string? DistrictName { get; set; }
+
+        [JsonPropertyName("total_wrote_2024")]
+        public double? TotalWrote { get; set; }
+
+        [JsonPropertyName("total_achieved_2024")]
+        public double? TotalAchieved { get; set; }
+
+        [JsonPropertyName("percent_achieved_2024")]
+        public double? PercentAchieved { get; set; }
     }
 }

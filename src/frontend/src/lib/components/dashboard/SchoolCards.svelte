@@ -3,6 +3,8 @@
 	import { Badge } from '$lib/components/ui/badge';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { fetchSchools } from '$lib/api/dashboard';
+	import { resolve } from '$app/paths';
+	import { schoolPath } from '$lib/config';
 	import { onMount } from 'svelte';
 	import {
 		School as SchoolIcon,
@@ -17,7 +19,7 @@
 	let {
 		selectedSchoolId = $bindable(null),
 		selectedProvince = $bindable(null)
-	}: { selectedSchoolId?: number | null; selectedProvince?: string | null } = $props();
+	}: { selectedSchoolId?: string | null; selectedProvince?: string | null } = $props();
 
 	let schools: School[] = $state([]);
 	let loading = $state(true);
@@ -121,7 +123,10 @@
 
 			<div class="space-y-2">
 				{#each displaySchools as school}
-					<div class="rounded-lg border p-3 transition-colors hover:border-primary/50">
+					<a
+						href={resolve(schoolPath(school.id))}
+						class="block rounded-lg border p-3 transition-colors hover:border-primary/50 hover:bg-muted/30"
+					>
 						<div class="flex items-start justify-between gap-2">
 							<span class="text-sm leading-tight font-medium">{school.name}</span>
 							<Badge variant="secondary" class="shrink-0 {passRateColor(school.passRate)}">
@@ -166,7 +171,7 @@
 								</span>
 							</div>
 						{/if}
-					</div>
+					</a>
 				{/each}
 			</div>
 		{/if}

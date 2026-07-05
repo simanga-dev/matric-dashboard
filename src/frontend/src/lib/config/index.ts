@@ -2,3 +2,4 @@
 export { LANGUAGE_METADATA } from './i18n';
 export { routes } from './routes';
 export { adminRoutes, type AdminRoute } from './routes';
+export { schoolPath } from './routes';

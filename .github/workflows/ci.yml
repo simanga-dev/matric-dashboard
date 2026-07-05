@@ -14,6 +14,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Build backend
+        run: dotnet build src/backend/MatricDasbhoard.slnx
+
+      - name: Format check (backend)
+        run: dotnet format src/backend/MatricDasbhoard.slnx --verify-no-changes
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -30,10 +41,10 @@ jobs:
         working-directory: src/frontend
         run: pnpm install --frozen-lockfile
 
-      - name: Build
-        working-directory: src/frontend
-        run: pnpm build
-
-      - name: Format check
+      - name: Format check (frontend)
         working-directory: src/frontend
         run: pnpm exec prettier --check .
+
+      - name: Build frontend
+        working-directory: src/frontend
+        run: pnpm build

@@ -3,6 +3,8 @@
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { Badge } from '$lib/components/ui/badge';
 	import { fetchSchools } from '$lib/api/dashboard';
+	import { resolve } from '$app/paths';
+	import { schoolPath } from '$lib/config';
 	import {
 		ChevronRight,
 		ChevronDown,
@@ -16,7 +18,7 @@
 	let {
 		selectedSchoolId = $bindable(null),
 		selectedProvince = $bindable(null)
-	}: { selectedSchoolId?: number | null; selectedProvince?: string | null } = $props();
+	}: { selectedSchoolId?: string | null; selectedProvince?: string | null } = $props();
 
 	let schools: School[] = $state([]);
 	let loading = $state(true);
@@ -67,10 +69,6 @@
 			expandedCircuits.add(circuit);
 			expandedCircuits = new Set(expandedCircuits);
 		}
-	}
-
-	function selectSchool(school: School) {
-		selectedSchoolId = selectedSchoolId === school.id ? null : school.id;
 	}
 
 	function selectProvince(province: string) {
@@ -136,14 +134,14 @@
 										{#if expandedCircuits.has(circuit)}
 											<div class="ml-3 border-l border-muted">
 												{#each schoolList as school}
-													<button
-														onclick={() => selectSchool(school)}
+													<a
+														href={resolve(schoolPath(school.id))}
 														data-selected={selectedSchoolId === school.id}
 														class="flex w-full items-center gap-2 px-4 py-1.5 text-left text-xs transition-colors hover:bg-muted/50 data-[selected=true]:bg-primary/10 data-[selected=true]:text-primary"
 													>
 														<SchoolIcon class="size-3 shrink-0 text-muted-foreground" />
 														<span class="truncate">{school.name}</span>
-													</button>
+													</a>
 												{/each}
 											</div>
 										{/if}

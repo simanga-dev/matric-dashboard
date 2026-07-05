@@ -11,7 +11,10 @@ export const load: LayoutServerLoad = async ({ parent, route, cookies }) => {
 	}
 
 	const isPublicRoute =
-		route.id === '/(app)' || route.id === '/(app)/dashboard' || route.id === '/(app)/overview';
+		route.id === '/(app)' ||
+		route.id === '/(app)/dashboard' ||
+		route.id === '/(app)/overview' ||
+		route.id?.startsWith('/(app)/schools/');
 
 	if (!user && !isPublicRoute) {
 		const target = hadSession ? `${routes.login}?reason=session_expired` : routes.login;

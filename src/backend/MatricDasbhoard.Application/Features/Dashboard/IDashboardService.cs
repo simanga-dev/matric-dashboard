@@ -1,4 +1,5 @@
 using MatricDasbhoard.Application.Features.Dashboard.Dtos;
+using MatricDasbhoard.Shared;
 
 namespace MatricDasbhoard.Application.Features.Dashboard;
 
@@ -22,4 +23,11 @@ public interface IDashboardService
     /// Returns a paginated list of schools with optional search.
     /// </summary>
     Task<SchoolListOutput> GetSchoolsAsync(int pageNumber, int pageSize, string? search = null);
+
+    /// <summary>
+    /// Returns a single school by its stable document identifier (EMIS number).
+    /// </summary>
+    /// <param name="id">The school's stable identifier from the search index.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task<Result<SchoolOutput>> GetSchoolByIdAsync(string id, CancellationToken cancellationToken = default);
 }

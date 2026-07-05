@@ -17,7 +17,7 @@ export interface PassRateTrend {
 }
 
 export interface School {
-	id: number;
+	id: string;
 	name: string;
 	province: string;
 	circuit: string;
