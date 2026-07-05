@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using MatricDasbhoard.Application.Features.Dashboard;
 using MatricDasbhoard.Application.Features.Dashboard.Dtos;
 using Meilisearch;
@@ -80,11 +81,11 @@ internal sealed class DashboardService : IDashboardService
                 Id: (pageNumber - 1) * pageSize + i + 1,
                 Name: hit.CentreName ?? "Unknown",
                 Province: hit.Province ?? string.Empty,
-                Circuit: hit.Circuit ?? string.Empty,
+                Circuit: hit.DistrictName ?? string.Empty,
                 TotalWrote: (int)(hit.TotalWrote ?? 0),
-                TotalPassed: (int)(hit.TotalPassed ?? 0),
-                PassRate: hit.PassRate ?? 0,
-                TotalAchieved: hit.TotalAchieved.HasValue ? (int?)hit.TotalAchieved.Value : null
+                TotalPassed: (int)(hit.TotalAchieved ?? 0),
+                PassRate: hit.PercentAchieved ?? 0,
+                TotalAchieved: null
             );
         }).ToList();
 
@@ -92,16 +93,26 @@ internal sealed class DashboardService : IDashboardService
     }
 
     /// <summary>
-    /// Maps to the Meilisearch school document schema.
+    /// Maps to the Meilisearch school document schema (snake_case field names, per-year metrics).
     /// </summary>
     private sealed class MeilisearchSchool
     {
+        [JsonPropertyName("centre_name")]
         public string? CentreName { get; set; }
+
+        [JsonPropertyName("province")]
         public string? Province { get; set; }
-        public string? Circuit { get; set; }
+
+        [JsonPropertyName("district_name")]
+        public string? DistrictName { get; set; }
+
+        [JsonPropertyName("total_wrote_2024")]
         public double? TotalWrote { get; set; }
-        public double? TotalPassed { get; set; }
-        public double? PassRate { get; set; }
+
+        [JsonPropertyName("total_achieved_2024")]
         public double? TotalAchieved { get; set; }
+
+        [JsonPropertyName("percent_achieved_2024")]
+        public double? PercentAchieved { get; set; }
     }
 }
