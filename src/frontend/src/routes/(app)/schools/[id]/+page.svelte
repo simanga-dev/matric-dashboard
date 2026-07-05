@@ -3,11 +3,7 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
-	import {
-		PageHeader,
-		LoadingSpinner,
-		EmptyState
-	} from '$lib/components/common';
+	import { PageHeader, LoadingSpinner, EmptyState } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
@@ -160,7 +156,7 @@
 						<SchoolIcon class="size-4" />
 						Overview
 					</span>
-					<Badge variant="secondary" class="{passRateColor(school.passRate)}">
+					<Badge variant="secondary" class={passRateColor(school.passRate)}>
 						{formatPassRate(school.passRate)}
 					</Badge>
 				</Card.Title>
@@ -211,13 +207,13 @@
 					</div>
 					<div>
 						<div class="text-xs text-muted-foreground">Passed</div>
-						<div class="mt-1 text-lg font-semibold tabular-nums text-green-600">
+						<div class="mt-1 text-lg font-semibold text-green-600 tabular-nums">
 							{school.totalPassed.toLocaleString()}
 						</div>
 					</div>
 					<div>
 						<div class="text-xs text-muted-foreground">Did not pass</div>
-						<div class="mt-1 text-lg font-semibold tabular-nums text-red-600">
+						<div class="mt-1 text-lg font-semibold text-red-600 tabular-nums">
 							{failedCount.toLocaleString()}
 						</div>
 					</div>
@@ -236,12 +232,12 @@
 							></div>
 						</div>
 						<p class="mt-2 text-xs text-muted-foreground">
-							{school.totalAchieved?.toLocaleString() ?? 0} of {school.totalWrote.toLocaleString()} learners qualified for bachelor admission.
+							{school.totalAchieved?.toLocaleString() ?? 0} of {school.totalWrote.toLocaleString()} learners
+							qualified for bachelor admission.
 						</p>
 					</div>
 				{/if}
 			</Card.Content>
 		</Card.Root>
-
-		{/if}
+	{/if}
 </div>

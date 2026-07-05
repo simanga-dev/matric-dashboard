@@ -6,7 +6,6 @@ using Meilisearch;
 
 namespace MatricDasbhoard.Infrastructure.Features.Dashboard.Services;
 
-/// <summary>
 /// Returns paginated school data from the Meilisearch "schools" index.
 /// </summary>
 internal sealed class DashboardService : IDashboardService
