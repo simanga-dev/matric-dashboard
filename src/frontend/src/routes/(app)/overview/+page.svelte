@@ -16,7 +16,7 @@
 		user?.firstName ? m.dashboard_welcome({ name: user.firstName }) : m.dashboard_welcomeGeneric()
 	);
 
-	let selectedSchoolId: number | null = $state(null);
+	let selectedSchoolId: string | null = $state(null);
 	let selectedProvince: string | null = $state(null);
 </script>
 

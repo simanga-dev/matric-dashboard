@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using MatricDasbhoard.Application.Features.Dashboard;
 using MatricDasbhoard.Application.Features.Dashboard.Dtos;
+using MatricDasbhoard.Shared;
 using Meilisearch;
 
 namespace MatricDasbhoard.Infrastructure.Features.Dashboard.Services;
@@ -75,28 +76,62 @@ internal sealed class DashboardService : IDashboardService
                 Offset = (pageNumber - 1) * pageSize
             });
 
-        var schools = result.Hits.Select((hit, i) =>
-        {
-            return new SchoolOutput(
-                Id: (pageNumber - 1) * pageSize + i + 1,
-                Name: hit.CentreName ?? "Unknown",
-                Province: hit.Province ?? string.Empty,
-                Circuit: hit.DistrictName ?? string.Empty,
-                TotalWrote: (int)(hit.TotalWrote ?? 0),
-                TotalPassed: (int)(hit.TotalAchieved ?? 0),
-                PassRate: hit.PercentAchieved ?? 0,
-                TotalAchieved: null
-            );
-        }).ToList();
+        var schools = result.Hits.Select(hit => ToSchoolOutput(hit)).ToList();
 
         return new SchoolListOutput(schools, result.Hits.Count, pageNumber, pageSize);
     }
 
+    public async Task<MatricDasbhoard.Shared.Result<SchoolOutput>> GetSchoolByIdAsync(
+        string id,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return MatricDasbhoard.Shared.Result<SchoolOutput>.Failure(
+                ErrorMessages.Dashboard.SchoolNotFound, ErrorType.NotFound);
+        }
+
+        var index = _meilisearchClient.Index(SchoolsIndex);
+        MeilisearchSchool? document;
+        try
+        {
+            document = await index.GetDocumentAsync<MeilisearchSchool>(id, cancellationToken: cancellationToken);
+        }
+        catch (MeilisearchApiError)
+        {
+            return MatricDasbhoard.Shared.Result<SchoolOutput>.Failure(
+                ErrorMessages.Dashboard.SchoolNotFound, ErrorType.NotFound);
+        }
+
+        if (document is null)
+        {
+            return MatricDasbhoard.Shared.Result<SchoolOutput>.Failure(
+                ErrorMessages.Dashboard.SchoolNotFound, ErrorType.NotFound);
+        }
+
+        return MatricDasbhoard.Shared.Result<SchoolOutput>.Success(ToSchoolOutput(document));
+    }
+
+    private static SchoolOutput ToSchoolOutput(MeilisearchSchool hit) => new(
+        Id: hit.Id ?? string.Empty,
+        Name: hit.CentreName ?? "Unknown",
+        Province: hit.Province ?? string.Empty,
+        Circuit: hit.DistrictName ?? string.Empty,
+        TotalWrote: (int)(hit.TotalWrote ?? 0),
+        TotalPassed: (int)(hit.TotalAchieved ?? 0),
+        PassRate: hit.PercentAchieved ?? 0,
+        TotalAchieved: null
+    );
+
     /// <summary>
     /// Maps to the Meilisearch school document schema (snake_case field names, per-year metrics).
+    /// The <c>id</c> field is the EMIS number, set as the index primary key by the upload script.
     /// </summary>
     private sealed class MeilisearchSchool
     {
+        [JsonPropertyName("id")]
+        public string? Id { get; set; }
+
         [JsonPropertyName("centre_name")]
         public string? CentreName { get; set; }
 

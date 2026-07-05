@@ -1,4 +1,5 @@
 using MatricDasbhoard.Application.Features.Dashboard;
+using MatricDasbhoard.Shared;
 using MatricDasbhoard.WebApi.Shared;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -48,5 +49,25 @@ public class DashboardController(IDashboardService dashboardService) : ApiContro
     {
         var schools = await dashboardService.GetSchoolsAsync(pageNumber, pageSize, search);
         return Ok(schools.ToResponse());
+    }
+
+    /// <summary>
+    /// Returns a single school by its stable identifier (EMIS number).
+    /// </summary>
+    /// <param name="id">The school's stable identifier from the search index.</param>
+    /// <response code="200">Returns the school details.</response>
+    /// <response code="404">If no school matches the identifier.</response>
+    [HttpGet("schools/{id}")]
+    [ProducesResponseType(typeof(Dtos.SchoolResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<Dtos.SchoolResponse>> GetSchoolById(string id, CancellationToken cancellationToken)
+    {
+        var result = await dashboardService.GetSchoolByIdAsync(id, cancellationToken);
+        if (!result.IsSuccess)
+        {
+            return ProblemFactory.Create(result.Error, result.ErrorType);
+        }
+
+        return Ok(result.Value.ToResponse());
     }
 }

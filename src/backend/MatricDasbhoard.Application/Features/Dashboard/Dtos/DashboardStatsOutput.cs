@@ -30,8 +30,9 @@ public record PassRateTrendOutput(
 /// <summary>
 /// A school entry with performance data.
 /// </summary>
+/// <param name="Id">Stable document identifier (EMIS number) from the search index.</param>
 public record SchoolOutput(
-    int Id,
+    string Id,
     string Name,
     string Province,
     string Circuit,

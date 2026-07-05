@@ -3,9 +3,12 @@
 	import * as Table from '$lib/components/ui/table';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
-	import { Search, ChevronLeft, ChevronRight } from '@lucide/svelte';
+	import { Search, ChevronLeft, ChevronRight, ExternalLink } from '@lucide/svelte';
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { fetchSchools } from '$lib/api/dashboard';
+	import { schoolPath } from '$lib/config';
 	import type { School, SchoolList } from '$lib/types/dashboard';
 
 	interface Props {
@@ -100,8 +103,24 @@
 				</Table.Header>
 				<Table.Body>
 					{#each items as school (school.id)}
-						<Table.Row>
-							<Table.Cell class="font-medium">{school.name}</Table.Cell>
+						<Table.Row
+							class="cursor-pointer transition-colors hover:bg-muted/50"
+							onclick={() => goto(resolve(schoolPath(school.id)))}
+							onkeydown={(e) => {
+								if (e.key === 'Enter' || e.key === ' ') {
+									e.preventDefault();
+									goto(resolve(schoolPath(school.id)));
+								}
+							}}
+							role="link"
+							tabindex={0}
+						>
+							<Table.Cell class="font-medium">
+								<span class="inline-flex items-center gap-1.5">
+									{school.name}
+									<ExternalLink class="size-3 shrink-0 text-muted-foreground" />
+								</span>
+							</Table.Cell>
 							<Table.Cell class="hidden md:table-cell">{school.province}</Table.Cell>
 							<Table.Cell class="text-right tabular-nums"
 								>{school.totalWrote.toLocaleString()}</Table.Cell

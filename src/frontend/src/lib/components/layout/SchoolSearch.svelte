@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { Search, Loader2, School as SchoolIcon, MapPin, TrendingUp } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { fetchSchools } from '$lib/api/dashboard';
-	import { routes } from '$lib/config';
+	import { schoolPath } from '$lib/config';
 	import type { School } from '$lib/types/dashboard';
 
 	let query = $state('');
@@ -59,8 +60,7 @@
 		open = false;
 		query = school.name;
 		results = [];
-		const params = new URLSearchParams({ search: school.name });
-		goto(`${routes.dashboard}?${params.toString()}`);
+		goto(resolve(schoolPath(school.id)));
 	}
 
 	function formatPassRate(rate: number): string {
