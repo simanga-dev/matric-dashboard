@@ -5,7 +5,7 @@ Usage:
     python3 scripts/upload_to_meilisearch.py [--csv <path>]
 
 Environment variables:
-    MEILI_URL       MeiliSearch host URL (default: https://search.matrictrend.app)
+    MEILI_URL       MeiliSearch host URL (default: https://search.matric-trend.app)
     MEILI_MASTER_KEY   MeiliSearch API key (required)
 
 The CSV is transformed into search-friendly documents with one document per school.
@@ -22,7 +22,7 @@ import time
 import requests
 
 
-MEILI_URL = os.environ.get("MEILI_URL", "https://search.matrictrend.app")
+MEILI_URL = os.environ.get("MEILI_URL", "https://search.matric-trend.app")
 INDEX_NAME = "schools"
 BATCH_SIZE = 500
 

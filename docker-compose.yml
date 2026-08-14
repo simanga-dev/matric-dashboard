@@ -56,6 +56,8 @@ services:
       Cors__AllowedOrigins__0: ${FRONTEND_URL:-http://localhost:3000}
       Hosting__ForceHttps: "false"
       Hosting__ReverseProxy__TrustedNetworks__0: 0.0.0.0/0
+      MEILI_URL: ${MEILI_URL:-https://search.matrictrend.app}
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?MEILI_MASTER_KEY is required}
       ASPNETCORE_URLS: http://+:8080
       DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "1"
     depends_on:

@@ -5,7 +5,7 @@ import sys
 import urllib.request
 from urllib.error import HTTPError, URLError
 
-MEILI_URL = os.environ.get("MEILI_URL", "https://search.matrictrend.app")
+MEILI_URL = os.environ.get("MEILI_URL", "https://search.matric-trend.app")
 INDEX_NAME = "schools"
 MEILI_MASTER_KEY = os.environ["MEILI_MASTER_KEY"]
 
