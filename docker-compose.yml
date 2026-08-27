@@ -1,4 +1,35 @@
 services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-matric_dashboard}
+      POSTGRES_USER: ${POSTGRES_USER:-matric}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-matric} -d ${POSTGRES_DB:-matric_dashboard}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.15
+    environment:
+      MEILI_ENV: production
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?MEILI_MASTER_KEY is required}
+    volumes:
+      - meilisearch-data:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://localhost:7700/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
   minio:
     image: minio/minio:latest
     command: server /data --console-address ":9001"
@@ -34,7 +65,7 @@ services:
       context: src/backend
       dockerfile: MatricDasbhoard.WebApi/Dockerfile
     environment:
-      ConnectionStrings__Database: ${ConnectionStrings__Database:?ConnectionStrings__Database is required}
+      ConnectionStrings__Database: Host=postgres;Port=5432;Database=${POSTGRES_DB:-matric_dashboard};Username=${POSTGRES_USER:-matric};Password=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       Authentication__Jwt__Key: ${JWT_SECRET:?JWT_SECRET is required}
       Authentication__ExternalProviders__EncryptionKey: ${EXT_AUTH_ENCRYPTION_KEY:?EXT_AUTH_ENCRYPTION_KEY is required}
       FileStorage__Endpoint: http://minio:9000
@@ -56,9 +87,15 @@ services:
       Cors__AllowedOrigins__0: ${FRONTEND_URL:-http://localhost:3000}
       Hosting__ForceHttps: "false"
       Hosting__ReverseProxy__TrustedNetworks__0: 0.0.0.0/0
+      MEILI_URL: ${MEILI_URL:-http://meilisearch:7700}
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?MEILI_MASTER_KEY is required}
       ASPNETCORE_URLS: http://+:8080
       DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "1"
     depends_on:
+      postgres:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
       minio:
         condition: service_healthy
       minio-init:
@@ -75,6 +112,8 @@ services:
     build:
       context: src/frontend
       dockerfile: Dockerfile
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
     environment:
       API_URL: http://api:8080
       TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-1x00000000000000000000AA}
@@ -86,4 +125,6 @@ services:
     restart: unless-stopped
 
 volumes:
+  postgres-data:
+  meilisearch-data:
   minio-data:
