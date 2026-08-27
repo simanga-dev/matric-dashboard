@@ -198,4 +198,12 @@ public static class ErrorMessages
         public const string NotFound = "Entity not found.";
         public const string NotDeleted = "Entity could not be deleted.";
     }
+
+    /// <summary>
+    /// Public dashboard error messages.
+    /// </summary>
+    public static class Dashboard
+    {
+        public const string SchoolNotFound = "School not found.";
+    }
 }

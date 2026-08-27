@@ -23,6 +23,7 @@
         <PackageReference Include="Hangfire.PostgreSql" />
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
         <PackageReference Include="AWSSDK.S3" />
+        <PackageReference Include="Meilisearch" />
         <PackageReference Include="SkiaSharp" />
         <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
     </ItemGroup>

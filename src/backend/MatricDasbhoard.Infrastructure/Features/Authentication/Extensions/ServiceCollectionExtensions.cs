@@ -66,8 +66,8 @@ public static class ServiceCollectionExtensions
 
                     opt.Tokens.AuthenticatorTokenProvider = TokenOptions.DefaultAuthenticatorProvider;
 
-                opt.User.RequireUniqueEmail = true;
-            })
+                    opt.User.RequireUniqueEmail = true;
+                })
             .AddEntityFrameworkStores<TContext>()
                 .AddDefaultTokenProviders();
 

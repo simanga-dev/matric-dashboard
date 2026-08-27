@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Top Achievers | Matric Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            background: 'hsl(40, 20%, 97%)',
+            foreground: 'hsl(20, 15%, 15%)',
+            card: 'hsl(40, 15%, 98.5%)',
+            'card-foreground': 'hsl(20, 15%, 15%)',
+            muted: 'hsl(35, 12%, 93%)',
+            'muted-foreground': 'hsl(20, 8%, 46%)',
+            primary: 'hsl(220, 25%, 20%)',
+            'primary-foreground': 'hsl(40, 20%, 97%)',
+            border: 'hsl(30, 12%, 88%)',
+            success: 'hsl(150, 40%, 38%)',
+            warning: 'hsl(42, 75%, 50%)',
+            destructive: 'hsl(0, 55%, 55%)',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+        },
+      },
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .dark body { background: hsl(24, 8%, 10%); }
+    .dark { background: hsl(24, 8%, 10%); color: hsl(30, 6%, 82%); }
+    .dark .bg-card { background: hsl(24, 7%, 12.5%); }
+    .dark .bg-background { background: hsl(24, 8%, 10%); }
+    .dark .bg-muted { background: hsl(24, 5%, 17%); }
+    .dark .text-muted-foreground { color: hsl(25, 5%, 55%); }
+    .dark .border-border { border-color: hsl(24, 5%, 18%); }
+    .dark .text-foreground { color: hsl(30, 6%, 82%); }
+    .dark .text-primary { color: hsl(30, 6%, 82%); }
+    .dark .hover\:bg-muted\/40:hover { background: hsl(24, 5%, 17%, 0.4); }
+    .dark .from-yellow-400\/20 { --tw-gradient-from: rgba(234, 179, 8, 0.2); }
+    .dark .to-yellow-600\/10 { --tw-gradient-to: rgba(202, 138, 4, 0.1); }
+    .dark .from-gray-300\/20 { --tw-gradient-from: rgba(209, 213, 219, 0.2); }
+    .dark .to-gray-400\/10 { --tw-gradient-to: rgba(156, 163, 175, 0.1); }
+    .dark .from-amber-700\/20 { --tw-gradient-from: rgba(180, 83, 9, 0.2); }
+    .dark .to-amber-800\/10 { --tw-gradient-to: rgba(146, 64, 14, 0.1); }
+    .dark .text-yellow-400 { color: #facc15; }
+    .dark .text-gray-300 { color: #d1d5db; }
+    .dark .text-amber-600 { color: #d97706; }
+
+    .pass-rate-high { color: hsl(150, 40%, 38%); }
+    .dark .pass-rate-high { color: hsl(150, 35%, 55%); }
+    .pass-rate-mid { color: hsl(42, 75%, 50%); }
+    .pass-rate-low { color: hsl(0, 55%, 55%); }
+    .trend-up { color: hsl(150, 40%, 38%); }
+    .trend-down { color: hsl(0, 55%, 55%); }
+
+    .sidebar {
+      background: hsl(30, 10%, 95.5%);
+      color: hsl(20, 10%, 28%);
+    }
+    .dark .sidebar {
+      background: hsl(24, 8%, 9%);
+      color: hsl(30, 5%, 85%);
+    }
+
+    .podium-gold {
+      background: linear-gradient(135deg, rgba(234, 179, 8, 0.15), rgba(202, 138, 4, 0.05));
+      border-color: rgba(234, 179, 8, 0.3);
+    }
+    .dark .podium-gold {
+      background: linear-gradient(135deg, rgba(234, 179, 8, 0.12), rgba(202, 138, 4, 0.04));
+      border-color: rgba(234, 179, 8, 0.2);
+    }
+
+    .podium-silver {
+      background: linear-gradient(135deg, rgba(209, 213, 219, 0.2), rgba(156, 163, 175, 0.08));
+      border-color: rgba(209, 213, 219, 0.25);
+    }
+    .dark .podium-silver {
+      background: linear-gradient(135deg, rgba(209, 213, 219, 0.1), rgba(156, 163, 175, 0.04));
+      border-color: rgba(209, 213, 219, 0.15);
+    }
+
+    .podium-bronze {
+      background: linear-gradient(135deg, rgba(180, 83, 9, 0.15), rgba(146, 64, 14, 0.05));
+      border-color: rgba(180, 83, 9, 0.25);
+    }
+    .dark .podium-bronze {
+      background: linear-gradient(135deg, rgba(180, 83, 9, 0.1), rgba(146, 64, 14, 0.04));
+      border-color: rgba(180, 83, 9, 0.15);
+    }
+
+    .rank-badge-1 {
+      background: linear-gradient(135deg, #facc15, #eab308);
+      color: #1a1a1a;
+    }
+    .rank-badge-2 {
+      background: linear-gradient(135deg, #d1d5db, #9ca3af);
+      color: #1a1a1a;
+    }
+    .rank-badge-3 {
+      background: linear-gradient(135deg, #d97706, #b45309);
+      color: #fafafa;
+    }
+
+    .progress-bar-gold { background: linear-gradient(90deg, #facc15, #eab308); }
+    .progress-bar-silver { background: linear-gradient(90deg, #d1d5db, #9ca3af); }
+    .progress-bar-bronze { background: linear-gradient(90deg, #d97706, #b45309); }
+    .progress-bar-green { background: hsl(150, 40%, 38%); }
+    .dark .progress-bar-green { background: hsl(150, 35%, 45%); }
+    .progress-bar-amber { background: hsl(42, 75%, 50%); }
+    .progress-bar-red { background: hsl(0, 55%, 55%); }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+  </style>
+</head>
+<body class="bg-background text-foreground antialiased">
+  <!-- Theme Toggle -->
+  <div class="fixed top-4 right-4 z-50 flex items-center gap-2">
+    <button onclick="document.documentElement.classList.toggle('dark')"
+      class="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-colors shadow-sm">
+      Toggle Theme
+    </button>
+  </div>
+
+  <!-- Page Wrapper -->
+  <div class="flex min-h-screen">
+    <!-- Sidebar (stub) -->
+    <aside class="sidebar fixed left-0 top-0 z-40 h-screen w-64 border-r border-border p-4 hidden lg:block">
+      <div class="mb-6 flex items-center gap-3">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg" style="background: hsl(220, 25%, 20%); color: hsl(40, 20%, 97%);">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        </div>
+        <span class="text-sm font-semibold">Matric Dashboard</span>
+      </div>
+      <nav class="space-y-1">
+        <a href="#" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/40 transition-colors">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          Overview
+        </a>
+        <a href="#" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/40 transition-colors">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="#" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/40 transition-colors">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422M12 14l-6.16-3.422"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12l-9 5-9-5"/></svg>
+          Schools
+        </a>
+        <a href="#" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium bg-muted/60 text-foreground">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+          Top Achievers
+        </a>
+        <div class="pt-4">
+          <p class="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Documents</p>
+          <a href="#" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/40 transition-colors">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            Past Papers
+          </a>
+        </div>
+      </nav>
+      <div class="absolute bottom-4 left-4 right-4">
+        <div class="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2">
+          <div class="h-6 w-6 rounded-full bg-muted"></div>
+          <span class="text-xs text-muted-foreground">Not signed in</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 lg:ml-64">
+      <!-- Header -->
+      <header class="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div class="flex h-14 items-center gap-4 px-6">
+          <div class="flex items-center gap-2 text-xs text-muted-foreground">
+            <a href="#" class="hover:text-foreground">Dashboard</a>
+            <span>/</span>
+            <span class="text-foreground font-medium">Top Achievers</span>
+          </div>
+          <div class="flex-1"></div>
+          <div class="flex items-center gap-2">
+            <button class="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-colors shadow-sm flex items-center gap-1.5">
+              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              Export
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div class="p-6">
+        <!-- Page Title -->
+        <div class="mb-6">
+          <h1 class="text-2xl font-semibold tracking-tight">Top Achievers 2024</h1>
+          <p class="mt-1 text-sm text-muted-foreground">Ranked performance of South Africa's top matric schools</p>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="mb-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <!-- Card 1: Top Pass Rate -->
+          <div class="rounded-xl border border-border bg-card p-5 shadow-xs">
+            <div class="flex items-center justify-between">
+              <p class="text-xs font-medium text-muted-foreground">Top Pass Rate</p>
+              <span class="rank-badge-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold">&#9733;</span>
+            </div>
+            <p class="mt-2 text-2xl font-semibold tabular-nums pass-rate-high">98.5%</p>
+            <div class="mt-2 flex items-center gap-1.5">
+              <span class="inline-flex items-center gap-0.5 rounded-md border border-border px-1.5 py-0.5 text-[10px] font-medium trend-up">
+                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                +0.5%
+              </span>
+              <span class="text-[10px] text-muted-foreground">from 2023</span>
+            </div>
+          </div>
+          <!-- Card 2: #1 School -->
+          <div class="rounded-xl border border-border bg-card p-5 shadow-xs">
+            <div class="flex items-center justify-between">
+              <p class="text-xs font-medium text-muted-foreground">#1 School</p>
+              <svg class="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+            </div>
+            <p class="mt-2 text-xl font-semibold truncate">Pretoria High School for Girls</p>
+            <div class="mt-1 flex items-center gap-1.5">
+              <span class="text-[10px] text-muted-foreground">Gauteng</span>
+              <span class="text-[10px] text-muted-foreground">&middot;</span>
+              <span class="text-[10px] text-muted-foreground">1,200 wrote</span>
+            </div>
+          </div>
+          <!-- Card 3: Avg Top 10 -->
+          <div class="rounded-xl border border-border bg-card p-5 shadow-xs">
+            <div class="flex items-center justify-between">
+              <p class="text-xs font-medium text-muted-foreground">Avg Top 10 Pass Rate</p>
+              <svg class="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            </div>
+            <p class="mt-2 text-2xl font-semibold tabular-nums pass-rate-high">96.2%</p>
+            <div class="mt-2 flex items-center gap-1.5">
+              <span class="inline-flex items-center gap-0.5 rounded-md border border-border px-1.5 py-0.5 text-[10px] font-medium trend-up">
+                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                +0.7%
+              </span>
+              <span class="text-[10px] text-muted-foreground">vs 2023 top 10</span>
+            </div>
+          </div>
+          <!-- Card 4: Top 100 Trend -->
+          <div class="rounded-xl border border-border bg-card p-5 shadow-xs">
+            <div class="flex items-center justify-between">
+              <p class="text-xs font-medium text-muted-foreground">Median Top 100 Pass Rate</p>
+              <svg class="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            </div>
+            <p class="mt-2 text-2xl font-semibold tabular-nums pass-rate-high">89.5%</p>
+            <div class="mt-2 flex items-center gap-1.5">
+              <span class="inline-flex items-center gap-0.5 rounded-md border border-border px-1.5 py-0.5 text-[10px] font-medium trend-up">
+                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                +2.3%
+              </span>
+              <span class="text-[10px] text-muted-foreground">from 2023</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Podium Section (Top 3) -->
+        <div class="mb-8">
+          <h2 class="mb-4 text-sm font-semibold tracking-tight flex items-center gap-2">
+            <span class="rank-badge-1 flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold">&#9733;</span>
+            Top 3 Schools - National Leaderboard
+          </h2>
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <!-- Gold - #1 -->
+            <div class="podium-gold relative rounded-xl border p-6 shadow-sm">
+              <div class="absolute -top-3 -right-3 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold rank-badge-1 shadow-md">1</div>
+              <div class="flex items-start justify-between">
+                <div>
+                  <p class="text-xs font-medium text-yellow-600 dark:text-yellow-400 uppercase tracking-wider">Gold</p>
+                  <p class="mt-1 text-lg font-semibold">Pretoria High School for Girls</p>
+                  <p class="text-xs text-muted-foreground">Gauteng &middot; Tshwane South</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-3xl font-bold tabular-nums pass-rate-high">98.5%</p>
+                  <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up">
+                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                    +0.5%
+                  </span>
+                </div>
+              </div>
+              <div class="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
+                <span>1,200 wrote</span>
+                <span>1,182 passed</span>
+                <span>612 bachelor</span>
+              </div>
+              <div class="mt-3 h-1.5 w-full rounded-full bg-yellow-200/30 dark:bg-yellow-900/20">
+                <div class="progress-bar-gold h-full rounded-full" style="width: 98.5%"></div>
+              </div>
+              <p class="mt-2 text-[10px] text-muted-foreground">#1 in 2024 &middot; #2 in 2023</p>
+            </div>
+
+            <!-- Silver - #2 -->
+            <div class="podium-silver relative rounded-xl border p-6 shadow-sm">
+              <div class="absolute -top-3 -right-3 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold rank-badge-2 shadow-md">2</div>
+              <div class="flex items-start justify-between">
+                <div>
+                  <p class="text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Silver</p>
+                  <p class="mt-1 text-lg font-semibold">Wynberg Girls' High School</p>
+                  <p class="text-xs text-muted-foreground">Western Cape &middot; Metro South</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-3xl font-bold tabular-nums pass-rate-high">97.8%</p>
+                  <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up">
+                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                    +1.2%
+                  </span>
+                </div>
+              </div>
+              <div class="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
+                <span>980 wrote</span>
+                <span>958 passed</span>
+                <span>498 bachelor</span>
+              </div>
+              <div class="mt-3 h-1.5 w-full rounded-full bg-gray-200/30 dark:bg-gray-700/20">
+                <div class="progress-bar-silver h-full rounded-full" style="width: 97.8%"></div>
+              </div>
+              <p class="mt-2 text-[10px] text-muted-foreground">#2 in 2024 &middot; #3 in 2023</p>
+            </div>
+
+            <!-- Bronze - #3 -->
+            <div class="podium-bronze relative rounded-xl border p-6 shadow-sm">
+              <div class="absolute -top-3 -right-3 flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold rank-badge-3 shadow-md">3</div>
+              <div class="flex items-start justify-between">
+                <div>
+                  <p class="text-xs font-medium text-amber-700 dark:text-amber-600 uppercase tracking-wider">Bronze</p>
+                  <p class="mt-1 text-lg font-semibold">Rustenburg Girls' High School</p>
+                  <p class="text-xs text-muted-foreground">Western Cape &middot; Metro Central</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-3xl font-bold tabular-nums pass-rate-high">97.2%</p>
+                  <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-down">
+                    <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                    -0.3%
+                  </span>
+                </div>
+              </div>
+              <div class="mt-4 flex items-center gap-4 text-xs text-muted-foreground">
+                <span>1,100 wrote</span>
+                <span>1,069 passed</span>
+                <span>523 bachelor</span>
+              </div>
+              <div class="mt-3 h-1.5 w-full rounded-full bg-amber-200/30 dark:bg-amber-900/20">
+                <div class="progress-bar-bronze h-full rounded-full" style="width: 97.2%"></div>
+              </div>
+              <p class="mt-2 text-[10px] text-muted-foreground">#3 in 2024 &middot; #1 in 2023</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="mb-6 rounded-xl border border-border bg-card p-4 shadow-xs">
+          <div class="flex flex-wrap items-center gap-3">
+            <!-- Year -->
+            <select class="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors">
+              <option>2024</option>
+              <option>2023</option>
+              <option>2022</option>
+              <option>2021</option>
+              <option>2020</option>
+            </select>
+            <!-- Province -->
+            <select class="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors">
+              <option>All Provinces</option>
+              <option>Eastern Cape</option>
+              <option>Free State</option>
+              <option>Gauteng</option>
+              <option>KwaZulu-Natal</option>
+              <option>Limpopo</option>
+              <option>Mpumalanga</option>
+              <option>Northern Cape</option>
+              <option>North West</option>
+              <option>Western Cape</option>
+            </select>
+            <!-- District -->
+            <select class="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors">
+              <option>All Districts</option>
+              <option>Tshwane South</option>
+              <option>Metro South</option>
+              <option>Metro Central</option>
+              <option>Johannesburg North</option>
+              <option>Johannesburg South</option>
+            </select>
+            <!-- Min Learners -->
+            <select class="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors">
+              <option>Min Learners: Any</option>
+              <option>100+ learners</option>
+              <option>200+ learners</option>
+              <option>500+ learners</option>
+              <option>1,000+ learners</option>
+            </select>
+            <!-- Search -->
+            <div class="relative flex-1 min-w-[200px]">
+              <svg class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <input type="text" placeholder="Find a school's rank..." value=""
+                class="w-full rounded-lg border border-border bg-background pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" />
+            </div>
+          </div>
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            <span class="text-[10px] text-muted-foreground">Showing:</span>
+            <span class="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-0.5 text-[10px] font-medium">
+              Year: 2024
+              <button class="text-muted-foreground hover:text-foreground">&times;</button>
+            </span>
+            <span class="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-0.5 text-[10px] font-medium">
+              National
+              <button class="text-muted-foreground hover:text-foreground">&times;</button>
+            </span>
+            <button class="text-[10px] text-muted-foreground hover:text-foreground underline">Clear all</button>
+          </div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
+          <!-- Table Header -->
+          <div class="flex items-center justify-between border-b border-border px-5 py-3">
+            <h3 class="text-sm font-medium">National Leaderboard</h3>
+            <span class="text-xs text-muted-foreground">Showing top 100</span>
+          </div>
+
+          <!-- Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b border-border bg-muted/30">
+                  <th class="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div class="flex items-center gap-1 cursor-pointer hover:text-foreground">
+                      Rank
+                      <svg class="h-3 w-3 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                  </th>
+                  <th class="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">School</th>
+                  <th class="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Province</th>
+                  <th class="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hidden lg:table-cell">District</th>
+                  <th class="px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Wrote</th>
+                  <th class="px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Pass Rate</th>
+                  <th class="px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Bachelor</th>
+                  <th class="px-5 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hidden lg:table-cell">Trend</th>
+                  <th class="px-5 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hidden lg:table-cell">Prev Rank</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Row 1 -->
+                <tr class="border-b border-border hover:bg-muted/20 transition-colors cursor-pointer bg-yellow-50/30 dark:bg-transparent">
+                  <td class="px-5 py-3.5">
+                    <span class="rank-badge-1 inline-flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold">1</span>
+                  </td>
+                  <td class="px-5 py-3.5 text-sm font-medium">Pretoria High School for Girls</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">Gauteng</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden lg:table-cell">Tshwane South</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">1,200</td>
+                  <td class="px-5 py-3.5 text-sm text-right font-semibold tabular-nums pass-rate-high">98.5%</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums hidden md:table-cell">612</td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell">
+                    <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up">
+                      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                      +0.5%
+                    </span>
+                  </td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell">
+                    <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up rounded-full bg-success/10 px-2 py-0.5">
+                      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                      +1
+                    </span>
+                  </td>
+                </tr>
+                <!-- Row 2 -->
+                <tr class="border-b border-border hover:bg-muted/20 transition-colors cursor-pointer bg-gray-50/30 dark:bg-transparent">
+                  <td class="px-5 py-3.5">
+                    <span class="rank-badge-2 inline-flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold">2</span>
+                  </td>
+                  <td class="px-5 py-3.5 text-sm font-medium">Wynberg Girls' High School</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">Western Cape</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden lg:table-cell">Metro South</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">980</td>
+                  <td class="px-5 py-3.5 text-sm text-right font-semibold tabular-nums pass-rate-high">97.8%</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums hidden md:table-cell">498</td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell">
+                    <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up">
+                      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                      +1.2%
+                    </span>
+                  </td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell">
+                    <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up rounded-full bg-success/10 px-2 py-0.5">
+                      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                      +1
+                    </span>
+                  </td>
+                </tr>
+                <!-- Row 3 -->
+                <tr class="border-b border-border hover:bg-muted/20 transition-colors cursor-pointer bg-amber-50/30 dark:bg-transparent">
+                  <td class="px-5 py-3.5">
+                    <span class="rank-badge-3 inline-flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold">3</span>
+                  </td>
+                  <td class="px-5 py-3.5 text-sm font-medium">Rustenburg Girls' High School</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">Western Cape</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden lg:table-cell">Metro Central</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">1,100</td>
+                  <td class="px-5 py-3.5 text-sm text-right font-semibold tabular-nums pass-rate-high">97.2%</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums hidden md:table-cell">523</td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell">
+                    <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-down">
+                      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                      -0.3%
+                    </span>
+                  </td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell">
+                    <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-down rounded-full bg-destructive/10 px-2 py-0.5">
+                      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                      -2
+                    </span>
+                  </td>
+                </tr>
+                <!-- Rows 4-10 -->
+                <tr class="border-b border-border hover:bg-muted/20 transition-colors cursor-pointer">
+                  <td class="px-5 py-3.5 text-sm font-medium tabular-nums">4</td>
+                  <td class="px-5 py-3.5 text-sm font-medium">St. Mary's School Waverley</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">Gauteng</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden lg:table-cell">Johannesburg North</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">850</td>
+                  <td class="px-5 py-3.5 text-sm text-right font-semibold tabular-nums pass-rate-high">97.1%</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums hidden md:table-cell">412</td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell"><span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up"><svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>+0.8%</span></td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell"><span class="text-[10px] text-muted-foreground">=</span></td>
+                </tr>
+                <tr class="border-b border-border hover:bg-muted/20 transition-colors cursor-pointer">
+                  <td class="px-5 py-3.5 text-sm font-medium tabular-nums">5</td>
+                  <td class="px-5 py-3.5 text-sm font-medium">Herschel Girls' School</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">Western Cape</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden lg:table-cell">Metro Central</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">780</td>
+                  <td class="px-5 py-3.5 text-sm text-right font-semibold tabular-nums pass-rate-high">96.9%</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums hidden md:table-cell">398</td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell"><span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up"><svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>+2.1%</span></td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell"><span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up rounded-full bg-success/10 px-2 py-0.5"><svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>+3</span></td>
+                </tr>
+                <tr class="border-b border-border hover:bg-muted/20 transition-colors cursor-pointer">
+                  <td class="px-5 py-3.5 text-sm font-medium tabular-nums">6</td>
+                  <td class="px-5 py-3.5 text-sm font-medium">St. John's College</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">Gauteng</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden lg:table-cell">Johannesburg South</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">920</td>
+                  <td class="px-5 py-3.5 text-sm text-right font-semibold tabular-nums pass-rate-high">96.5%</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums hidden md:table-cell">467</td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell"><span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up"><svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>+1.5%</span></td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell"><span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up rounded-full bg-success/10 px-2 py-0.5"><svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>+1</span></td>
+                </tr>
+                <tr class="border-b border-border hover:bg-muted/20 transition-colors cursor-pointer">
+                  <td class="px-5 py-3.5 text-sm font-medium tabular-nums">7</td>
+                  <td class="px-5 py-3.5 text-sm font-medium">Roedean School (SA)</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">Gauteng</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden lg:table-cell">Johannesburg Central</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">760</td>
+                  <td class="px-5 py-3.5 text-sm text-right font-semibold tabular-nums pass-rate-high">96.2%</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums hidden md:table-cell">382</td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell"><span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-down"><svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>-0.1%</span></td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell"><span class="text-[10px] text-muted-foreground">=</span></td>
+                </tr>
+                <tr class="border-b border-border hover:bg-muted/20 transition-colors cursor-pointer">
+                  <td class="px-5 py-3.5 text-sm font-medium tabular-nums">8</td>
+                  <td class="px-5 py-3.5 text-sm font-medium">St. Andrew's School for Girls</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">Gauteng</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden lg:table-cell">Johannesburg South</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">690</td>
+                  <td class="px-5 py-3.5 text-sm text-right font-semibold tabular-nums pass-rate-high">95.8%</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums hidden md:table-cell">341</td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell"><span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up"><svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>+0.6%</span></td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell"><span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up rounded-full bg-success/10 px-2 py-0.5"><svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>+2</span></td>
+                </tr>
+                <tr class="border-b border-border hover:bg-muted/20 transition-colors cursor-pointer">
+                  <td class="px-5 py-3.5 text-sm font-medium tabular-nums">9</td>
+                  <td class="px-5 py-3.5 text-sm font-medium">St. Anne's Diocesan College</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">KwaZulu-Natal</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden lg:table-cell">uMgungundlovu</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">580</td>
+                  <td class="px-5 py-3.5 text-sm text-right font-semibold tabular-nums pass-rate-high">95.5%</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums hidden md:table-cell">289</td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell"><span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up"><svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>+2.3%</span></td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell"><span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up rounded-full bg-success/10 px-2 py-0.5"><svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>+5</span></td>
+                </tr>
+                <tr class="hover:bg-muted/20 transition-colors cursor-pointer">
+                  <td class="px-5 py-3.5 text-sm font-medium tabular-nums">10</td>
+                  <td class="px-5 py-3.5 text-sm font-medium">Crawford College La Lucia</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">KwaZulu-Natal</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden lg:table-cell">iLembe</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">720</td>
+                  <td class="px-5 py-3.5 text-sm text-right font-semibold tabular-nums pass-rate-high">95.1%</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums hidden md:table-cell">356</td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell"><span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-down"><svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>-0.4%</span></td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell"><span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-down rounded-full bg-destructive/10 px-2 py-0.5"><svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>-1</span></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="flex items-center justify-between border-t border-border px-5 py-3">
+            <div class="text-xs text-muted-foreground">
+              Showing top <span class="font-medium text-foreground">10</span> of 100
+            </div>
+            <div class="flex items-center gap-2">
+              <select class="rounded-lg border border-border bg-background px-2 py-1 text-xs text-foreground">
+                <option>10 per page</option>
+                <option selected>20 per page</option>
+                <option>50 per page</option>
+                <option>100 per page</option>
+              </select>
+              <div class="flex items-center gap-1">
+                <button class="rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-colors disabled:opacity-40" disabled>
+                  <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <button class="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">1</button>
+                <button class="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-colors">2</button>
+                <button class="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-colors">3</button>
+                <button class="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-colors">4</button>
+                <button class="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-colors">5</button>
+                <button class="rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-colors">
+                  <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Province Leaders Section -->
+        <div class="mt-8">
+          <h2 class="mb-4 text-sm font-semibold tracking-tight flex items-center gap-2">
+            <svg class="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            Province Leaders - Best School Per Province
+          </h2>
+          <div class="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
+            <!-- Gauteng -->
+            <div class="rounded-xl border border-border bg-card p-4 shadow-xs hover:border-primary/30 transition-colors cursor-pointer">
+              <div class="flex items-center justify-between">
+                <p class="text-xs font-semibold">Gauteng</p>
+                <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-yellow-100 text-[9px] font-bold text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">1</span>
+              </div>
+              <p class="mt-2 text-sm font-medium truncate">Pretoria High School for Girls</p>
+              <div class="mt-1 flex items-center gap-2">
+                <span class="text-lg font-bold tabular-nums pass-rate-high">98.5%</span>
+                <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up">
+                  <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                  +0.5%
+                </span>
+              </div>
+              <p class="text-[10px] text-muted-foreground">1,200 wrote</p>
+            </div>
+            <!-- Western Cape -->
+            <div class="rounded-xl border border-border bg-card p-4 shadow-xs hover:border-primary/30 transition-colors cursor-pointer">
+              <div class="flex items-center justify-between">
+                <p class="text-xs font-semibold">Western Cape</p>
+                <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-gray-100 text-[9px] font-bold text-gray-800 dark:bg-gray-800 dark:text-gray-300">2</span>
+              </div>
+              <p class="mt-2 text-sm font-medium truncate">Wynberg Girls' High School</p>
+              <div class="mt-1 flex items-center gap-2">
+                <span class="text-lg font-bold tabular-nums pass-rate-high">97.8%</span>
+                <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up">
+                  <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                  +1.2%
+                </span>
+              </div>
+              <p class="text-[10px] text-muted-foreground">980 wrote</p>
+            </div>
+            <!-- KwaZulu-Natal -->
+            <div class="rounded-xl border border-border bg-card p-4 shadow-xs hover:border-primary/30 transition-colors cursor-pointer">
+              <div class="flex items-center justify-between">
+                <p class="text-xs font-semibold">KwaZulu-Natal</p>
+                <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-[9px] font-bold text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">3</span>
+              </div>
+              <p class="mt-2 text-sm font-medium truncate">St. Anne's Diocesan College</p>
+              <div class="mt-1 flex items-center gap-2">
+                <span class="text-lg font-bold tabular-nums pass-rate-high">95.5%</span>
+                <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up">
+                  <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                  +2.3%
+                </span>
+              </div>
+              <p class="text-[10px] text-muted-foreground">580 wrote</p>
+            </div>
+            <!-- Eastern Cape -->
+            <div class="rounded-xl border border-border bg-card p-4 shadow-xs hover:border-primary/30 transition-colors cursor-pointer">
+              <div class="flex items-center justify-between">
+                <p class="text-xs font-semibold">Eastern Cape</p>
+                <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-gray-100 text-[9px] font-bold text-gray-600 dark:bg-gray-800 dark:text-gray-400">4</span>
+              </div>
+              <p class="mt-2 text-sm font-medium truncate">St. Andrew's College</p>
+              <div class="mt-1 flex items-center gap-2">
+                <span class="text-lg font-bold tabular-nums pass-rate-high">94.8%</span>
+                <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up">
+                  <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                  +1.8%
+                </span>
+              </div>
+              <p class="text-[10px] text-muted-foreground">480 wrote</p>
+            </div>
+            <!-- Free State -->
+            <div class="rounded-xl border border-border bg-card p-4 shadow-xs hover:border-primary/30 transition-colors cursor-pointer">
+              <div class="flex items-center justify-between">
+                <p class="text-xs font-semibold">Free State</p>
+                <span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-gray-100 text-[9px] font-bold text-gray-600 dark:bg-gray-800 dark:text-gray-400">5</span>
+              </div>
+              <p class="mt-2 text-sm font-medium truncate">Eunice High School</p>
+              <div class="mt-1 flex items-center gap-2">
+                <span class="text-lg font-bold tabular-nums pass-rate-high">93.2%</span>
+                <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-down">
+                  <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                  -0.5%
+                </span>
+              </div>
+              <p class="text-[10px] text-muted-foreground">520 wrote</p>
+            </div>
+            <!-- More provinces (hidden on smaller screens, visible on md+) -->
+            <div class="hidden sm:block rounded-xl border border-border bg-card p-4 shadow-xs hover:border-primary/30 transition-colors cursor-pointer">
+              <div class="flex items-center justify-between">
+                <p class="text-xs font-semibold">Limpopo</p>
+                <span class="text-[10px] text-muted-foreground">Rank 14</span>
+              </div>
+              <p class="mt-2 text-sm font-medium truncate">Pietersburg High School</p>
+              <div class="mt-1 flex items-center gap-2">
+                <span class="text-lg font-bold tabular-nums pass-rate-mid">88.4%</span>
+                <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up">
+                  <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                  +3.2%
+                </span>
+              </div>
+              <p class="text-[10px] text-muted-foreground">680 wrote</p>
+            </div>
+            <div class="hidden md:block rounded-xl border border-border bg-card p-4 shadow-xs hover:border-primary/30 transition-colors cursor-pointer">
+              <div class="flex items-center justify-between">
+                <p class="text-xs font-semibold">Mpumalanga</p>
+                <span class="text-[10px] text-muted-foreground">Rank 18</span>
+              </div>
+              <p class="mt-2 text-sm font-medium truncate">Uplands College</p>
+              <div class="mt-1 flex items-center gap-2">
+                <span class="text-lg font-bold tabular-nums pass-rate-mid">87.1%</span>
+                <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up">
+                  <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                  +1.5%
+                </span>
+              </div>
+              <p class="text-[10px] text-muted-foreground">420 wrote</p>
+            </div>
+            <div class="hidden md:block rounded-xl border border-border bg-card p-4 shadow-xs hover:border-primary/30 transition-colors cursor-pointer">
+              <div class="flex items-center justify-between">
+                <p class="text-xs font-semibold">North West</p>
+                <span class="text-[10px] text-muted-foreground">Rank 22</span>
+              </div>
+              <p class="mt-2 text-sm font-medium truncate">Potchefstroom Gimnasium</p>
+              <div class="mt-1 flex items-center gap-2">
+                <span class="text-lg font-bold tabular-nums pass-rate-mid">85.6%</span>
+                <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up">
+                  <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                  +0.9%
+                </span>
+              </div>
+              <p class="text-[10px] text-muted-foreground">550 wrote</p>
+            </div>
+            <div class="hidden lg:block rounded-xl border border-border bg-card p-4 shadow-xs hover:border-primary/30 transition-colors cursor-pointer">
+              <div class="flex items-center justify-between">
+                <p class="text-xs font-semibold">Northern Cape</p>
+                <span class="text-[10px] text-muted-foreground">Rank 34</span>
+              </div>
+              <p class="mt-2 text-sm font-medium truncate">Diamantveld High School</p>
+              <div class="mt-1 flex items-center gap-2">
+                <span class="text-lg font-bold tabular-nums pass-rate-mid">82.3%</span>
+                <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up">
+                  <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                  +4.1%
+                </span>
+              </div>
+              <p class="text-[10px] text-muted-foreground">320 wrote</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Historical Note -->
+        <div class="mt-8 rounded-xl border border-border bg-card p-5 shadow-xs">
+          <div class="flex items-start gap-4">
+            <svg class="h-5 w-5 shrink-0 text-muted-foreground mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            <div>
+              <p class="text-sm font-medium">Historical Performance</p>
+              <p class="mt-1 text-xs text-muted-foreground">Click on any school to view its 5-year performance history. The year selector at the top changes the ranking year. Data available from 2020 to 2024.</p>
+              <div class="mt-3 flex flex-wrap gap-2">
+                <span class="inline-flex items-center gap-1 rounded-full bg-success/10 px-3 py-1 text-[10px] font-medium text-success">+ Upward trend</span>
+                <span class="inline-flex items-center gap-1 rounded-full bg-destructive/10 px-3 py-1 text-[10px] font-medium text-destructive">- Downward trend</span>
+                <span class="inline-flex items-center gap-1 rounded-full bg-muted px-3 py-1 text-[10px] font-medium text-muted-foreground">= No change</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer spacer -->
+        <div class="mt-6 text-center text-[10px] text-muted-foreground">
+          Matric Dashboard &middot; Design Mockup &middot; Top Achievers Page
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

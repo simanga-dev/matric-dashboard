@@ -5,8 +5,8 @@ namespace MatricDasbhoard.WebApi.Features.Dashboard.Dtos;
 /// </summary>
 public class SchoolResponse
 {
-    /// <summary>Unique school identifier.</summary>
-    public int Id { get; init; }
+    /// <summary>Unique school identifier (EMIS number, stable across pages and searches).</summary>
+    public string Id { get; init; } = string.Empty;
 
     /// <summary>School name.</summary>
     public string Name { get; init; } = string.Empty;

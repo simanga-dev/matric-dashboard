@@ -1,5 +1,5 @@
 import { browserClient } from './client';
-import type { DashboardStats, PassRateTrend, SchoolList } from '$lib/types/dashboard';
+import type { DashboardStats, PassRateTrend, School, SchoolList } from '$lib/types/dashboard';
 
 export async function fetchDashboardStats(): Promise<DashboardStats> {
 	const { data, error } = await browserClient.GET('/api/v1/dashboard/stats');
@@ -27,4 +27,13 @@ export async function fetchSchools(
 	});
 	if (error) throw new Error('Failed to fetch schools');
 	return data as unknown as SchoolList;
+}
+
+export async function fetchSchoolById(id: string): Promise<School | null> {
+	const { data, error } = await browserClient.GET(
+		'/api/v1/dashboard/schools/{id}' as never,
+		{ params: { path: { id } } } as never
+	);
+	if (error) throw new Error('Failed to fetch school');
+	return data as unknown as School;
 }

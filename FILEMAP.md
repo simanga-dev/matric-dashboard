@@ -212,6 +212,6 @@ src/backend/tests/
 | `src/backend/MatricDasbhoard.WebApi/Shared/RateLimitPolicies.cs` | Rate limit policy name constants |
 | `src/backend/Directory.Packages.props` | NuGet versions (never in .csproj) |
 | `src/backend/MatricDasbhoard.ServiceDefaults/Extensions.cs` | Aspire shared: OTEL, service discovery, HTTP resilience defaults |
-| `src/backend/MatricDasbhoard.AppHost/Program.cs` | Aspire orchestrator: local dev (PostgreSQL, MinIO, MailPit, API, Frontend) |
+| `src/backend/MatricDasbhoard.AppHost/Program.cs` | Aspire orchestrator: local dev (PostgreSQL, MinIO, MeiliSearch, MailPit, API, Frontend) |
 | `src/backend/MatricDasbhoard.WebApi/appsettings.Testing.json` | Test environment config |
 | `src/backend/tests/MatricDasbhoard.Api.Tests/Fixtures/CustomWebApplicationFactory.cs` | Test host configuration for API tests |

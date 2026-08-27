@@ -4,8 +4,8 @@
     <FrameworkVersion>10.0.5</FrameworkVersion>
   </PropertyGroup>
   <ItemGroup>
-    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.2.0" />
-    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.2.0" />
+    <PackageVersion Include="Aspire.Hosting.JavaScript" Version="13.4.0" />
+    <PackageVersion Include="Aspire.Hosting.PostgreSQL" Version="13.4.0" />
 
     <PackageVersion Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
     <PackageVersion Include="Microsoft.Extensions.Caching.Hybrid" Version="10.4.0" />
@@ -39,8 +39,10 @@
     <PackageVersion Include="Hangfire.AspNetCore" Version="1.8.23" />
     <PackageVersion Include="Hangfire.Core" Version="1.8.23" />
     <PackageVersion Include="Hangfire.PostgreSql" Version="1.21.1" />
-    <PackageVersion Include="CommunityToolkit.Aspire.Hosting.MailPit" Version="13.1.1" />
-    <PackageVersion Include="CommunityToolkit.Aspire.Hosting.Minio" Version="13.1.1" />
+    <PackageVersion Include="CommunityToolkit.Aspire.Hosting.MailPit" Version="13.4.0" />
+    <PackageVersion Include="CommunityToolkit.Aspire.Hosting.Minio" Version="13.4.0" />
+    <PackageVersion Include="CommunityToolkit.Aspire.Hosting.Meilisearch" Version="13.4.0" />
+    <PackageVersion Include="Meilisearch" Version="0.16.4" />
     <PackageVersion Include="AWSSDK.S3" Version="4.0.19.1" />
     <PackageVersion Include="SkiaSharp" Version="3.119.2" />
     <PackageVersion Include="SkiaSharp.NativeAssets.Linux.NoDependencies" Version="3.119.2" />

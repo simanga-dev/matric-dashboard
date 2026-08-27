@@ -673,13 +673,17 @@ public class AdminServiceTests : IDisposable
     {
         _dbContext.Users.Add(new ApplicationUser
         {
-            Id = Guid.NewGuid(), UserName = "alice@test.com",
-            NormalizedUserName = "ALICE@TEST.COM", FirstName = "Alice"
+            Id = Guid.NewGuid(),
+            UserName = "alice@test.com",
+            NormalizedUserName = "ALICE@TEST.COM",
+            FirstName = "Alice"
         });
         _dbContext.Users.Add(new ApplicationUser
         {
-            Id = Guid.NewGuid(), UserName = "bob@test.com",
-            NormalizedUserName = "BOB@TEST.COM", FirstName = "Bob"
+            Id = Guid.NewGuid(),
+            UserName = "bob@test.com",
+            NormalizedUserName = "BOB@TEST.COM",
+            FirstName = "Bob"
         });
         await _dbContext.SaveChangesAsync();
 
@@ -698,7 +702,8 @@ public class AdminServiceTests : IDisposable
 
         _dbContext.Users.Add(new ApplicationUser
         {
-            Id = userId, UserName = "withRole@test.com",
+            Id = userId,
+            UserName = "withRole@test.com",
             NormalizedUserName = "WITHROLE@TEST.COM"
         });
         _dbContext.Roles.Add(new ApplicationRole { Id = roleId, Name = "Admin", NormalizedName = "ADMIN" });

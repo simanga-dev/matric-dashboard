@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Schools | Matric Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            background: 'hsl(40, 20%, 97%)',
+            foreground: 'hsl(20, 15%, 15%)',
+            card: 'hsl(40, 15%, 98.5%)',
+            'card-foreground': 'hsl(20, 15%, 15%)',
+            muted: 'hsl(35, 12%, 93%)',
+            'muted-foreground': 'hsl(20, 8%, 46%)',
+            primary: 'hsl(220, 25%, 20%)',
+            'primary-foreground': 'hsl(40, 20%, 97%)',
+            border: 'hsl(30, 12%, 88%)',
+            success: 'hsl(150, 40%, 38%)',
+            warning: 'hsl(42, 75%, 50%)',
+            destructive: 'hsl(0, 55%, 55%)',
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+        },
+      },
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', system-ui, sans-serif; }
+    .dark body { background: hsl(24, 8%, 10%); }
+    .dark { background: hsl(24, 8%, 10%); color: hsl(30, 6%, 82%); }
+    .dark .bg-card { background: hsl(24, 7%, 12.5%); }
+    .dark .bg-background { background: hsl(24, 8%, 10%); }
+    .dark .bg-muted { background: hsl(24, 5%, 17%); }
+    .dark .text-muted-foreground { color: hsl(25, 5%, 55%); }
+    .dark .border-border { border-color: hsl(24, 5%, 18%); }
+    .dark .text-foreground { color: hsl(30, 6%, 82%); }
+    .dark .text-primary { color: hsl(30, 6%, 82%); }
+    .dark .hover\:bg-muted\/40:hover { background: hsl(24, 5%, 17%, 0.4); }
+
+    .pass-rate-high { color: hsl(150, 40%, 38%); }
+    .dark .pass-rate-high { color: hsl(150, 35%, 55%); }
+    .pass-rate-mid { color: hsl(42, 75%, 50%); }
+    .dark .pass-rate-mid { color: hsl(42, 55%, 52%); }
+    .pass-rate-low { color: hsl(0, 55%, 55%); }
+    .dark .pass-rate-low { color: hsl(0, 40%, 50%); }
+
+    .sidebar {
+      background: hsl(30, 10%, 95.5%);
+      color: hsl(20, 10%, 28%);
+    }
+    .dark .sidebar {
+      background: hsl(24, 8%, 9%);
+      color: hsl(30, 5%, 85%);
+    }
+
+    .trend-up { color: hsl(150, 40%, 38%); }
+    .trend-down { color: hsl(0, 55%, 55%); }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+  </style>
+</head>
+<body class="bg-background text-foreground antialiased">
+  <!-- Theme Toggle -->
+  <div class="fixed top-4 right-4 z-50 flex items-center gap-2">
+    <button onclick="document.documentElement.classList.toggle('dark')"
+      class="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-colors shadow-sm">
+      Toggle Theme
+    </button>
+  </div>
+
+  <!-- Page Wrapper -->
+  <div class="flex min-h-screen">
+    <!-- Sidebar (stub) -->
+    <aside class="sidebar fixed left-0 top-0 z-40 h-screen w-64 border-r border-border p-4 hidden lg:block">
+      <div class="mb-6 flex items-center gap-3">
+        <div class="flex h-8 w-8 items-center justify-center rounded-lg" style="background: hsl(220, 25%, 20%); color: hsl(40, 20%, 97%);">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+        </div>
+        <span class="text-sm font-semibold">Matric Dashboard</span>
+      </div>
+      <nav class="space-y-1">
+        <a href="#" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/40 transition-colors">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+          Overview
+        </a>
+        <a href="#" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/40 transition-colors">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+          Dashboard
+        </a>
+        <a href="#" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium bg-muted/60 text-foreground">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422M12 14l-6.16-3.422"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12l-9 5-9-5"/></svg>
+          Schools
+        </a>
+        <a href="#" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/40 transition-colors">
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+          Top Achievers
+        </a>
+        <div class="pt-4">
+          <p class="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Documents</p>
+          <a href="#" class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:bg-muted/40 transition-colors">
+            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+            Past Papers
+          </a>
+        </div>
+      </nav>
+      <div class="absolute bottom-4 left-4 right-4">
+        <div class="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2">
+          <div class="h-6 w-6 rounded-full bg-muted"></div>
+          <span class="text-xs text-muted-foreground">Not signed in</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <div class="flex-1 lg:ml-64">
+      <!-- Header -->
+      <header class="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div class="flex h-14 items-center gap-4 px-6">
+          <div class="flex items-center gap-2 text-xs text-muted-foreground">
+            <a href="#" class="hover:text-foreground">Dashboard</a>
+            <span>/</span>
+            <span class="text-foreground font-medium">Schools</span>
+          </div>
+          <div class="flex-1"></div>
+          <div class="flex items-center gap-2">
+            <button class="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-colors shadow-sm flex items-center gap-1.5">
+              <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              Export
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <div class="p-6">
+        <!-- Page Title -->
+        <div class="mb-6">
+          <h1 class="text-2xl font-semibold tracking-tight">Schools</h1>
+          <p class="mt-1 text-sm text-muted-foreground">Search, filter, and explore all South African matric schools</p>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <!-- Card 1: Total Schools -->
+          <div class="rounded-xl border border-border bg-card p-5 shadow-xs">
+            <div class="flex items-center justify-between">
+              <p class="text-xs font-medium text-muted-foreground">Total Schools</p>
+              <svg class="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l6.16-3.422M12 14l-6.16-3.422"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12l-9 5-9-5"/></svg>
+            </div>
+            <p class="mt-2 text-2xl font-semibold tabular-nums">6,894</p>
+            <div class="mt-2 flex items-center gap-1.5">
+              <span class="inline-flex items-center gap-0.5 rounded-md border border-border px-1.5 py-0.5 text-[10px] font-medium trend-up">
+                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                +2.1%
+              </span>
+              <span class="text-[10px] text-muted-foreground">vs last year</span>
+            </div>
+          </div>
+          <!-- Card 2: Total Learners -->
+          <div class="rounded-xl border border-border bg-card p-5 shadow-xs">
+            <div class="flex items-center justify-between">
+              <p class="text-xs font-medium text-muted-foreground">Total Learners 2024</p>
+              <svg class="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <p class="mt-2 text-2xl font-semibold tabular-nums">623,109</p>
+            <div class="mt-2 flex items-center gap-1.5">
+              <span class="inline-flex items-center gap-0.5 rounded-md border border-border px-1.5 py-0.5 text-[10px] font-medium trend-up">
+                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                +3.4%
+              </span>
+              <span class="text-[10px] text-muted-foreground">vs last year</span>
+            </div>
+          </div>
+          <!-- Card 3: Average Pass Rate -->
+          <div class="rounded-xl border border-border bg-card p-5 shadow-xs">
+            <div class="flex items-center justify-between">
+              <p class="text-xs font-medium text-muted-foreground">Average Pass Rate</p>
+              <svg class="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            </div>
+            <p class="mt-2 text-2xl font-semibold tabular-nums">78.3%</p>
+            <div class="mt-2 flex items-center gap-1.5">
+              <span class="inline-flex items-center gap-0.5 rounded-md border border-border px-1.5 py-0.5 text-[10px] font-medium trend-up">
+                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                +0.8%
+              </span>
+              <span class="text-[10px] text-muted-foreground">vs last year</span>
+            </div>
+          </div>
+          <!-- Card 4: Bachelor Pass Rate -->
+          <div class="rounded-xl border border-border bg-card p-5 shadow-xs">
+            <div class="flex items-center justify-between">
+              <p class="text-xs font-medium text-muted-foreground">Bachelor Pass Rate</p>
+              <svg class="h-4 w-4 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            </div>
+            <p class="mt-2 text-2xl font-semibold tabular-nums">45.2%</p>
+            <div class="mt-2 flex items-center gap-1.5">
+              <span class="inline-flex items-center gap-0.5 rounded-md border border-border px-1.5 py-0.5 text-[10px] font-medium trend-down">
+                <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                -0.3%
+              </span>
+              <span class="text-[10px] text-muted-foreground">vs last year</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="mb-6 rounded-xl border border-border bg-card p-4 shadow-xs">
+          <div class="flex flex-wrap items-center gap-3">
+            <!-- Search -->
+            <div class="relative flex-1 min-w-[200px]">
+              <svg class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              <input type="text" placeholder="Search schools..." value=""
+                class="w-full rounded-lg border border-border bg-background pl-9 pr-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors" />
+            </div>
+            <!-- Province Filter -->
+            <select class="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors">
+              <option>All Provinces</option>
+              <option>Eastern Cape</option>
+              <option>Free State</option>
+              <option>Gauteng</option>
+              <option>KwaZulu-Natal</option>
+              <option>Limpopo</option>
+              <option>Mpumalanga</option>
+              <option>Northern Cape</option>
+              <option>North West</option>
+              <option>Western Cape</option>
+            </select>
+            <!-- Year Filter -->
+            <select class="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors">
+              <option>2024</option>
+              <option>2023</option>
+              <option>2022</option>
+              <option>2021</option>
+              <option>2020</option>
+            </select>
+            <!-- Quintile Filter -->
+            <select class="rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors">
+              <option>All Quintiles</option>
+              <option>Quintile 1</option>
+              <option>Quintile 2</option>
+              <option>Quintile 3</option>
+              <option>Quintile 4</option>
+              <option>Quintile 5</option>
+            </select>
+            <!-- Pass Rate Range -->
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-muted-foreground whitespace-nowrap">Pass Rate:</span>
+              <select class="rounded-lg border border-border bg-background px-2 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors">
+                <option>All</option>
+                <option>&gt; 90%</option>
+                <option>&gt; 80%</option>
+                <option>&gt; 70%</option>
+                <option>&gt; 60%</option>
+                <option>&lt; 60%</option>
+              </select>
+            </div>
+            <!-- View Toggle -->
+            <div class="flex items-center rounded-lg border border-border overflow-hidden">
+              <button class="px-3 py-2 text-xs font-medium bg-primary text-primary-foreground transition-colors">Table</button>
+              <button class="px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-colors">Cards</button>
+              <button class="px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-colors">Map</button>
+              <button class="px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-colors">Tree</button>
+            </div>
+          </div>
+          <!-- Active Filters -->
+          <div class="mt-3 flex flex-wrap items-center gap-2">
+            <span class="text-[10px] text-muted-foreground">Active filters:</span>
+            <span class="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-0.5 text-[10px] font-medium">
+              Year: 2024
+              <button class="text-muted-foreground hover:text-foreground">&times;</button>
+            </span>
+            <span class="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-0.5 text-[10px] font-medium">
+              View: Table
+              <button class="text-muted-foreground hover:text-foreground">&times;</button>
+            </span>
+            <button class="text-[10px] text-muted-foreground hover:text-foreground underline">Clear all</button>
+          </div>
+        </div>
+
+        <!-- Schools Table -->
+        <div class="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
+          <!-- Table Header -->
+          <div class="flex items-center justify-between border-b border-border px-5 py-3">
+            <h3 class="text-sm font-medium">All Schools</h3>
+            <span class="text-xs text-muted-foreground">6,894 results</span>
+          </div>
+
+          <!-- Table -->
+          <div class="overflow-x-auto">
+            <table class="w-full">
+              <thead>
+                <tr class="border-b border-border bg-muted/30">
+                  <th class="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div class="flex items-center gap-1 cursor-pointer hover:text-foreground">
+                      Rank
+                      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
+                    </div>
+                  </th>
+                  <th class="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div class="flex items-center gap-1 cursor-pointer hover:text-foreground">
+                      School Name
+                      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
+                    </div>
+                  </th>
+                  <th class="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div class="flex items-center gap-1 cursor-pointer hover:text-foreground">Province</div>
+                  </th>
+                  <th class="px-5 py-3 text-left text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">
+                    <div class="flex items-center gap-1 cursor-pointer hover:text-foreground">District</div>
+                  </th>
+                  <th class="px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div class="flex items-center justify-end gap-1 cursor-pointer hover:text-foreground">
+                      Wrote
+                      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>
+                    </div>
+                  </th>
+                  <th class="px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div class="flex items-center justify-end gap-1 cursor-pointer hover:text-foreground">Passed</div>
+                  </th>
+                  <th class="px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <div class="flex items-center justify-end gap-1 cursor-pointer hover:text-foreground">
+                      Pass Rate
+                      <svg class="h-3 w-3 text-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                  </th>
+                  <th class="px-5 py-3 text-right text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hidden lg:table-cell">Bachelor</th>
+                  <th class="px-5 py-3 text-center text-[10px] font-semibold uppercase tracking-wider text-muted-foreground hidden lg:table-cell">Trend</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Row 1 -->
+                <tr class="border-b border-border hover:bg-muted/20 transition-colors cursor-pointer">
+                  <td class="px-5 py-3.5 text-sm font-medium tabular-nums">1</td>
+                  <td class="px-5 py-3.5 text-sm font-medium">Pretoria High School for Girls</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground">Gauteng</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">Tshwane South</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">1,200</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">1,182</td>
+                  <td class="px-5 py-3.5 text-sm text-right font-semibold tabular-nums pass-rate-high">98.5%</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums hidden lg:table-cell">612</td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell">
+                    <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up">
+                      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                      +0.5%
+                    </span>
+                  </td>
+                </tr>
+                <!-- Row 2 -->
+                <tr class="border-b border-border hover:bg-muted/20 transition-colors cursor-pointer">
+                  <td class="px-5 py-3.5 text-sm font-medium tabular-nums">2</td>
+                  <td class="px-5 py-3.5 text-sm font-medium">Wynberg Girls' High School</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground">Western Cape</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">Metro South</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">980</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">958</td>
+                  <td class="px-5 py-3.5 text-sm text-right font-semibold tabular-nums pass-rate-high">97.8%</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums hidden lg:table-cell">498</td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell">
+                    <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up">
+                      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                      +1.2%
+                    </span>
+                  </td>
+                </tr>
+                <!-- Row 3 -->
+                <tr class="border-b border-border hover:bg-muted/20 transition-colors cursor-pointer">
+                  <td class="px-5 py-3.5 text-sm font-medium tabular-nums">3</td>
+                  <td class="px-5 py-3.5 text-sm font-medium">Rustenburg Girls' High School</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground">Western Cape</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">Metro Central</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">1,100</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">1,069</td>
+                  <td class="px-5 py-3.5 text-sm text-right font-semibold tabular-nums pass-rate-high">97.2%</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums hidden lg:table-cell">523</td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell">
+                    <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-down">
+                      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                      -0.3%
+                    </span>
+                  </td>
+                </tr>
+                <!-- Row 4 -->
+                <tr class="border-b border-border hover:bg-muted/20 transition-colors cursor-pointer">
+                  <td class="px-5 py-3.5 text-sm font-medium tabular-nums">4</td>
+                  <td class="px-5 py-3.5 text-sm font-medium">St. Mary's School Waverley</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground">Gauteng</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">Johannesburg North</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">850</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">826</td>
+                  <td class="px-5 py-3.5 text-sm text-right font-semibold tabular-nums pass-rate-high">97.1%</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums hidden lg:table-cell">412</td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell">
+                    <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up">
+                      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                      +0.8%
+                    </span>
+                  </td>
+                </tr>
+                <!-- Row 5 -->
+                <tr class="border-b border-border hover:bg-muted/20 transition-colors cursor-pointer">
+                  <td class="px-5 py-3.5 text-sm font-medium tabular-nums">5</td>
+                  <td class="px-5 py-3.5 text-sm font-medium">Herschel Girls' School</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground">Western Cape</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">Metro Central</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">780</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">756</td>
+                  <td class="px-5 py-3.5 text-sm text-right font-semibold tabular-nums pass-rate-high">96.9%</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums hidden lg:table-cell">398</td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell">
+                    <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up">
+                      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                      +2.1%
+                    </span>
+                  </td>
+                </tr>
+                <!-- Row 6 -->
+                <tr class="border-b border-border hover:bg-muted/20 transition-colors cursor-pointer">
+                  <td class="px-5 py-3.5 text-sm font-medium tabular-nums">6</td>
+                  <td class="px-5 py-3.5 text-sm font-medium">St. John's College</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground">Gauteng</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">Johannesburg South</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">920</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">888</td>
+                  <td class="px-5 py-3.5 text-sm text-right font-semibold tabular-nums pass-rate-high">96.5%</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums hidden lg:table-cell">467</td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell">
+                    <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up">
+                      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                      +1.5%
+                    </span>
+                  </td>
+                </tr>
+                <!-- Row 7 - Mid performer -->
+                <tr class="border-b border-border hover:bg-muted/20 transition-colors cursor-pointer">
+                  <td class="px-5 py-3.5 text-sm font-medium tabular-nums">47</td>
+                  <td class="px-5 py-3.5 text-sm font-medium">Alexandra High School</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground">Eastern Cape</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">Sarah Baartman</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">650</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">490</td>
+                  <td class="px-5 py-3.5 text-sm text-right font-semibold tabular-nums pass-rate-mid">75.4%</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums hidden lg:table-cell">215</td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell">
+                    <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up">
+                      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                      +3.2%
+                    </span>
+                  </td>
+                </tr>
+                <!-- Row 8 - Lower performer -->
+                <tr class="border-b border-border hover:bg-muted/20 transition-colors cursor-pointer">
+                  <td class="px-5 py-3.5 text-sm font-medium tabular-nums">142</td>
+                  <td class="px-5 py-3.5 text-sm font-medium">Kwadwesi Comprehensive School</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground">Eastern Cape</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">Buffalo City</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">480</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">250</td>
+                  <td class="px-5 py-3.5 text-sm text-right font-semibold tabular-nums pass-rate-low">52.1%</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums hidden lg:table-cell">89</td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell">
+                    <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-down">
+                      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                      -1.8%
+                    </span>
+                  </td>
+                </tr>
+                <!-- Row 9 -->
+                <tr class="border-b border-border hover:bg-muted/20 transition-colors cursor-pointer">
+                  <td class="px-5 py-3.5 text-sm font-medium tabular-nums">201</td>
+                  <td class="px-5 py-3.5 text-sm font-medium">Zamokuhle Secondary School</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground">KwaZulu-Natal</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">uMgungundlovu</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">520</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">282</td>
+                  <td class="px-5 py-3.5 text-sm text-right font-semibold tabular-nums pass-rate-mid">54.2%</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums hidden lg:table-cell">98</td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell">
+                    <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up">
+                      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                      +5.7%
+                    </span>
+                  </td>
+                </tr>
+                <!-- Row 10 -->
+                <tr class="hover:bg-muted/20 transition-colors cursor-pointer">
+                  <td class="px-5 py-3.5 text-sm font-medium tabular-nums">356</td>
+                  <td class="px-5 py-3.5 text-sm font-medium">Sekhukhune High School</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground">Limpopo</td>
+                  <td class="px-5 py-3.5 text-sm text-muted-foreground hidden md:table-cell">Sekhukhune East</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">390</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums">211</td>
+                  <td class="px-5 py-3.5 text-sm text-right font-semibold tabular-nums pass-rate-mid">54.1%</td>
+                  <td class="px-5 py-3.5 text-sm text-right tabular-nums hidden lg:table-cell">72</td>
+                  <td class="px-5 py-3.5 text-center hidden lg:table-cell">
+                    <span class="inline-flex items-center gap-0.5 text-[10px] font-medium trend-up">
+                      <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                      +1.2%
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pagination -->
+          <div class="flex items-center justify-between border-t border-border px-5 py-3">
+            <div class="text-xs text-muted-foreground">
+              Page <span class="font-medium text-foreground">1</span> of <span class="font-medium text-foreground">690</span>
+              (6,894 schools)
+            </div>
+            <div class="flex items-center gap-2">
+              <select class="rounded-lg border border-border bg-background px-2 py-1 text-xs text-foreground">
+                <option>10 per page</option>
+                <option>25 per page</option>
+                <option selected>50 per page</option>
+                <option>100 per page</option>
+              </select>
+              <div class="flex items-center gap-1">
+                <button class="rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-colors disabled:opacity-40" disabled>
+                  <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <button class="rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-colors disabled:opacity-40" disabled>
+                  <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7"/></svg>
+                </button>
+                <button class="rounded-lg bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground">1</button>
+                <button class="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-colors">2</button>
+                <button class="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-colors">3</button>
+                <span class="px-1 text-xs text-muted-foreground">...</span>
+                <button class="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-colors">690</button>
+                <button class="rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-colors">
+                  <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7"/></svg>
+                </button>
+                <button class="rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted/40 transition-colors">
+                  <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer spacer -->
+        <div class="mt-6 text-center text-[10px] text-muted-foreground">
+          Matric Dashboard &middot; Design Mockup &middot; Schools Page
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

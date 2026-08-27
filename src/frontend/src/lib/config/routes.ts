@@ -8,12 +8,22 @@ import { Permissions } from '$lib/utils/permissions';
 export const routes = {
 	dashboard: '/dashboard',
 	overview: '/overview',
+	schools: '/schools',
 	login: '/login',
 	register: '/register',
 	forgotPassword: '/forgot-password',
 	profile: '/profile',
 	settings: '/settings'
 } as const;
+
+/**
+ * Builds the detail-page pathname for a single school.
+ * Returns a typed template literal so {@link resolve} from `$app/paths`
+ * recognizes it as a valid pathname (base-path-aware, no extra params needed).
+ */
+export function schoolPath(id: number | string): `/schools/${string}` {
+	return `/schools/${String(id)}`;
+}
 
 /**
  * Union of all permission string literals from the Permissions object.

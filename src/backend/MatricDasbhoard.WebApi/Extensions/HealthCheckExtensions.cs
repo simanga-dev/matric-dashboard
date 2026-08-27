@@ -63,22 +63,22 @@ internal static class HealthCheckExtensions
     public static WebApplication MapHealthCheckEndpoints(this WebApplication app)
     {
         app.MapHealthChecks("/health", new()
-            {
-                ResponseWriter = WriteJsonResponse
-            })
+        {
+            ResponseWriter = WriteJsonResponse
+        })
             .DisableRateLimiting();
 
         app.MapHealthChecks("/health/ready", new()
-            {
-                Predicate = check => check.Tags.Contains(ReadyTag),
-                ResponseWriter = WriteJsonResponse
-            })
+        {
+            Predicate = check => check.Tags.Contains(ReadyTag),
+            ResponseWriter = WriteJsonResponse
+        })
             .DisableRateLimiting();
 
         app.MapHealthChecks("/health/live", new()
-            {
-                Predicate = _ => false
-            })
+        {
+            Predicate = _ => false
+        })
             .DisableRateLimiting();
 
         return app;
