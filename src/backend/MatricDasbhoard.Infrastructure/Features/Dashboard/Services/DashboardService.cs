@@ -6,6 +6,7 @@ using Meilisearch;
 
 namespace MatricDasbhoard.Infrastructure.Features.Dashboard.Services;
 
+/// <summary>
 /// Returns paginated school data from the Meilisearch "schools" index.
 /// </summary>
 internal sealed class DashboardService : IDashboardService
@@ -73,11 +74,11 @@ internal sealed class DashboardService : IDashboardService
             {
                 Limit = pageSize,
                 Offset = (pageNumber - 1) * pageSize
-            });
+            }) as SearchResult<MeilisearchSchool>;
 
-        var schools = result.Hits.Select(hit => ToSchoolOutput(hit)).ToList();
+        var schools = result!.Hits.Select(hit => ToSchoolOutput(hit)).ToList();
 
-        return new SchoolListOutput(schools, result.Hits.Count, pageNumber, pageSize);
+        return new SchoolListOutput(schools, result.EstimatedTotalHits, pageNumber, pageSize);
     }
 
     public async Task<MatricDasbhoard.Shared.Result<SchoolOutput>> GetSchoolByIdAsync(
@@ -124,11 +125,11 @@ internal sealed class DashboardService : IDashboardService
 
     /// <summary>
     /// Maps to the Meilisearch school document schema (snake_case field names, per-year metrics).
-    /// The <c>id</c> field is the EMIS number, set as the index primary key by the upload script.
+    /// The <c>school_id</c> field is the index primary key.
     /// </summary>
     private sealed class MeilisearchSchool
     {
-        [JsonPropertyName("id")]
+        [JsonPropertyName("school_id")]
         public string? Id { get; set; }
 
         [JsonPropertyName("centre_name")]
