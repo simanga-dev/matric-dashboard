@@ -38,6 +38,7 @@ if (builder.ExecutionContext.IsRunMode)
 var db = postgres.AddDatabase("Database");
 
 var storage = builder.AddMinioContainer("storage", rootUser: storageUser, rootPassword: storagePassword)
+    .WithImage("quay.io/minio/minio")
     .WithEndpoint("http", e => e.Port = minioPort)
     .WithEndpoint("console", e => e.Port = minioConsolePort)
     .WithDataVolume("matric-dasbhoard-storage-data");
