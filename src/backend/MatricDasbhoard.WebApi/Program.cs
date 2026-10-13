@@ -131,11 +131,11 @@ try
     builder.Services.AddFluentValidationAutoValidation();
     builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
-        Log.Debug("Adding hosting options");
-        builder.Services.AddHostingOptions(builder.Configuration);
+    Log.Debug("Adding hosting options");
+    builder.Services.AddHostingOptions(builder.Configuration);
 
-        Log.Debug("Adding GeoServer proxy");
-        builder.Services.AddGeoServer(builder.Configuration);
+    Log.Debug("Adding GeoServer proxy");
+    builder.Services.AddGeoServer(builder.Configuration);
 
     Log.Debug("Adding rate limiting");
     builder.Services.AddRateLimiting(builder.Configuration);
