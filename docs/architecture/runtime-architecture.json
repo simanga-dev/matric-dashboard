@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "MatricDasbhoard Runtime Architecture",
+    "output": "runtime-architecture.html",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "request-path",
+        "label": "Primary request path",
+        "focus": ["browser", "frontend", "api", "application", "postgres"],
+        "note": "Follow a browser request from the SvelteKit edge to durable matric data."
+      },
+      {
+        "id": "platform-services",
+        "label": "Platform services",
+        "focus": ["api", "infrastructure", "postgres", "storage", "search"],
+        "note": "Inspect persistence, file storage, search, and backend integration seams."
+      },
+      {
+        "id": "trust-boundaries",
+        "label": "Trust boundaries",
+        "focus": ["browser", "frontend", "api", "identity", "captcha", "smtp"],
+        "note": "Trace the boundary between public clients, protected API capabilities, and external providers."
+      }
+    ]
+  },
+  "components": [
+    { "id": "browser", "type": "external", "label": "Browser / Mobile Client", "sublabel": "Public client", "pos": [40, 300], "size": [150, 68] },
+    { "id": "frontend", "type": "frontend", "label": "SvelteKit Frontend", "sublabel": "Vite / Svelte 5", "pos": [250, 300], "size": [150, 68], "tag": "UI + API proxy" },
+    { "id": "api", "type": "backend", "label": ".NET Web API", "sublabel": "ASP.NET Core", "pos": [470, 300], "size": [150, 68], "tag": "HTTPS + auth" },
+    { "id": "application", "type": "backend", "label": "Application Core", "sublabel": "Use cases / DTOs", "pos": [690, 300], "size": [150, 68] },
+    { "id": "infrastructure", "type": "backend", "label": "Infrastructure Adapters", "sublabel": "EF Core + integrations", "pos": [910, 300], "size": [165, 68] },
+    { "id": "postgres", "type": "database", "label": "PostgreSQL", "sublabel": "Transactional store", "pos": [1135, 300], "size": [145, 68], "tag": "EF Core" },
+    { "id": "storage", "type": "cloud", "label": "MinIO Object Storage", "sublabel": "S3-compatible files", "pos": [910, 475], "size": [165, 68] },
+    { "id": "search", "type": "database", "label": "Meilisearch", "sublabel": "Search index", "pos": [1135, 475], "size": [145, 68] },
+    { "id": "identity", "type": "security", "label": "Identity Providers", "sublabel": "OAuth + JWT", "pos": [470, 120], "size": [150, 68], "tag": "External trust" },
+    { "id": "captcha", "type": "security", "label": "Cloudflare Turnstile", "sublabel": "Bot protection", "pos": [690, 120], "size": [150, 68], "tag": "External trust" },
+    { "id": "smtp", "type": "external", "label": "SMTP / Mailpit", "sublabel": "Email delivery", "pos": [910, 120], "size": [165, 68] }
+  ],
+  "boundaries": [
+    { "kind": "security-group", "label": "Protected application boundary", "wraps": ["api", "application", "infrastructure", "postgres", "storage", "search"] },
+    { "kind": "region", "label": "MatricDasbhoard deployment", "wraps": ["frontend", "api", "application", "infrastructure", "postgres", "storage", "search"] }
+  ],
+  "connections": [
+    { "id": "client-to-frontend", "from": "browser", "to": "frontend", "label": "HTTPS", "variant": "emphasis" },
+    { "id": "frontend-to-api", "from": "frontend", "to": "api", "label": "API requests", "variant": "emphasis" },
+    { "id": "api-to-application", "from": "api", "to": "application", "label": "dispatch use case", "labelDy": 58 },
+    { "id": "application-to-infrastructure", "from": "application", "to": "infrastructure", "label": "ports / interfaces", "labelDy": 58 },
+    { "id": "infrastructure-to-postgres", "from": "infrastructure", "to": "postgres", "label": "SQL", "variant": "emphasis" },
+    { "id": "infrastructure-to-storage", "from": "infrastructure", "to": "storage", "label": "S3 API", "variant": "dashed", "fromSide": "bottom", "toSide": "top", "labelDy": 24 },
+    { "id": "infrastructure-to-search", "from": "infrastructure", "to": "search", "label": "index / query", "variant": "dashed", "fromSide": "right", "toSide": "left" },
+    { "id": "identity-to-api", "from": "identity", "to": "api", "label": "verify JWT", "variant": "security", "fromSide": "bottom", "toSide": "top", "labelDy": 24 },
+    { "id": "captcha-to-api", "from": "captcha", "to": "api", "label": "validate challenge", "variant": "security", "fromSide": "bottom", "toSide": "top" },
+    { "id": "api-to-smtp", "from": "api", "to": "smtp", "label": "send email", "variant": "dashed", "fromSide": "top", "toSide": "bottom", "labelDx": 80 }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Request path", "items": ["SvelteKit serves the user interface and proxies API calls", "ASP.NET Core middleware applies CORS, rate limiting, authentication, authorization, and ProblemDetails", "Application use cases keep domain rules behind ports"] },
+    { "dot": "emerald", "title": "State and integrations", "items": ["PostgreSQL is the durable transactional store", "MinIO stores avatars and other files through the S3-compatible adapter", "Meilisearch supports indexed dashboard and marks queries"] },
+    { "dot": "rose", "title": "Trust boundaries", "items": ["Public clients cross into the protected application boundary over HTTPS", "OAuth providers and Cloudflare Turnstile are external security dependencies", "SMTP is external in production; Mailpit is used for local development"] }
+  ]
+}

@@ -27,6 +27,37 @@ export interface School {
 	totalAchieved: number | null;
 }
 
+export interface SchoolYear {
+	year: number;
+	progressed: number;
+	totalWrote: number;
+	totalPassed: number;
+	passRate: number;
+}
+
+export interface SchoolComparison {
+	year?: number;
+	provinceRank: number;
+	provinceSchoolCount: number;
+	provinceAveragePassRate: number | null;
+	nationalAveragePassRate: number | null;
+}
+
+export interface SchoolDetail {
+	id: string;
+	name: string;
+	province: string;
+	circuit: string;
+	centreNumber: string;
+	quintile: number;
+	totalWrote: number;
+	totalPassed: number;
+	passRate: number;
+	totalAchieved?: number | null;
+	years: SchoolYear[];
+	comparison: SchoolComparison;
+}
+
 export interface SchoolList {
 	items: School[];
 	totalCount: number;

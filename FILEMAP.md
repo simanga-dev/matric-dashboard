@@ -96,6 +96,31 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`CaptchaOptions`** (Infrastructure - Captcha config) | `appsettings.json`, `appsettings.Development.json`, `appsettings.Testing.json`, `TurnstileCaptchaService`, `ServiceCollectionExtensions` |
 | **`TurnstileCaptchaService`** (Infrastructure - Captcha service) | `ICaptchaService` interface, `CaptchaOptions`, `AuthController` captcha gate |
 
+### GeoServer / Spatial Changes
+
+| When you change... | Also update... |
+|---|---|
+| **`docker-compose.yml`** postgres image/volume | `.env.example`, `docs/spatial-operations.md`; preserve Compose PG17 layout by default, PG18 needs explicit image/volume/mount overrides. Inspect Aspire's separate persisted volume before changing its major version |
+| **`scripts/postgis/init.sql`** (schema/columns/layer name) | `scripts/geoserver/bootstrap.sh` layer name, frontend WFS `typeName` in `SchoolGeoMap.svelte` |
+| **`scripts/geoserver/bootstrap.sh`** (workspace/store/layer names) | `SchoolGeoMap.svelte` WFS URL, `.env` / `.env.example` GeoServer vars |
+| **GeoServer host port binding** | Bootstrap local maintenance URL, `.env.example`, `docs/spatial-operations.md`; Compose API keeps internal service DNS |
+| **Sample location seeds** (`scripts/postgis/init.sql`, `scripts/geoserver/seed_from_api.py`) | Guard real rows with `is_sample`, bootstrap bounds refresh after seeding, `scripts/tests/test_spatial_operations.py`, `docs/spatial-operations.md` |
+| **`GeoServerOptions`** (config shape) | `appsettings.json`, `appsettings.Development.json`, `AppHost/Program.cs` env, `docker-compose.yml` api env |
+| **`GeoServerProxyMiddleware`** (route/behavior) | `GeoServerOptions.RoutePrefix`, frontend `api/geo/[...path]` proxy route |
+| **`api/geo/[...path]`** (frontend proxy route) | Backend `GeoServerOptions.RoutePrefix`, `SchoolGeoMap.svelte` WFS URL |
+
+### School Data (Postgres `marks` schema)
+
+School lists and lookups are read from PostgreSQL via EF (`DashboardService`). The CSV is loaded with the import script.
+
+| When you change... | Also update... |
+|---|---|
+| **`2024_nsc_school_performance_report.csv`** (columns) | `scripts/import_schools_to_db.py` (column names), `School`/`SchoolPerformance` entities, `DashboardService` projection |
+| **`School`/`SchoolPerformance` entity** (fields) | EF configuration, migration, `scripts/import_schools_to_db.py`, `DashboardService` mapping, `SchoolOutput` / `SchoolDetailOutput` DTOs |
+| **`DashboardService.GetSchoolsAsync`** | `IDashboardService`, `DashboardController`, `SchoolOutput` DTO, `DashboardMapper` |
+| **`DashboardService.GetSchoolByIdAsync`** | `IDashboardService`, `DashboardController`, `SchoolDetailOutput` DTO, `DashboardMapper`, `MatricDasbhoard.Api.Tests/Features/Dashboard/DashboardMapperTests.cs` |
+| **`scripts/import_schools_to_db.py`** (import shape/identity validation) | `scripts/import_schools_to_db.sh`, entity columns, `scripts/tests/test_spatial_operations.py`, `docs/spatial-operations.md`; quarantine placeholders without synthesizing EMIS identifiers |
+
 ---
 
 ## Key Files Quick Reference
@@ -212,6 +237,6 @@ src/backend/tests/
 | `src/backend/MatricDasbhoard.WebApi/Shared/RateLimitPolicies.cs` | Rate limit policy name constants |
 | `src/backend/Directory.Packages.props` | NuGet versions (never in .csproj) |
 | `src/backend/MatricDasbhoard.ServiceDefaults/Extensions.cs` | Aspire shared: OTEL, service discovery, HTTP resilience defaults |
-| `src/backend/MatricDasbhoard.AppHost/Program.cs` | Aspire orchestrator: local dev (PostgreSQL, MinIO, MeiliSearch, MailPit, API, Frontend) |
+| `src/backend/MatricDasbhoard.AppHost/Program.cs` | Aspire orchestrator: local dev (PostGIS + GeoServer, loopback-only S3Mock with separate data volume, MailPit, API, Frontend); publish mode retains MinIO |
 | `src/backend/MatricDasbhoard.WebApi/appsettings.Testing.json` | Test environment config |
 | `src/backend/tests/MatricDasbhoard.Api.Tests/Fixtures/CustomWebApplicationFactory.cs` | Test host configuration for API tests |

@@ -9,7 +9,8 @@
 	import { resolve } from '$app/paths';
 	import { fetchSchools } from '$lib/api/dashboard';
 	import { schoolPath } from '$lib/config';
-	import type { School, SchoolList } from '$lib/types/dashboard';
+	import type { SchoolList } from '$lib/types/dashboard';
+	import { toTitleCase } from '$lib/utils';
 
 	interface Props {
 		externalSearch?: string;
@@ -17,7 +18,7 @@
 
 	let { externalSearch }: Props = $props();
 
-	let schoolData: SchoolList | null = $state(null);
+	let schoolData = $state<SchoolList | null>(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 	let searchQuery = $state(externalSearch ?? '');
@@ -117,11 +118,11 @@
 						>
 							<Table.Cell class="font-medium">
 								<span class="inline-flex items-center gap-1.5">
-									{school.name}
+									{toTitleCase(school.name)}
 									<ExternalLink class="size-3 shrink-0 text-muted-foreground" />
 								</span>
 							</Table.Cell>
-							<Table.Cell class="hidden md:table-cell">{school.province}</Table.Cell>
+							<Table.Cell class="hidden md:table-cell">{toTitleCase(school.province)}</Table.Cell>
 							<Table.Cell class="text-right tabular-nums"
 								>{school.totalWrote.toLocaleString()}</Table.Cell
 							>

@@ -6,8 +6,6 @@
 	import { adminRoutes, type AdminRoute } from '$lib/config';
 	import { hasPermission } from '$lib/utils';
 	import {
-		LayoutDashboard,
-		Eye,
 		Users,
 		Shield,
 		Clock,
@@ -16,7 +14,7 @@
 		CircleHelp,
 		LogIn,
 		BookOpen,
-		GraduationCap,
+		MapPinned,
 		Trophy,
 		List,
 		type IconProps
@@ -45,17 +43,7 @@
 		{
 			title: m.nav_overview,
 			href: resolve(routes.overview),
-			icon: Eye
-		},
-		{
-			title: m.nav_dashboard,
-			href: resolve(routes.dashboard),
-			icon: LayoutDashboard
-		},
-		{
-			title: () => 'Schools',
-			href: '/schools',
-			icon: GraduationCap
+			icon: MapPinned
 		},
 		{
 			title: () => 'Top Achievers',
@@ -112,7 +100,7 @@
 
 	function isActive(href: string): boolean {
 		const pathname = page.url.pathname;
-		if (href === resolve(routes.dashboard) || href === resolve(routes.overview)) {
+		if (href === resolve(routes.overview)) {
 			return pathname === href;
 		}
 		return pathname.startsWith(href);
@@ -132,7 +120,7 @@
 			<Sidebar.MenuItem>
 				<Sidebar.MenuButton size="lg">
 					{#snippet child({ props })}
-						<a href={resolve(routes.dashboard)} onclick={handleNavigate} {...props}>
+						<a href={resolve(routes.overview)} onclick={handleNavigate} {...props}>
 							<div
 								class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"
 							>
@@ -239,13 +227,15 @@
 			<Sidebar.Menu>
 				<Sidebar.MenuItem>
 					<Sidebar.MenuButton
+						size="sm"
+						class="h-6 px-2 py-1"
 						tooltipContent={m.shortcuts_help()}
 						onclick={() => (shortcutsState.isHelpOpen = true)}
 					>
-						<CircleHelp class="size-5" />
+						<CircleHelp class="size-4" />
 						<span class="flex-1">{m.shortcuts_help()}</span>
 						<kbd
-							class="pointer-events-none ms-auto inline-flex h-5 shrink-0 items-center rounded border bg-muted px-1 font-mono text-[10px] font-medium text-muted-foreground select-none group-data-[collapsible=icon]:hidden"
+							class="pointer-events-none ms-auto inline-flex h-4 shrink-0 items-center rounded border bg-muted px-1 font-mono text-[10px] font-medium text-muted-foreground select-none group-data-[collapsible=icon]:hidden"
 						>
 							{getShortcutSymbol(ShortcutAction.Help)}
 						</kbd>

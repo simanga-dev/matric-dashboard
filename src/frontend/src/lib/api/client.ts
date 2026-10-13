@@ -1,6 +1,7 @@
 import createClient from 'openapi-fetch';
 import type { Middleware } from 'openapi-fetch';
 import type { paths } from './v1';
+import type { DashboardPaths } from './dashboard-contract';
 
 /**
  * Creates a typed openapi-fetch client.
@@ -18,7 +19,7 @@ export function createApiClient(
 	baseUrl: string = '',
 	middleware: Middleware[] = []
 ) {
-	const client = createClient<paths>({ baseUrl, fetch: customFetch ?? fetch });
+	const client = createClient<paths & DashboardPaths>({ baseUrl, fetch: customFetch ?? fetch });
 	for (const mw of middleware) {
 		client.use(mw);
 	}

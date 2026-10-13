@@ -25,9 +25,10 @@ public interface IDashboardService
     Task<SchoolListOutput> GetSchoolsAsync(int pageNumber, int pageSize, string? search = null);
 
     /// <summary>
-    /// Returns a single school by its stable document identifier (EMIS number).
+    /// Returns a single school by its stable document identifier (EMIS number),
+    /// including multi-year performance and province/national comparison.
     /// </summary>
     /// <param name="id">The school's stable identifier from the search index.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
-    Task<Result<SchoolOutput>> GetSchoolByIdAsync(string id, CancellationToken cancellationToken = default);
+    Task<Result<SchoolDetailOutput>> GetSchoolByIdAsync(string id, CancellationToken cancellationToken = default);
 }

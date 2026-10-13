@@ -5,7 +5,7 @@ Generated with [netrock](https://netrock.dev) - a .NET API project generator.
 ## Prerequisites
 
 - [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
-- [Docker](https://docs.docker.com/get-docker/) (required for Aspire orchestration)
+t [Docker](https://docs.docker.com/get-docker/) (required for Aspire orchestration)
 
 ## Quick start
 
@@ -36,6 +36,9 @@ dotnet run --project src/backend/MatricDasbhoard.AppHost
 The Aspire dashboard opens automatically. From there you can access the API, pgAdmin, Mailpit, and MinIO console.
 
 ## Run tests
+
+Spatial stack setup, PostgreSQL migration, and unresolved EMIS quarantine are
+documented in [Spatial data operations](docs/spatial-operations.md).
 
 ```bash
 dotnet test src/backend/MatricDasbhoard.slnx

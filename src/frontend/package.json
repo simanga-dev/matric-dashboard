@@ -58,6 +58,7 @@
 		"bits-ui": "^2.16.3",
 		"clsx": "^2.1.1",
 		"flag-icons": "^7.5.0",
+		"ol": "^10.11.0",
 		"openapi-fetch": "^0.17.0",
 		"qrcode": "^1.5.4",
 		"svelte-easy-crop": "^5.0.1",

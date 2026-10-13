@@ -134,6 +134,9 @@ try
     Log.Debug("Adding hosting options");
     builder.Services.AddHostingOptions(builder.Configuration);
 
+    Log.Debug("Adding GeoServer proxy");
+    builder.Services.AddGeoServer(builder.Configuration);
+
     Log.Debug("Adding rate limiting");
     builder.Services.AddRateLimiting(builder.Configuration);
 
@@ -198,6 +201,9 @@ try
 
     Log.Debug("Setting UseAuthorization");
     app.UseAuthorization();
+
+    Log.Debug("Setting GeoServer proxy");
+    app.UseGeoServerProxy();
 
     Log.Debug("Setting up job scheduling");
     app.UseJobScheduling();

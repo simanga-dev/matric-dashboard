@@ -464,3 +464,6 @@ $RECYCLE.BIN/
 
 # Claude Code local settings (user-specific permission overrides)
 .claude/settings.local.json
+
+# Playwright MCP session artifacts (screenshots, snapshots, logs)
+.playwright-mcp/

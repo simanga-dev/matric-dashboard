@@ -1,0 +1,32 @@
+import type { DashboardStats, PassRateTrend, SchoolDetail, SchoolList } from '$lib/types/dashboard';
+import type { components } from './v1';
+
+type GetResponse<T> = {
+	200: { content: { 'application/json': T } };
+	default: { content: { 'application/problem+json': components['schemas']['ProblemDetails'] } };
+};
+
+/** Dashboard contracts supplement the generated spec until it includes these endpoints. */
+export interface DashboardPaths {
+	'/api/v1/dashboard/stats': {
+		get: { responses: GetResponse<DashboardStats> };
+	};
+	'/api/v1/dashboard/pass-rate-trends': {
+		get: {
+			parameters: { query?: { years?: string } };
+			responses: GetResponse<PassRateTrend[]>;
+		};
+	};
+	'/api/v1/dashboard/schools': {
+		get: {
+			parameters: { query?: { pageNumber?: number; pageSize?: number; search?: string } };
+			responses: GetResponse<SchoolList>;
+		};
+	};
+	'/api/v1/dashboard/schools/{id}': {
+		get: {
+			parameters: { path: { id: string } };
+			responses: GetResponse<SchoolDetail>;
+		};
+	};
+}

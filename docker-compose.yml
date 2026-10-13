@@ -1,18 +1,43 @@
 services:
   postgres:
-    image: postgres:17-alpine
+    # PostGIS build of PostgreSQL - spatial types/functions for the school map.
+    # Preserve existing Compose PostgreSQL 17 volumes. PG18 requires a new volume
+    # and dump/restore; see docs/spatial-operations.md before opting in.
+    image: ${POSTGIS_IMAGE:-postgis/postgis:17-3.5-alpine}
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-matric_dashboard}
       POSTGRES_USER: ${POSTGRES_USER:-matric}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - ${POSTGRES_VOLUME:-postgres-data}:${POSTGRES_VOLUME_TARGET:-/var/lib/postgresql/data}
+      # Creates the geo schema and seeds sample school points on first init.
+      - ./scripts/postgis/init.sql:/docker-entrypoint-initdb.d/10-init-geo.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-matric} -d ${POSTGRES_DB:-matric_dashboard}"]
       interval: 5s
       timeout: 5s
       retries: 5
       start_period: 10s
+    restart: unless-stopped
+
+  geoserver:
+    # Publishes the PostGIS school layer over OGC WMS/WFS. The API proxies
+    # client requests to this service (never exposed directly to browsers).
+    image: docker.osgeo.org/geoserver:2.26.2
+    environment:
+      SKIP_DEMO_DATA: "true"
+      GEOSERVER_ADMIN_USER: ${GEOSERVER_ADMIN_USER:-admin}
+      GEOSERVER_ADMIN_PASSWORD: ${GEOSERVER_ADMIN_PASSWORD:?GEOSERVER_ADMIN_PASSWORD is required}
+      CORS_ENABLED: "false"
+      EXTRA_JAVA_OPTS: "-Xms512m -Xmx1g"
+    ports:
+      # Local maintenance/bootstrap only. Browser traffic uses the API proxy.
+      - "127.0.0.1:${GEOSERVER_PORT:-8080}:8080"
+    volumes:
+      - geoserver-data:/opt/geoserver_data
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
 
   meilisearch:
@@ -89,6 +114,8 @@ services:
       Hosting__ReverseProxy__TrustedNetworks__0: 0.0.0.0/0
       MEILI_URL: ${MEILI_URL:-http://meilisearch:7700}
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?MEILI_MASTER_KEY is required}
+      GeoServer__Enabled: "true"
+      GeoServer__BaseUrl: ${GEOSERVER_BASE_URL:-http://geoserver:8080/geoserver}
       ASPNETCORE_URLS: http://+:8080
       DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "1"
     depends_on:
@@ -126,5 +153,7 @@ services:
 
 volumes:
   postgres-data:
+  postgres-data-pg18:
   meilisearch-data:
   minio-data:
+  geoserver-data:

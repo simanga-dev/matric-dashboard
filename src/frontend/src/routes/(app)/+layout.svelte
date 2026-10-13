@@ -4,9 +4,16 @@
 	import { EmailVerificationBanner } from '$lib/components/auth';
 	import { page } from '$app/state';
 	import { invalidateAll } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { healthState } from '$lib/state';
+	import { routes } from '$lib/config';
+	import { cn } from '$lib/utils';
 
 	let { children, data } = $props();
+
+	// The overview is a full-bleed workspace: it manages its own height and
+	// wants no page padding or card frame around it.
+	let fullBleed = $derived(page.url.pathname === resolve(routes.overview));
 
 	// When health polling detects the backend went down, re-run server loads.
 	// The (app) layout.server.ts will throw 503, showing the error page with
@@ -28,15 +35,28 @@
 	style="--sidebar-width: calc(var(--spacing) * 72); --header-height: calc(var(--spacing) * 12);"
 >
 	<AppSidebar user={data.user} />
-	<Sidebar.Inset>
+	<Sidebar.Inset
+		class={fullBleed
+			? 'md:peer-data-[variant=inset]:m-0 md:peer-data-[variant=inset]:ms-0 md:peer-data-[variant=inset]:rounded-none md:peer-data-[variant=inset]:shadow-none md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ms-0'
+			: undefined}
+	>
 		<ContentHeader user={data.user} />
 		{#if data.user && !data.user.emailConfirmed}
 			<EmailVerificationBanner />
 		{/if}
 
-		<div class="flex flex-1 flex-col bg-background md:m-2 md:rounded-xl md:shadow-sm">
+		<div
+			class={cn(
+				'flex flex-1 flex-col bg-background',
+				!fullBleed && 'md:m-2 md:rounded-xl md:shadow-sm'
+			)}
+		>
 			<div
-				class="flex flex-1 flex-col gap-4 overflow-y-auto overscroll-contain p-4 pb-[max(4rem,calc(env(safe-area-inset-bottom,0px)+2rem))] lg:gap-6 lg:p-6 lg:pb-[max(4rem,calc(env(safe-area-inset-bottom,0px)+2rem))]"
+				class={cn(
+					'flex flex-1 flex-col overflow-y-auto overscroll-contain',
+					!fullBleed &&
+						'gap-4 p-4 pb-[max(4rem,calc(env(safe-area-inset-bottom,0px)+2rem))] lg:gap-6 lg:p-6 lg:pb-[max(4rem,calc(env(safe-area-inset-bottom,0px)+2rem))]'
+				)}
 			>
 				{#key page.url.pathname}
 					<div

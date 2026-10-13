@@ -17,6 +17,14 @@ build:
 test:
     dotnet test src/backend/MatricDasbhoard.slnx -c Release
 
+# Start PostGIS + GeoServer for the spatial school map (docker compose)
+geo-up:
+    docker compose up -d postgres geoserver
+
+# Seed the sample school layer and configure GeoServer (run after geo-up)
+geo-bootstrap:
+    ./scripts/geoserver/bootstrap.sh
+
 # Add a new EF Core migration
 migrate name:
     dotnet ef migrations add {{name}} \

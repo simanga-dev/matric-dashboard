@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ parent, url }) => {
 	const { user } = await parent();
 
 	if (user) {
-		throw redirect(303, routes.dashboard);
+		throw redirect(303, routes.overview);
 	}
 
 	const raw = url.searchParams.get('reason');

@@ -40,6 +40,6 @@ export const load: PageServerLoad = async ({ url, fetch }) => {
 		return { error: 'network_error' };
 	}
 
-	// Successful login - redirect to dashboard
-	throw redirect(303, routes.dashboard);
+	// Successful login - redirect to the overview landing page
+	throw redirect(303, routes.overview);
 };

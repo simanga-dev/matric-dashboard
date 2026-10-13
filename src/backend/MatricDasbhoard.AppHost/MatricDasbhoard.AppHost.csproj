@@ -2,6 +2,7 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
+        <UserSecretsId>matric-dasbhoard-apphost</UserSecretsId>
     </PropertyGroup>
 
     <ItemGroup>
