@@ -1,12 +1,15 @@
 <script lang="ts">
 	import { onMount, onDestroy, tick } from 'svelte';
 	import 'ol/ol.css';
+	import { resolve } from '$app/paths';
+	import { Button } from '$lib/components/ui/button';
+	import { schoolPath } from '$lib/config';
 	import type { FeatureLike } from 'ol/Feature';
 	import type { StyleFunction } from 'ol/style/Style';
 	import type { Point } from 'ol/geom';
 	import type OlMap from 'ol/Map';
 	import type VectorLayer from 'ol/layer/Vector';
-	import { Maximize, Home, AlertCircle } from '@lucide/svelte';
+	import { Maximize, Home, AlertCircle, MapPin, ExternalLink } from '@lucide/svelte';
 	import { toTitleCase } from '$lib/utils';
 	import { passRateColor } from './school-hierarchy';
 	/**
@@ -30,6 +33,7 @@
 	}
 
 	interface SchoolPopup {
+		id: string;
 		name: string;
 		province: string;
 		passRate: number;
@@ -60,6 +64,18 @@
 
 	function passRate(passed: number, wrote: number): number {
 		return wrote > 0 ? Math.round((passed / wrote) * 1000) / 10 : 0;
+	}
+
+	function rateTextClass(rate: number): string {
+		if (rate >= 80) return 'text-green-700 dark:text-green-400';
+		if (rate >= 60) return 'text-amber-700 dark:text-amber-400';
+		return 'text-red-700 dark:text-red-400';
+	}
+
+	function rateBarClass(rate: number): string {
+		if (rate >= 80) return 'bg-green-500';
+		if (rate >= 60) return 'bg-amber-500';
+		return 'bg-red-500';
 	}
 
 	const SCHOOL_ICON_NODE = [
@@ -275,6 +291,7 @@
 				const passed = Number(props.passed);
 				const wrote = Number(props.wrote);
 				popup = {
+					id: String(props.emis_number),
 					name: String(props.name),
 					province: String(props.province),
 					passRate: passRate(passed, wrote),
@@ -385,20 +402,51 @@
 						</div>{/if}
 					<div
 						bind:this={popupHost}
-						class="pointer-events-none w-56 rounded-lg border bg-popover p-3 text-sm shadow-md {popup
+						class="pointer-events-none w-60 rounded-xl border bg-popover p-3 shadow-lg {popup
 							? ''
 							: 'hidden'}"
 					>
 						{#if popup}
-							<div class="font-medium">{toTitleCase(popup.name)}</div>
-							<div class="text-xs text-muted-foreground">{toTitleCase(popup.province)}</div>
-							<div class="mt-2 flex items-center justify-between">
+							<div class="min-w-0">
+								<div class="truncate text-sm font-semibold">{toTitleCase(popup.name)}</div>
+								<div class="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+									<MapPin class="size-3 shrink-0" />
+									<span class="truncate">{toTitleCase(popup.province)}</span>
+								</div>
+							</div>
+
+							<div class="mt-3 flex items-end justify-between gap-3">
 								<span class="text-xs text-muted-foreground">Pass rate</span>
-								<span class="font-semibold tabular-nums">{popup.passRate}%</span>
+								<span
+									class="text-2xl leading-none font-semibold tabular-nums {rateTextClass(
+										popup.passRate
+									)}"
+								>
+									{popup.passRate}%
+								</span>
 							</div>
-							<div class="text-xs text-muted-foreground">
-								{popup.passed} of {popup.wrote} passed
+
+							<div class="mt-2 h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden="true">
+								<div
+									class="h-full rounded-full {rateBarClass(popup.passRate)}"
+									style:width={`${Math.min(100, Math.max(0, popup.passRate))}%`}
+								></div>
 							</div>
+
+							<div class="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+								<span>{popup.passed} passed</span>
+								<span>{popup.wrote - popup.passed} did not pass</span>
+							</div>
+
+							<Button
+								variant="outline"
+								size="sm"
+								class="pointer-events-auto mt-3 w-full gap-1.5"
+								href={resolve(schoolPath(popup.id))}
+							>
+								<ExternalLink class="size-3.5" />
+								View school
+							</Button>
 						{/if}
 					</div>
 				</div>

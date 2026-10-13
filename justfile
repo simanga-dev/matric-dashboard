@@ -25,6 +25,10 @@ geo-up:
 geo-bootstrap:
     ./scripts/geoserver/bootstrap.sh
 
+# Import real school coordinates from the DBE EMIS masterlists (run after geo-bootstrap)
+geo-locations:
+    ./scripts/import_school_locations.sh
+
 # Add a new EF Core migration
 migrate name:
     dotnet ef migrations add {{name}} \

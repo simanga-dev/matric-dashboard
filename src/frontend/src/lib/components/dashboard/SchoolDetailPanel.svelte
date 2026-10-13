@@ -1,16 +1,21 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { resolve } from '$app/paths';
 	import { Skeleton } from '$lib/components/ui/skeleton';
+	import { Button } from '$lib/components/ui/button';
 	import { fetchSchoolById } from '$lib/api/dashboard';
 	import type { SchoolDetail } from '$lib/types/dashboard';
+	import { schoolPath } from '$lib/config';
 	import { toTitleCase } from '$lib/utils';
+	import SchoolPerformanceTimeline from './SchoolPerformanceTimeline.svelte';
 	import {
 		Building2,
 		School as SchoolIcon,
 		MapPin,
 		Users,
 		GraduationCap,
-		XCircle
+		XCircle,
+		ExternalLink
 	} from '@lucide/svelte';
 
 	let {
@@ -63,6 +68,18 @@
 	});
 
 	let failedCount = $derived(school ? Math.max(0, school.totalWrote - school.totalPassed) : 0);
+
+	let timeline = $derived(school ? [...school.years].sort((a, b) => a.year - b.year) : []);
+	let delta = $derived(
+		timeline.length > 1 ? timeline[timeline.length - 1]!.passRate - timeline[0]!.passRate : null
+	);
+	let deltaClass = $derived(
+		delta === null || Math.abs(delta) < 0.05
+			? 'text-muted-foreground'
+			: delta > 0
+				? 'text-green-700 dark:text-green-400'
+				: 'text-red-700 dark:text-red-400'
+	);
 
 	function passRateColor(rate: number): string {
 		if (rate >= 80) return 'text-green-700 dark:text-green-400';
@@ -165,24 +182,40 @@
 				</div>
 
 				<div class="rounded-xl border bg-muted/20 p-4">
-					<p class="text-xs text-muted-foreground">NSC pass rate · 2024</p>
-					<p
-						class="mt-1 text-3xl font-semibold tracking-tight tabular-nums {passRateColor(
-							school.passRate
-						)}"
-					>
-						{formatRate(school.passRate)}
-					</p>
-					<div class="mt-3 h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden="true">
-						<div
-							class="h-full rounded-full bg-primary"
-							style:width={`${Math.min(100, Math.max(0, school.passRate))}%`}
-						></div>
+					<div class="flex items-end justify-between gap-3">
+						<div>
+							<p class="text-xs text-muted-foreground">NSC pass rate · 2024</p>
+							<p
+								class="mt-1 text-4xl font-semibold tracking-tight tabular-nums {passRateColor(
+									school.passRate
+								)}"
+							>
+								{formatRate(school.passRate)}
+							</p>
+						</div>
+						{#if delta !== null}
+							<span class="pb-1 text-xs font-medium whitespace-nowrap tabular-nums {deltaClass}">
+								{delta >= 0 ? '+' : ''}{delta.toFixed(1)} pts
+							</span>
+						{/if}
+					</div>
+					<div class="mt-3">
+						<SchoolPerformanceTimeline years={school.years} />
 					</div>
 					<p class="mt-2 text-xs text-muted-foreground">
 						{school.totalPassed.toLocaleString()} of {school.totalWrote.toLocaleString()} learners passed
 					</p>
 				</div>
+
+				<Button
+					variant="outline"
+					class="w-full gap-1.5"
+					href={resolve(schoolPath(school.id))}
+					aria-label={`View full page for ${toTitleCase(school.name)}`}
+				>
+					<ExternalLink class="size-4" />
+					View full school page
+				</Button>
 
 				<section>
 					<h3

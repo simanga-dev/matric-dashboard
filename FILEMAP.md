@@ -108,6 +108,9 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`GeoServerOptions`** (config shape) | `appsettings.json`, `appsettings.Development.json`, `AppHost/Program.cs` env, `docker-compose.yml` api env |
 | **`GeoServerProxyMiddleware`** (route/behavior) | `GeoServerOptions.RoutePrefix`, frontend `api/geo/[...path]` proxy route |
 | **`api/geo/[...path]`** (frontend proxy route) | Backend `GeoServerOptions.RoutePrefix`, `SchoolGeoMap.svelte` WFS URL |
+| **`scripts/import_school_locations.py`** (coordinate source/normalization) | `scripts/import_school_locations.sh`, `scripts/geoserver/bootstrap.sh` (optional step), `justfile` `geo-locations`, `geo.school_locations` columns, `scripts/tests/test_spatial_operations.py`, `docs/spatial-operations.md`; masterlist headers `GIS_Long`/`GIS_Lat` vs `GIS_Longitude`/`GIS_Latitude` |
+| **`scripts/import_school_locations.sh`** (DBE env vars/psql call) | `scripts/import_school_locations.py`, `docs/spatial-operations.md` |
+| **DBE masterlist columns** (`NatEmis`, `Official_Institution_Name`, `GIS_*`) | `scripts/import_school_locations.py` header lookup, `scripts/tests/test_spatial_operations.py` workbook fixture |
 
 ### School Data (Postgres `marks` schema)
 
@@ -115,7 +118,7 @@ School lists and lookups are read from PostgreSQL via EF (`DashboardService`). T
 
 | When you change... | Also update... |
 |---|---|
-| **`2024_nsc_school_performance_report.csv`** (columns) | `scripts/import_schools_to_db.py` (column names), `School`/`SchoolPerformance` entities, `DashboardService` projection |
+| **`2024_nsc_school_performance_report.csv`** (columns) | `scripts/import_schools_to_db.py` (column names), `scripts/import_school_locations.py` (roster columns), `School`/`SchoolPerformance` entities, `DashboardService` projection |
 | **`School`/`SchoolPerformance` entity** (fields) | EF configuration, migration, `scripts/import_schools_to_db.py`, `DashboardService` mapping, `SchoolOutput` / `SchoolDetailOutput` DTOs |
 | **`DashboardService.GetSchoolsAsync`** | `IDashboardService`, `DashboardController`, `SchoolOutput` DTO, `DashboardMapper` |
 | **`DashboardService.GetSchoolByIdAsync`** | `IDashboardService`, `DashboardController`, `SchoolDetailOutput` DTO, `DashboardMapper`, `MatricDasbhoard.Api.Tests/Features/Dashboard/DashboardMapperTests.cs` |

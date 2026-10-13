@@ -202,6 +202,22 @@ if [ "${SEED_FROM_API:-1}" = "1" ]; then
     fi
 fi
 
+# ── 8b. Import real school coordinates from the DBE EMIS masterlists ─────────
+# Overrides the approximate API/init points with measured coordinates keyed on
+# EMIS number. Runs only when a masterlist is present; set IMPORT_LOCATIONS=0 to
+# skip. See scripts/import_school_locations.py.
+DBE_DIR="${DBE_DIR:-$HOME/Documents/dbe-emis-downloads}"
+DBE_PRIMARY="${DBE_PRIMARY:-$DBE_DIR/National.xlsx}"
+if [ "${IMPORT_LOCATIONS:-1}" = "1" ] && [ -f "$DBE_PRIMARY" ]; then
+    echo "Importing real school coordinates ($DBE_PRIMARY) ..."
+    DBE_DIR="$DBE_DIR" DBE_PRIMARY="$DBE_PRIMARY" python3 "$SCRIPT_DIR/../import_school_locations.py" \
+        | docker exec -e PGPASSWORD="$PG_PASSWORD" -i "$PG_CONTAINER" \
+            psql -v ON_ERROR_STOP=1 -U "$PG_USER" -d "$PG_DB" >/dev/null
+    echo "  real coordinates imported"
+else
+    echo "Skipping real coordinate import (set IMPORT_LOCATIONS=1 with DBE_PRIMARY to enable)"
+fi
+
 # Refresh after the final seed on every run, including already-published layers.
 echo "Recalculating layer bounds ..."
 payload="$(jq -n --arg name "$LAYER" '{featureType:{name:$name}}')"
