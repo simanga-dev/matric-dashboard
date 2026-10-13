@@ -430,7 +430,8 @@ elif name == 'curl':
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
             log = directory / "calls.jsonl"
-            env = self.stub_env(directory, log, DBE_DIR=str(directory / "no-dbe"))
+            env = self.stub_env(directory, log, DBE_DIR=str(directory / "no-dbe"),
+                                GEOSERVER_LAYERS="school_locations", IMPORT_BOUNDARIES="0")
             for _ in range(2):
                 result = subprocess.run(["bash", str(ROOT / "scripts/geoserver/bootstrap.sh")],
                                         env=env, capture_output=True, text=True, check=False)
@@ -447,12 +448,30 @@ elif name == 'curl':
             result = subprocess.run(["bash", str(ROOT / "scripts/geoserver/bootstrap.sh")],
                                     env=env, capture_output=True, text=True, check=False)
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("layer bounds refreshed", result.stdout)
+            self.assertIn("bounds refreshed", result.stdout)
             env["BOUNDS_STATUS"] = "500"
             result = subprocess.run(["bash", str(ROOT / "scripts/geoserver/bootstrap.sh")],
                                     env=env, capture_output=True, text=True, check=False)
             self.assertNotEqual(result.returncode, 0)
             self.assertIn("Could not recalculate bounds", result.stderr)
+
+    def test_publishes_and_refreshes_all_geo_layers(self):
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            log = directory / "calls.jsonl"
+            env = self.stub_env(directory, log, DBE_DIR=str(directory / "no-dbe"))
+            result = subprocess.run(["bash", str(ROOT / "scripts/geoserver/bootstrap.sh")],
+                                    env=env, capture_output=True, text=True, check=False)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            calls = [json.loads(line) for line in log.read_text().splitlines()]
+            puts = [arg for name, args in calls if name == "curl" and "PUT" in args for arg in args]
+            self.assertEqual(len([1 for name, args in calls if name == "curl" and "PUT" in args]), 3)
+            for layer in ("school_locations", "provinces", "districts"):
+                self.assertTrue(any(f"featuretypes/{layer}?" in arg for arg in puts), layer)
+            seeds = [i for i, (name, _) in enumerate(calls) if name == "python3"]
+            first_put = next(i for i, (name, args) in enumerate(calls) if name == "curl" and "PUT" in args)
+            self.assertTrue(all(seed < first_put for seed in seeds))
+            self.assertIn("boundaries imported", result.stdout)
 
     def test_real_coordinate_import_runs_before_bounds_refresh_when_masterlist_present(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -461,7 +480,8 @@ elif name == 'curl':
             dbe = directory / "dbe"
             dbe.mkdir()
             (dbe / "National.xlsx").write_bytes(b"placeholder")
-            env = self.stub_env(directory, log, DBE_DIR=str(dbe), IMPORT_LOCATIONS="1")
+            env = self.stub_env(directory, log, DBE_DIR=str(dbe), IMPORT_LOCATIONS="1",
+                                GEOSERVER_LAYERS="school_locations", IMPORT_BOUNDARIES="0")
             result = subprocess.run(["bash", str(ROOT / "scripts/geoserver/bootstrap.sh")],
                                     env=env, capture_output=True, text=True, check=False)
             self.assertEqual(result.returncode, 0, result.stderr)

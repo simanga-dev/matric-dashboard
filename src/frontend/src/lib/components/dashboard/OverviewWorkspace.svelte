@@ -16,6 +16,7 @@
 	let {
 		selectedSchoolId = $bindable(null),
 		selectedProvince = $bindable(null),
+		selectedDistrict = $bindable(null),
 		expandedProvinces = $bindable(new Set<string>()),
 		expandedCircuits = $bindable(new Set<string>()),
 		restoredSchoolId = null,
@@ -23,6 +24,7 @@
 	}: {
 		selectedSchoolId?: string | null;
 		selectedProvince?: string | null;
+		selectedDistrict?: string | null;
 		expandedProvinces?: Set<string>;
 		expandedCircuits?: Set<string>;
 		restoredSchoolId?: string | null;
@@ -91,6 +93,7 @@
 								{revealRequest}
 								bind:selectedSchoolId
 								bind:selectedProvince
+								bind:selectedDistrict
 								bind:expandedProvinces
 								bind:expandedCircuits
 							>
@@ -123,7 +126,7 @@
 			</ResizablePanel>
 			<ResizableHandle />
 			<ResizablePanel defaultSize={60}>
-				<SchoolGeoMap bind:selectedSchoolId />
+				<SchoolGeoMap bind:selectedSchoolId {selectedProvince} {selectedDistrict} />
 			</ResizablePanel>
 			<ResizableHandle />
 			<ResizablePanel defaultSize={20}>
@@ -133,7 +136,7 @@
 							<Collapsible.Content id={detailsId} forceMount>
 								{#snippet child({ props, open })}
 									<div {...props} hidden={!open} inert={!open} class="h-full min-h-0 flex-1">
-										<SchoolDetailPanel {selectedSchoolId} {selectedProvince}>
+										<SchoolDetailPanel {selectedSchoolId} {selectedProvince} {selectedDistrict}>
 											{#snippet headerAction()}
 												<Collapsible.Trigger
 													bind:ref={detailsCollapseButton}

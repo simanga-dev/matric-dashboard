@@ -78,6 +78,47 @@ internal sealed class DashboardService : IDashboardService
     }
 
     /// <inheritdoc />
+    public async Task<RegionStatsOutput> GetRegionStatsAsync(
+        string? province,
+        string? district,
+        CancellationToken cancellationToken = default)
+    {
+        var performances = _dbContext.SchoolPerformances
+            .Where(p => !p.IsDeleted && p.Year == LatestYear && !p.School.IsDeleted);
+
+        var scope = "country";
+        var name = "South Africa";
+        if (!string.IsNullOrWhiteSpace(province))
+        {
+            performances = performances.Where(p => p.School.Province == province);
+            scope = "province";
+            name = province;
+        }
+
+        if (!string.IsNullOrWhiteSpace(district))
+        {
+            performances = performances.Where(p => p.School.DistrictName == district);
+            scope = "district";
+            name = district;
+        }
+
+        var schoolCount = await performances.Select(p => p.SchoolId).Distinct().CountAsync(cancellationToken);
+        var totalWrote = await performances.SumAsync(p => (long)p.TotalWrote, cancellationToken);
+        var totalPassed = await performances.SumAsync(p => (long)p.TotalAchieved, cancellationToken);
+        var passRate = totalWrote > 0 ? Math.Round((double)totalPassed / totalWrote * 100, 1) : 0;
+
+        return new RegionStatsOutput(
+            scope,
+            name,
+            string.IsNullOrWhiteSpace(province) ? null : province,
+            LatestYear,
+            schoolCount,
+            (int)totalWrote,
+            (int)totalPassed,
+            passRate);
+    }
+
+    /// <inheritdoc />
     public async Task<SchoolListOutput> GetSchoolsAsync(int pageNumber, int pageSize, string? search = null)
     {
         var term = string.IsNullOrWhiteSpace(search) ? null : search.Trim();

@@ -22,6 +22,7 @@
 	let {
 		selectedSchoolId = $bindable(null),
 		selectedProvince = $bindable(null),
+		selectedDistrict = $bindable(null),
 		expandedProvinces = $bindable(new Set<string>()),
 		expandedCircuits = $bindable(new Set<string>()),
 		restoredSchoolId = null,
@@ -30,6 +31,7 @@
 	}: {
 		selectedSchoolId?: string | null;
 		selectedProvince?: string | null;
+		selectedDistrict?: string | null;
 		expandedProvinces?: Set<string>;
 		expandedCircuits?: Set<string>;
 		restoredSchoolId?: string | null;
@@ -129,12 +131,20 @@
 
 	function selectProvince(province: string) {
 		selectedProvince = province;
+		selectedDistrict = null;
+		selectedSchoolId = null;
+	}
+
+	function selectDistrict(province: string, district: string) {
+		selectedProvince = province;
+		selectedDistrict = district;
 		selectedSchoolId = null;
 	}
 
 	function selectSchool(school: School) {
 		selectedSchoolId = String(school.id);
 		selectedProvince = null;
+		selectedDistrict = null;
 	}
 </script>
 
@@ -260,20 +270,32 @@
 								{#each [...circuits] as [circuit, schoolList] (circuit)}
 									{@const key = circuitKey(province, circuit)}
 									<li>
-										<button
-											type="button"
-											class="node w-full text-muted-foreground"
-											aria-expanded={openCircuits.has(key)}
-											aria-label={`${openCircuits.has(key) ? 'Collapse' : 'Expand'} ${circuit ? toTitleCase(circuit) : 'Unknown circuit'} in ${toTitleCase(province)}`}
-											onclick={() => (expandedCircuits = toggle(expandedCircuits, key))}
-											title={toTitleCase(circuit)}
-											><ChevronRight
-												class={`size-3 shrink-0 transition-transform ${openCircuits.has(key) ? 'rotate-90' : ''}`}
-											/><span class="truncate"
-												>{circuit ? toTitleCase(circuit) : 'Unknown circuit'}</span
-											><span class="ml-auto text-[11px] tabular-nums">{schoolList.length}</span
-											></button
+										<div
+											class="branch"
+											class:selected={selectedProvince === province && selectedDistrict === circuit}
 										>
+											<button
+												type="button"
+												class="disclosure"
+												aria-label={`${openCircuits.has(key) ? 'Collapse' : 'Expand'} ${circuit ? toTitleCase(circuit) : 'Unknown circuit'} in ${toTitleCase(province)}`}
+												aria-expanded={openCircuits.has(key)}
+												onclick={() => (expandedCircuits = toggle(expandedCircuits, key))}
+												><ChevronRight
+													class={`size-3 shrink-0 transition-transform ${openCircuits.has(key) ? 'rotate-90' : ''}`}
+												/></button
+											>
+											<button
+												type="button"
+												class="node text-muted-foreground"
+												aria-pressed={selectedProvince === province && selectedDistrict === circuit}
+												onclick={() => selectDistrict(province, circuit)}
+												title={toTitleCase(circuit)}
+												><span class="truncate"
+													>{circuit ? toTitleCase(circuit) : 'Unknown circuit'}</span
+												><span class="ml-auto text-[11px] tabular-nums">{schoolList.length}</span
+												></button
+											>
+										</div>
 										{#if openCircuits.has(key)}
 											<ul class="ml-3 border-l border-border pl-1">
 												{#each schoolList as school (school.id)}<li>

@@ -25,6 +25,18 @@ public interface IDashboardService
     Task<SchoolListOutput> GetSchoolsAsync(int pageNumber, int pageSize, string? search = null);
 
     /// <summary>
+    /// Returns aggregated NSC performance for the country, or narrowed to a
+    /// province and/or district.
+    /// </summary>
+    /// <param name="province">Optional province filter (exact name).</param>
+    /// <param name="district">Optional district filter (exact name), typically with a province.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task<RegionStatsOutput> GetRegionStatsAsync(
+        string? province,
+        string? district,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Returns a single school by its stable document identifier (EMIS number),
     /// including multi-year performance and province/national comparison.
     /// </summary>

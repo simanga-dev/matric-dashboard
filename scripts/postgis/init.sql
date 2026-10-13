@@ -30,6 +30,30 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_school_locations_emis
 CREATE INDEX IF NOT EXISTS ix_school_locations_geom
     ON geo.school_locations USING gist (geom);
 
+-- Administrative boundaries. Provinces come from the Municipal Demarcation Board
+-- (via geoBoundaries); districts are derived from school points so they match the
+-- DBE education-district names used by the app. Both are populated by
+-- scripts/import_boundaries.py, not by this file.
+CREATE TABLE IF NOT EXISTS geo.provinces (
+    code text PRIMARY KEY,
+    name text NOT NULL,
+    geom geometry(MultiPolygon, 4326) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS ix_provinces_geom
+    ON geo.provinces USING gist (geom);
+
+CREATE TABLE IF NOT EXISTS geo.districts (
+    id       bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    province text NOT NULL,
+    name     text NOT NULL,
+    geom     geometry(MultiPolygon, 4326) NOT NULL,
+    UNIQUE (province, name)
+);
+
+CREATE INDEX IF NOT EXISTS ix_districts_geom
+    ON geo.districts USING gist (geom);
+
 INSERT INTO geo.school_locations
     (emis_number, name, province, district, quintile, wrote, passed, is_sample, geom)
 VALUES

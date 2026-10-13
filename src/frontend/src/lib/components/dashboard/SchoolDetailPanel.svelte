@@ -3,8 +3,8 @@
 	import { resolve } from '$app/paths';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { Button } from '$lib/components/ui/button';
-	import { fetchSchoolById } from '$lib/api/dashboard';
-	import type { SchoolDetail } from '$lib/types/dashboard';
+	import { fetchSchoolById, fetchRegionStats } from '$lib/api/dashboard';
+	import type { RegionStats, SchoolDetail } from '$lib/types/dashboard';
 	import { schoolPath } from '$lib/config';
 	import { toTitleCase } from '$lib/utils';
 	import SchoolPerformanceTimeline from './SchoolPerformanceTimeline.svelte';
@@ -15,16 +15,19 @@
 		Users,
 		GraduationCap,
 		XCircle,
-		ExternalLink
+		ExternalLink,
+		Network
 	} from '@lucide/svelte';
 
 	let {
 		selectedSchoolId = null,
 		selectedProvince = null,
+		selectedDistrict = null,
 		headerAction
 	}: {
 		selectedSchoolId?: string | null;
 		selectedProvince?: string | null;
+		selectedDistrict?: string | null;
 		headerAction?: Snippet;
 	} = $props();
 
@@ -69,6 +72,49 @@
 
 	let failedCount = $derived(school ? Math.max(0, school.totalWrote - school.totalPassed) : 0);
 
+	// When no school is selected the panel describes the selected scope:
+	// a district, a province, or the whole country.
+	let region = $state<RegionStats | null>(null);
+	let regionLoading = $state(false);
+	let regionError = $state<string | null>(null);
+	let regionRequest = $derived({
+		enabled: !selectedSchoolId,
+		province: selectedProvince,
+		district: selectedDistrict
+	});
+
+	$effect(() => {
+		const { enabled, province, district } = regionRequest;
+		if (!enabled) {
+			region = null;
+			regionError = null;
+			regionLoading = false;
+			return;
+		}
+		let cancelled = false;
+		region = null;
+		regionLoading = true;
+		regionError = null;
+		fetchRegionStats(province, district)
+			.then((result) => {
+				if (!cancelled) region = result;
+			})
+			.catch((e) => {
+				if (!cancelled)
+					regionError = e instanceof Error ? e.message : 'Failed to load region stats.';
+			})
+			.finally(() => {
+				if (!cancelled) regionLoading = false;
+			});
+		return () => {
+			cancelled = true;
+		};
+	});
+
+	let regionFailedCount = $derived(
+		region ? Math.max(0, region.totalWrote - region.totalPassed) : 0
+	);
+
 	let timeline = $derived(school ? [...school.years].sort((a, b) => a.year - b.year) : []);
 	let delta = $derived(
 		timeline.length > 1 ? timeline[timeline.length - 1]!.passRate - timeline[0]!.passRate : null
@@ -99,33 +145,113 @@
 	<header class="flex h-11 shrink-0 items-center gap-3 border-b bg-muted/30 px-4">
 		<Building2 class="size-4 shrink-0 text-primary" />
 		<div class="min-w-0 flex-1">
-			<h2 class="text-sm font-semibold">School details</h2>
+			<h2 class="text-sm font-semibold">
+				{selectedSchoolId ? 'School details' : 'Region details'}
+			</h2>
 		</div>
 		{@render headerAction?.()}
 	</header>
 	<div class="min-h-0 flex-1 overflow-y-auto p-4" aria-busy={loading}>
-		{#if !selectedSchoolId && !selectedProvince}
-			<div class="flex h-full flex-col justify-center py-6">
-				<div
-					class="mb-4 flex size-12 items-center justify-center rounded-xl border bg-primary/5 text-primary"
-				>
-					<SchoolIcon class="size-6" />
+		{#if !selectedSchoolId}
+			{#if regionLoading}
+				<div role="status" class="space-y-4">
+					<span class="sr-only">Loading region stats…</span>
+					<Skeleton class="h-5 w-40 rounded-full" />
+					<div class="space-y-3 rounded-xl border bg-muted/20 p-4">
+						<Skeleton class="h-3 w-28 rounded-full" />
+						<Skeleton class="h-9 w-24 rounded-md" />
+						<Skeleton class="h-1.5 w-full rounded-full" />
+						<Skeleton class="h-3 w-40 rounded-full" />
+					</div>
 				</div>
-				<h3 class="text-base font-semibold">Start with a school</h3>
-				<p class="mt-2 text-sm leading-relaxed text-muted-foreground">
-					Select a school in the browser or on the map to view its results.
-				</p>
-				<ol class="mt-6 space-y-3 text-xs text-muted-foreground">
-					<li class="rounded-lg border bg-muted/20 p-3">
-						<span class="font-medium text-foreground">01 · Browse</span>
-						<p class="mt-1">Expand a province and circuit, or filter by name or EMIS.</p>
-					</li>
-					<li class="rounded-lg border bg-muted/20 p-3">
-						<span class="font-medium text-foreground">02 · Inspect</span>
-						<p class="mt-1">View learner counts, pass rate and school identification here.</p>
-					</li>
-				</ol>
-			</div>
+			{:else if regionError}
+				<div role="alert" class="space-y-3 rounded-lg border bg-muted/30 p-4">
+					<p class="text-sm font-medium">Unable to load region stats</p>
+					<p class="text-xs text-muted-foreground">{regionError}</p>
+				</div>
+			{:else if region}
+				<div class="space-y-5">
+					<div class="min-w-0">
+						<h3 class="text-base leading-tight font-semibold">
+							{region.scope === 'country' ? 'South Africa' : toTitleCase(region.name)}
+						</h3>
+						<p class="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+							<Network class="size-3" />
+							{region.scope === 'country'
+								? 'National overview'
+								: region.scope === 'province'
+									? 'Province overview'
+									: `District in ${toTitleCase(region.province ?? '')}`}
+						</p>
+					</div>
+
+					<div class="rounded-xl border bg-muted/20 p-4">
+						<p class="text-xs text-muted-foreground">NSC pass rate · {region.year}</p>
+						<p
+							class="mt-1 text-4xl font-semibold tracking-tight tabular-nums {passRateColor(
+								region.passRate
+							)}"
+						>
+							{formatRate(region.passRate)}
+						</p>
+						<div class="mt-3 h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden="true">
+							<div
+								class="h-full rounded-full bg-primary"
+								style:width={`${Math.min(100, Math.max(0, region.passRate))}%`}
+							></div>
+						</div>
+						<p class="mt-2 text-xs text-muted-foreground">
+							{region.totalPassed.toLocaleString()} of {region.totalWrote.toLocaleString()} learners passed
+						</p>
+					</div>
+
+					<section>
+						<h3
+							class="mb-2 border-b pb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+						>
+							{region.scope === 'country'
+								? 'Country'
+								: region.scope === 'province'
+									? 'Province'
+									: 'District'} summary
+						</h3>
+						<dl class="space-y-1.5 text-sm">
+							<div class="flex items-baseline justify-between gap-4">
+								<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
+									<SchoolIcon class="size-3.5" />
+									Schools
+								</dt>
+								<dd class="tabular-nums">{region.schoolCount.toLocaleString()}</dd>
+							</div>
+							<div class="flex items-baseline justify-between gap-4">
+								<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
+									<Users class="size-3.5" />
+									Learners wrote
+								</dt>
+								<dd class="tabular-nums">{region.totalWrote.toLocaleString()}</dd>
+							</div>
+							<div class="flex items-baseline justify-between gap-4">
+								<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
+									<GraduationCap class="size-3.5" />
+									Passed
+								</dt>
+								<dd class="text-green-700 tabular-nums dark:text-green-400">
+									{region.totalPassed.toLocaleString()}
+								</dd>
+							</div>
+							<div class="flex items-baseline justify-between gap-4">
+								<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
+									<XCircle class="size-3.5" />
+									Did not pass
+								</dt>
+								<dd class="text-red-700 tabular-nums dark:text-red-400">
+									{regionFailedCount.toLocaleString()}
+								</dd>
+							</div>
+						</dl>
+					</section>
+				</div>
+			{/if}
 		{:else if selectedSchoolId && loading}
 			<div role="status" class="space-y-5">
 				<span class="sr-only">Loading selected school…</span>
@@ -273,14 +399,6 @@
 						</div>
 					</dl>
 				</section>
-			</div>
-		{:else if selectedProvince}
-			<div class="space-y-3 rounded-xl border bg-muted/20 p-4">
-				<MapPin class="size-6 text-primary" />
-				<h3 class="text-base font-semibold">{toTitleCase(selectedProvince)}</h3>
-				<p class="text-sm leading-relaxed text-muted-foreground">
-					Expand this province in the browser, then choose a circuit and school to view results.
-				</p>
 			</div>
 		{/if}
 	</div>

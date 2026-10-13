@@ -4,6 +4,7 @@
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
 	import { schoolPath } from '$lib/config';
+	import type Feature from 'ol/Feature';
 	import type { FeatureLike } from 'ol/Feature';
 	import type { StyleFunction } from 'ol/style/Style';
 	import type { Point } from 'ol/geom';
@@ -20,9 +21,10 @@
 	 * school tree uses (SchoolOutput.Id), so selecting a school in the tree
 	 * highlights and zooms to it here - and vice versa.
 	 */
-	const WFS_URL =
-		'/api/geo/wfs?service=WFS&version=1.0.0&request=GetFeature' +
-		'&typeName=matric:school_locations&outputFormat=application/json';
+	const WFS_BASE =
+		'/api/geo/wfs?service=WFS&version=1.0.0&request=GetFeature&outputFormat=application/json';
+	const wfsUrl = (typeName: string) => `${WFS_BASE}&typeName=${typeName}`;
+	const WFS_URL = wfsUrl('matric:school_locations');
 
 	interface SchoolProperties {
 		emis_number?: string;
@@ -41,7 +43,15 @@
 		wrote: number;
 	}
 
-	let { selectedSchoolId = $bindable(null) }: { selectedSchoolId?: string | null } = $props();
+	let {
+		selectedSchoolId = $bindable(null),
+		selectedProvince = null,
+		selectedDistrict = null
+	}: {
+		selectedSchoolId?: string | null;
+		selectedProvince?: string | null;
+		selectedDistrict?: string | null;
+	} = $props();
 
 	let mapHost: HTMLDivElement | null = $state(null);
 	let popupHost: HTMLDivElement | null = $state(null);
@@ -55,6 +65,11 @@
 	// wrapping them (which breaks OpenLayers internals).
 	let olMap: OlMap | null = null;
 	let vecLayer: VectorLayer | null = null;
+	let boundaryLayers: VectorLayer[] = [];
+	let provinceFeatures: Feature[] = [];
+	let districtFeatures: Feature[] = [];
+	let highlightProvince: string | null = null;
+	let highlightDistrict: string | null = null;
 	let resizeObserver: ResizeObserver | null = null;
 	let selectedEmis: string | null = null;
 	let disposed = false;
@@ -64,6 +79,35 @@
 
 	function passRate(passed: number, wrote: number): number {
 		return wrote > 0 ? Math.round((passed / wrote) * 1000) / 10 : 0;
+	}
+
+	/** Case-insensitive name match; false when either side is empty. */
+	function sameName(value: unknown, target: string | null): boolean {
+		if (!target) return false;
+		return String(value ?? '').toUpperCase() === target.toUpperCase();
+	}
+
+	/** Highlights the selected province or district and zooms to it. */
+	function applyRegionFocus() {
+		highlightProvince = selectedProvince;
+		highlightDistrict = selectedDistrict;
+		for (const layer of boundaryLayers) layer.changed();
+		if (!olMap) return;
+
+		const target = highlightDistrict
+			? districtFeatures.find(
+					(feature) =>
+						sameName(feature.get('name'), highlightDistrict) &&
+						sameName(feature.get('province'), highlightProvince)
+				)
+			: highlightProvince
+				? provinceFeatures.find((feature) => sameName(feature.get('name'), highlightProvince))
+				: null;
+
+		const extent = target?.getGeometry()?.getExtent();
+		if (extent && Number.isFinite(extent[0])) {
+			olMap.getView().fit(extent, { padding: [40, 40, 40, 40], duration: 400, maxZoom: 10 });
+		}
 	}
 
 	function rateTextClass(rate: number): string {
@@ -142,6 +186,10 @@
 		applySelection(selectedSchoolId);
 	});
 
+	$effect(() => {
+		applyRegionFocus();
+	});
+
 	onDestroy(() => {
 		disposed = true;
 		resizeObserver?.disconnect();
@@ -153,6 +201,9 @@
 		olMap?.setTarget(undefined);
 		olMap = null;
 		vecLayer = null;
+		boundaryLayers = [];
+		provinceFeatures = [];
+		districtFeatures = [];
 		selectedEmis = null;
 		popup = null;
 		resetView = null;
@@ -202,15 +253,44 @@
 
 			const { fromLonLat } = proj;
 			if (disposed) return;
-			const { Style, Icon: IconStyle } = style;
+			const { Style, Icon: IconStyle, Fill, Stroke } = style;
 
+			const reader = new GeoJSON();
 			const source = new VectorSource();
-			const features = new GeoJSON().readFeatures(geojson, {
+			const features = reader.readFeatures(geojson, {
 				dataProjection: 'EPSG:4326',
 				featureProjection: 'EPSG:3857'
 			});
 			source.addFeatures(features);
 			featureCount = features.length;
+
+			// Administrative boundaries are optional: if the layer is missing the
+			// school map still renders, just without region highlighting.
+			const provinceSource = new VectorSource();
+			const districtSource = new VectorSource();
+			try {
+				const [provinceResponse, districtResponse] = await Promise.all([
+					fetch(wfsUrl('matric:provinces')),
+					fetch(wfsUrl('matric:districts'))
+				]);
+				if (provinceResponse.ok && provinceResponse.headers.get('content-type')?.includes('json')) {
+					provinceFeatures = reader.readFeatures(await provinceResponse.json(), {
+						dataProjection: 'EPSG:4326',
+						featureProjection: 'EPSG:3857'
+					});
+					provinceSource.addFeatures(provinceFeatures);
+				}
+				if (districtResponse.ok && districtResponse.headers.get('content-type')?.includes('json')) {
+					districtFeatures = reader.readFeatures(await districtResponse.json(), {
+						dataProjection: 'EPSG:4326',
+						featureProjection: 'EPSG:3857'
+					});
+					districtSource.addFeatures(districtFeatures);
+				}
+			} catch {
+				// Boundaries are an enhancement; ignore fetch/parse failures.
+			}
+			if (disposed) return;
 
 			// The map host lives inside the success branch, so it only exists
 			// once `loading` is false. Flip state and wait for the DOM update
@@ -237,6 +317,35 @@
 				});
 			};
 
+			const regionStyle = () =>
+				new Style({
+					fill: new Fill({ color: 'rgba(29, 78, 216, 0.15)' }),
+					stroke: new Stroke({ color: '#1d4ed8', width: 2 })
+				});
+
+			const provinceStyle: StyleFunction = (feature: FeatureLike) => {
+				if (highlightDistrict) return undefined;
+				return sameName(feature.get('name'), highlightProvince) ? regionStyle() : undefined;
+			};
+
+			const districtStyle: StyleFunction = (feature: FeatureLike) => {
+				if (!highlightDistrict) return undefined;
+				return sameName(feature.get('name'), highlightDistrict) &&
+					sameName(feature.get('province'), highlightProvince)
+					? regionStyle()
+					: undefined;
+			};
+
+			const provinceLayer = new VectorLayerCtor({
+				source: provinceSource,
+				style: provinceStyle
+			});
+			const districtLayer = new VectorLayerCtor({
+				source: districtSource,
+				style: districtStyle
+			});
+			boundaryLayers = [provinceLayer, districtLayer];
+
 			const view = new View({ center: fromLonLat([24.7, -29]), zoom: 5 });
 
 			olMap = new OlMapCtor({
@@ -244,11 +353,13 @@
 				controls: defaultControls({ rotate: false }),
 				layers: [
 					new TileLayer({ source: new OSM() }),
+					provinceLayer,
+					districtLayer,
 					new VectorLayerCtor({ source, style: styleFor })
 				],
 				view
 			});
-			vecLayer = olMap.getLayers().getArray()[1] as VectorLayer;
+			vecLayer = olMap.getLayers().getArray()[3] as VectorLayer;
 
 			const extent = source.getExtent();
 			fitSchools = () => {
@@ -261,6 +372,10 @@
 				view.fit(countryExtent, { padding: [24, 24, 24, 24], duration: 300 });
 			};
 			fitSchools();
+
+			// A region selection arriving before the map loaded takes precedence
+			// over the default fit-to-schools framing.
+			applyRegionFocus();
 
 			resizeObserver = new ResizeObserver(() => olMap?.updateSize());
 			resizeObserver.observe(mapHost);

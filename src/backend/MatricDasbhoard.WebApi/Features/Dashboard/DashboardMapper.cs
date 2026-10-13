@@ -39,6 +39,21 @@ internal static class DashboardMapper
     };
 
     /// <summary>
+    /// Maps aggregated region (country/province/district) stats.
+    /// </summary>
+    public static RegionStatsResponse ToResponse(this RegionStatsOutput output) => new()
+    {
+        Scope = output.Scope,
+        Name = output.Name,
+        Province = output.Province,
+        Year = output.Year,
+        SchoolCount = output.SchoolCount,
+        TotalWrote = output.TotalWrote,
+        TotalPassed = output.TotalPassed,
+        PassRate = output.PassRate
+    };
+
+    /// <summary>
     /// Maps a school entry.
     /// </summary>
     public static SchoolResponse ToResponse(this SchoolOutput output) => new()

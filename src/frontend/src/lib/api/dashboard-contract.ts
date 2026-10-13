@@ -1,4 +1,10 @@
-import type { DashboardStats, PassRateTrend, SchoolDetail, SchoolList } from '$lib/types/dashboard';
+import type {
+	DashboardStats,
+	PassRateTrend,
+	RegionStats,
+	SchoolDetail,
+	SchoolList
+} from '$lib/types/dashboard';
 import type { components } from './v1';
 
 type GetResponse<T> = {
@@ -27,6 +33,12 @@ export interface DashboardPaths {
 		get: {
 			parameters: { path: { id: string } };
 			responses: GetResponse<SchoolDetail>;
+		};
+	};
+	'/api/v1/dashboard/regions/stats': {
+		get: {
+			parameters: { query?: { province?: string; district?: string } };
+			responses: GetResponse<RegionStats>;
 		};
 	};
 }

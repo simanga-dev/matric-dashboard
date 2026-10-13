@@ -34,6 +34,7 @@
 			return {
 				school: typeof record.school === 'string' ? record.school : null,
 				province: typeof record.province === 'string' ? record.province : null,
+				district: typeof record.district === 'string' ? record.district : null,
 				expandedProvinces: strings(record.expandedProvinces),
 				expandedCircuits: strings(record.expandedCircuits)
 			};
@@ -48,6 +49,7 @@
 
 	let selectedSchoolId: string | null = $state(initial.school);
 	let selectedProvince: string | null = $state(initial.province);
+	let selectedDistrict: string | null = $state(initial.district);
 	let expandedProvinces = $state<Set<string>>(new Set(initial.expandedProvinces));
 	let expandedCircuits = $state<Set<string>>(new Set(initial.expandedCircuits));
 	let restoredSchoolId = $state<string | null>(
@@ -69,6 +71,7 @@
 		return {
 			school: selectedSchoolId,
 			province: selectedProvince,
+			district: selectedDistrict,
 			expandedProvinces: [...expandedProvinces],
 			expandedCircuits: [...expandedCircuits]
 		};
@@ -86,6 +89,7 @@
 		lastQuery = serializeOverviewState(state);
 		selectedSchoolId = state.school;
 		selectedProvince = state.province;
+		selectedDistrict = state.district;
 		expandedProvinces = new Set(state.expandedProvinces);
 		expandedCircuits = new Set(state.expandedCircuits);
 	}
@@ -99,7 +103,10 @@
 	});
 
 	$effect(() => {
-		if (selectedSchoolId) selectedProvince = null;
+		if (selectedSchoolId) {
+			selectedProvince = null;
+			selectedDistrict = null;
+		}
 		if (restoredSchoolId !== selectedSchoolId) restoredSchoolId = null;
 	});
 
@@ -122,6 +129,7 @@
 		const state: OverviewUrlState = {
 			school: selectedSchoolId,
 			province: selectedProvince,
+			district: selectedDistrict,
 			expandedProvinces: [...expandedProvinces],
 			expandedCircuits: [...expandedCircuits]
 		};
@@ -139,6 +147,7 @@
 		const state: OverviewUrlState = {
 			school: selectedSchoolId,
 			province: selectedProvince,
+			district: selectedDistrict,
 			expandedProvinces: [...expandedProvinces],
 			expandedCircuits: [...expandedCircuits]
 		};
@@ -162,6 +171,7 @@
 			{revealRequest}
 			bind:selectedSchoolId
 			bind:selectedProvince
+			bind:selectedDistrict
 			bind:expandedProvinces
 			bind:expandedCircuits
 		/>

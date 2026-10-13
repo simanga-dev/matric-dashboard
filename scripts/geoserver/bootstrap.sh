@@ -23,7 +23,7 @@
 #   GEOSERVER_ADMIN_PASSWORD   default from container env, else from .env
 #   GEOSERVER_WORKSPACE        default matric
 #   GEOSERVER_DATASTORE        default schools
-#   GEOSERVER_LAYER            default school_locations
+#   GEOSERVER_LAYERS           default "school_locations provinces districts"
 #   PG_CONTAINER               default auto-detected running postgis container
 #   PG_HOST                    default auto-detected network alias (compose: postgres, Aspire: db)
 #   PG_PORT                    default 5432
@@ -70,7 +70,7 @@ command -v curl >/dev/null || { echo "curl is required" >&2; exit 1; }
 
 WS="${GEOSERVER_WORKSPACE:-matric}"
 DS="${GEOSERVER_DATASTORE:-schools}"
-LAYER="${GEOSERVER_LAYER:-school_locations}"
+LAYERS="${GEOSERVER_LAYERS:-school_locations provinces districts}"
 PG_SCHEMA="${PG_SCHEMA:-geo}"
 PG_PORT="${PG_PORT:-5432}"
 
@@ -173,17 +173,21 @@ else
     echo "Data store '$DS' already exists"
 fi
 
-# ── 7. Feature type ──────────────────────────────────────────────────────────
-if [ "$(rest_status "$GS_URL/rest/workspaces/$WS/datastores/$DS/featuretypes/$LAYER")" = "404" ]; then
-    payload="$(jq -n --arg name "$LAYER" \
-        '{featureType:{name:$name,nativeName:$name,title:"School Locations (sample)",srs:"EPSG:4326"}}')"
-    code="$(rest_post \
-        "$GS_URL/rest/workspaces/$WS/datastores/$DS/featuretypes?recalculate=nativebbox,latlonbbox" \
-        "$payload")"
-    echo "Publishing layer '$WS:$LAYER': HTTP $code"
-else
-    echo "Layer '$WS:$LAYER' already published"
-fi
+# ── 7. Feature types ─────────────────────────────────────────────────────────
+# Public tables in the geo schema that the map reads over WFS.
+LAYERS="${GEOSERVER_LAYERS:-school_locations provinces districts}"
+for LAYER in $LAYERS; do
+    if [ "$(rest_status "$GS_URL/rest/workspaces/$WS/datastores/$DS/featuretypes/$LAYER")" = "404" ]; then
+        payload="$(jq -n --arg name "$LAYER" \
+            '{featureType:{name:$name,nativeName:$name,srs:"EPSG:4326"}}')"
+        code="$(rest_post \
+            "$GS_URL/rest/workspaces/$WS/datastores/$DS/featuretypes?recalculate=nativebbox,latlonbbox" \
+            "$payload")"
+        echo "Publishing layer '$WS:$LAYER': HTTP $code"
+    else
+        echo "Layer '$WS:$LAYER' already published"
+    fi
+done
 
 # ── 8. Seed real schools from the API (approximate coordinates) ──────────────
 # Replaces the static sample points with the actual schools the app indexes so
@@ -218,24 +222,39 @@ else
     echo "Skipping real coordinate import (set IMPORT_LOCATIONS=1 with DBE_PRIMARY to enable)"
 fi
 
+# ── 8c. Import province and district boundaries ──────────────────────────────
+# Provinces come from the demarcation GeoJSON; districts are derived from school
+# points. Set IMPORT_BOUNDARIES=0 to skip. See scripts/import_boundaries.py.
+if [ "${IMPORT_BOUNDARIES:-1}" = "1" ]; then
+    echo "Importing province and district boundaries ..."
+    python3 "$SCRIPT_DIR/../import_boundaries.py" \
+        | docker exec -e PGPASSWORD="$PG_PASSWORD" -i "$PG_CONTAINER" \
+            psql -v ON_ERROR_STOP=1 -U "$PG_USER" -d "$PG_DB" >/dev/null
+    echo "  boundaries imported"
+fi
+
 # Refresh after the final seed on every run, including already-published layers.
 echo "Recalculating layer bounds ..."
-payload="$(jq -n --arg name "$LAYER" '{featureType:{name:$name}}')"
-code="$(curl -sS -o /dev/null -w '%{http_code}' -u "$GS_USER:$GS_PASS" \
-    -H 'Content-Type: application/json' -X PUT \
-    "$GS_URL/rest/workspaces/$WS/datastores/$DS/featuretypes/$LAYER?recalculate=nativebbox,latlonbbox" \
-    -d "$payload")"
-case "$code" in
-    2??) echo "  layer bounds refreshed" ;;
-    *) echo "Could not recalculate bounds for $WS:$LAYER: HTTP $code" >&2; exit 1 ;;
-esac
+for LAYER in $LAYERS; do
+    payload="$(jq -n --arg name "$LAYER" '{featureType:{name:$name}}')"
+    code="$(curl -sS -o /dev/null -w '%{http_code}' -u "$GS_USER:$GS_PASS" \
+        -H 'Content-Type: application/json' -X PUT \
+        "$GS_URL/rest/workspaces/$WS/datastores/$DS/featuretypes/$LAYER?recalculate=nativebbox,latlonbbox" \
+        -d "$payload")"
+    case "$code" in
+        2??) echo "  $LAYER bounds refreshed" ;;
+        *) echo "Could not recalculate bounds for $WS:$LAYER: HTTP $code" >&2; exit 1 ;;
+    esac
+done
 
 # ── 9. Verify ────────────────────────────────────────────────────────────────
 echo "Verifying WFS GetFeature ..."
-feature_count="$(curl -sf \
-    "$GS_URL/$WS/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=$WS:$LAYER&outputFormat=application/json" \
-    | jq '.features | length')"
-echo "  $WS:$LAYER returned $feature_count feature(s)"
+for LAYER in $LAYERS; do
+    feature_count="$(curl -sf \
+        "$GS_URL/$WS/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=$WS:$LAYER&outputFormat=application/json" \
+        | jq '.features | length')"
+    echo "  $WS:$LAYER returned $feature_count feature(s)"
+done
 
 echo
-echo "Done. Layer '$WS:$LAYER' is ready."
+echo "Done. Layers ready in workspace '$WS': $LAYERS"

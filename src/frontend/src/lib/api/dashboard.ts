@@ -1,5 +1,11 @@
 import { browserClient } from './client';
-import type { DashboardStats, PassRateTrend, SchoolDetail, SchoolList } from '$lib/types/dashboard';
+import type {
+	DashboardStats,
+	PassRateTrend,
+	RegionStats,
+	SchoolDetail,
+	SchoolList
+} from '$lib/types/dashboard';
 
 export async function fetchDashboardStats(): Promise<DashboardStats> {
 	const { data, error } = await browserClient.GET('/api/v1/dashboard/stats');
@@ -33,5 +39,16 @@ export async function fetchSchoolById(id: string): Promise<SchoolDetail | null> 
 	});
 	if (response.status === 404) return null;
 	if (error || !data) throw new Error('Failed to fetch school');
+	return data;
+}
+
+export async function fetchRegionStats(
+	province?: string | null,
+	district?: string | null
+): Promise<RegionStats> {
+	const { data, error } = await browserClient.GET('/api/v1/dashboard/regions/stats', {
+		params: { query: { province: province ?? undefined, district: district ?? undefined } }
+	});
+	if (error || !data) throw new Error('Failed to fetch region stats');
 	return data;
 }

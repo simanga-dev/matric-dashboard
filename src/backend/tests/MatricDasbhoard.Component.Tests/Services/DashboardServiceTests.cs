@@ -138,6 +138,41 @@ public class DashboardServiceTests
         }
     }
 
+    /// <summary>Region stats aggregate the requested scope with a learner-weighted rate.</summary>
+    [Fact]
+    public async Task RegionStats_AggregatesScopeWithWeightedPassRate()
+    {
+        await using var db = TestDbContextFactory.Create();
+        var a = School("100", "A");
+        a.AddPerformance(new SchoolPerformance(2024, 0, 100, 80, 80));
+        var b = School("200", "B");
+        b.AddPerformance(new SchoolPerformance(2024, 0, 100, 60, 60));
+        var other = School("300", "C", "LIMPOPO");
+        other.AddPerformance(new SchoolPerformance(2024, 0, 50, 50, 100));
+        db.Schools.AddRange(a, b, other);
+        await db.SaveChangesAsync();
+        using var http = UnreachableSearch();
+        var service = new DashboardService(db, new MeilisearchClient(http));
+
+        var country = await service.GetRegionStatsAsync(null, null);
+        Assert.Equal("country", country.Scope);
+        Assert.Equal("South Africa", country.Name);
+        Assert.Equal(3, country.SchoolCount);
+        Assert.Equal(250, country.TotalWrote);
+        Assert.Equal(190, country.TotalPassed);
+        Assert.Equal(76, country.PassRate);
+
+        var province = await service.GetRegionStatsAsync("GAUTENG", null);
+        Assert.Equal("province", province.Scope);
+        Assert.Equal(2, province.SchoolCount);
+        Assert.Equal(70, province.PassRate);
+
+        var district = await service.GetRegionStatsAsync("GAUTENG", "District");
+        Assert.Equal("district", district.Scope);
+        Assert.Equal("GAUTENG", district.Province);
+        Assert.Equal(2, district.SchoolCount);
+    }
+
     private static School School(string id, string name, string province = "GAUTENG") =>
         new(province, "District", id, id, name, 3);
 

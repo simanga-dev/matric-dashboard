@@ -67,3 +67,14 @@ export interface SchoolList {
 	hasPreviousPage: boolean;
 	hasNextPage: boolean;
 }
+
+export interface RegionStats {
+	scope: 'country' | 'province' | 'district';
+	name: string;
+	province: string | null;
+	year: number;
+	schoolCount: number;
+	totalWrote: number;
+	totalPassed: number;
+	passRate: number;
+}

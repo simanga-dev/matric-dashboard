@@ -4,6 +4,10 @@ namespace MatricDasbhoard.Api.Tests.Contracts;
 internal record SchoolDetailV1Contract(string Id, string Name, string Province, string Circuit,
     int TotalWrote, int TotalPassed, double PassRate, int? TotalAchieved);
 
+/// <summary>Frozen v1 region (country/province/district) stats contract.</summary>
+internal record RegionStatsContract(string Scope, string Name, string? Province, int Year,
+    int SchoolCount, int TotalWrote, int TotalPassed, double PassRate);
+
 // Auth
 internal record AuthTokensResponse(string AccessToken, string RefreshToken, bool RequiresTwoFactor, string? ChallengeToken);
 internal record TwoFactorSetupContract(string SharedKey, string AuthenticatorUri);

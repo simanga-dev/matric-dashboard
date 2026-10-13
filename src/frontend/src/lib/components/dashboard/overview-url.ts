@@ -11,6 +11,7 @@ import type { School } from '$lib/types/dashboard';
  * Parameters:
  * - `school`   selected school id (EMIS number)
  * - `province` selected province name
+ * - `district` selected district (circuit) name, scoped by province
  * - `open`     base64url of `{ p: string[], c: [province, circuit][] }`, the
  *              expanded provinces and circuits. Base64url keeps the value
  *              compact and free of query-breaking characters.
@@ -21,6 +22,7 @@ import type { School } from '$lib/types/dashboard';
 export interface OverviewUrlState {
 	school: string | null;
 	province: string | null;
+	district: string | null;
 	expandedProvinces: string[];
 	expandedCircuits: string[];
 }
@@ -41,6 +43,7 @@ export function revealOverviewSchool(state: OverviewUrlState, school: School): O
 	return {
 		school: school.id,
 		province: null,
+		district: null,
 		expandedProvinces: [...new Set([...state.expandedProvinces, school.province])],
 		expandedCircuits: [
 			...new Set([...state.expandedCircuits, circuitKey(school.province, school.circuit)])
@@ -161,10 +164,12 @@ export function parseOverviewState(search: string): OverviewUrlState {
 
 	const school = rawParam(search, 'school');
 	const province = rawParam(search, 'province');
+	const district = rawParam(search, 'district');
 
 	return {
 		school: school === null ? null : decode(school),
 		province: province === null ? null : decode(province),
+		district: district === null ? null : decode(district),
 		expandedProvinces: payload.p,
 		expandedCircuits: payload.c.map(([prov, circuit]) => circuitKey(prov, circuit))
 	};
@@ -175,6 +180,7 @@ export function hasOverviewState(state: OverviewUrlState): boolean {
 	return Boolean(
 		state.school ||
 		state.province ||
+		state.district ||
 		state.expandedProvinces.length ||
 		state.expandedCircuits.length
 	);
@@ -185,6 +191,7 @@ export function serializeOverviewState(state: OverviewUrlState): string {
 	const parts: string[] = [];
 	if (state.school) parts.push(`school=${encodeURIComponent(state.school)}`);
 	if (state.province) parts.push(`province=${encodeURIComponent(state.province)}`);
+	if (state.district) parts.push(`district=${encodeURIComponent(state.district)}`);
 
 	if (state.expandedProvinces.length || state.expandedCircuits.length) {
 		const circuits: [string, string][] = [];
