@@ -36,6 +36,13 @@ public static class ApplicationBuilderExtensions
     private static async Task ApplyMigrationsAsync(IServiceProvider serviceProvider)
     {
         var dbContext = serviceProvider.GetRequiredService<MatricDasbhoardDbContext>();
+
+        // Tests use the EF InMemory provider, which has no migrations to apply.
+        if (!dbContext.Database.IsRelational())
+        {
+            return;
+        }
+
         await WaitForDatabaseAsync(dbContext);
         await dbContext.Database.MigrateAsync();
     }

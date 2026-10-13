@@ -6,6 +6,6 @@ export const load: PageServerLoad = async ({ parent }) => {
 	const { user } = await parent();
 
 	if (user) {
-		throw redirect(303, routes.dashboard);
+		throw redirect(303, routes.overview);
 	}
 };

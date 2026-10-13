@@ -1,3 +1,5 @@
+using Aspire.Hosting.ApplicationModel;
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var frontendPort = int.TryParse(builder.Configuration["Ports:Frontend"], out var fp) ? fp : 13000;
@@ -12,6 +14,8 @@ var minioConsolePort = frontendPort + 6;
 var mailpitSmtpPort = frontendPort + 7;
 var mailpitHttpPort = frontendPort + 8;
 var meilisearchPort = frontendPort + 9;
+var geoserverPort = frontendPort + 10;
+var geoserverBaseUrl = $"http://localhost:{geoserverPort}/geoserver";
 
 // ── Infrastructure ──────────────────────────────────────────────────────────
 // Container resources use session lifetime (default) - containers stop on
@@ -24,8 +28,13 @@ var storageUser = builder.AddParameter("storage-user");
 var storagePassword = builder.AddParameter("storage-password", secret: true);
 var jwtSecret = builder.AddParameter("jwt-secret", secret: true);
 var meilisearchMasterKey = builder.AddParameter("meilisearch-master-key", secret: true);
+var geoserverPassword = builder.AddParameter("geoserver-password", secret: true);
 
 var postgres = builder.AddPostgres("db", password: pgPassword)
+    // PostGIS build of PostgreSQL - spatial types/functions for the school map.
+    // Must match the major version of the persisted dev volume (PostgreSQL 18).
+    .WithImage("postgis/postgis")
+    .WithImageTag("18-3.6-alpine")
     .WithEndpoint("tcp", e => e.Port = postgresPort)
     .WithDataVolume("matric-dasbhoard-db-data");
 
@@ -37,15 +46,46 @@ if (builder.ExecutionContext.IsRunMode)
 
 var db = postgres.AddDatabase("Database");
 
-var storage = builder.AddMinioContainer("storage", rootUser: storageUser, rootPassword: storagePassword)
-    .WithImage("quay.io/minio/minio")
-    .WithEndpoint("http", e => e.Port = minioPort)
-    .WithEndpoint("console", e => e.Port = minioConsolePort)
-    .WithDataVolume("matric-dasbhoard-storage-data");
+IResourceBuilder<ContainerResource> storage;
+if (builder.ExecutionContext.IsRunMode)
+{
+    // S3Mock accepts any credentials. Keep it local and separate from real MinIO data.
+    storage = builder.AddContainer("storage", "adobe/s3mock")
+        .WithImageSHA256("ab01a6946750f451ca215a47e91030695b260e4003b8a5a6201d25029b8fca92")
+        .WithHttpEndpoint(port: minioPort, targetPort: 9090)
+        .WithEndpoint("http", e => e.TargetHost = "127.0.0.1")
+        .WithVolume("matric-dasbhoard-s3mock-data", "/s3mockroot")
+        .WithEnvironment("COM_ADOBE_TESTING_S3MOCK_STORE_ROOT", "/s3mockroot")
+        .WithEnvironment("COM_ADOBE_TESTING_S3MOCK_STORE_RETAIN_FILES_ON_EXIT", "true")
+        .WithHttpHealthCheck("/favicon.ico");
+}
+else
+{
+    storage = builder.AddMinioContainer("storage", rootUser: storageUser, rootPassword: storagePassword)
+        .WithImage("quay.io/minio/minio")
+        .WithEndpoint("http", e => e.Port = minioPort)
+        .WithEndpoint("console", e => e.Port = minioConsolePort)
+        .WithDataVolume("matric-dasbhoard-storage-data");
+}
 
+// Meilisearch backs the school search box. Browse and map data come from
+// Postgres/GeoServer; free-text search goes to the index built by
+// scripts/upload_to_meilisearch.py.
 var meilisearch = builder.AddMeilisearch("meilisearch", masterKey: meilisearchMasterKey)
     .WithEndpoint("http", e => e.Port = meilisearchPort)
     .WithDataVolume("matric-dasbhoard-meilisearch-data");
+
+// GeoServer publishes the PostGIS school layer over OGC WMS/WFS. The API proxies
+// client requests to it, so it is never exposed directly to browsers.
+// Bootstrap the workspace/store/layer with: ./scripts/geoserver/bootstrap.sh
+var geoserver = builder.AddContainer("geoserver", "docker.osgeo.org/geoserver", "2.26.2")
+    .WithHttpEndpoint(port: geoserverPort, targetPort: 8080, name: "http")
+    .WithVolume("matric-dasbhoard-geoserver-data", "/opt/geoserver_data")
+    .WithEnvironment("SKIP_DEMO_DATA", "true")
+    .WithEnvironment("GEOSERVER_ADMIN_USER", "admin")
+    .WithEnvironment("GEOSERVER_ADMIN_PASSWORD", geoserverPassword)
+    .WithEnvironment("CORS_ENABLED", "false")
+    .WithEnvironment("EXTRA_JAVA_OPTS", "-Xms512m -Xmx1g");
 
 // ── API ─────────────────────────────────────────────────────────────────────
 // Migrations and seeding are handled by the API on startup (development only).
@@ -63,12 +103,14 @@ var api = builder.AddProject<Projects.MatricDasbhoard_WebApi>("api")
     .WaitFor(meilisearch)
     .WithEnvironment("Authentication__Jwt__Key", jwtSecret)
     .WithEnvironment("FileStorage__Endpoint", storage.GetEndpoint("http"))
-    .WithEnvironment("FileStorage__AccessKey", storage.Resource.RootUser)
-    .WithEnvironment("FileStorage__SecretKey", storage.Resource.PasswordParameter)
+    .WithEnvironment("FileStorage__AccessKey", storageUser)
+    .WithEnvironment("FileStorage__SecretKey", storagePassword)
     .WithEnvironment("FileStorage__BucketName", "matric-dasbhoard-files")
     .WithEnvironment("FileStorage__UseSSL", "false")
     .WithEnvironment("MEILI_URL", meilisearch.GetEndpoint("http"))
     .WithEnvironment("MEILI_MASTER_KEY", meilisearchMasterKey)
+    .WithEnvironment("GeoServer__Enabled", "true")
+    .WithEnvironment("GeoServer__BaseUrl", geoserverBaseUrl)
     ;
 
 // Mailpit only for local development - production uses real SMTP (configured via environment variables)

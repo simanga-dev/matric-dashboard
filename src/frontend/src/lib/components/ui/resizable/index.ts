@@ -1,5 +1,3 @@
-import type { Snippet } from 'svelte';
-
 export interface ResizableContext {
 	sizes: number[];
 	direction: 'horizontal' | 'vertical';
@@ -7,6 +5,7 @@ export interface ResizableContext {
 	registerPanel: (defaultSize?: number) => number;
 	getPanelStyle: (index: number) => string;
 	startResize: (panelIndex: number, event: PointerEvent, containerEl: HTMLElement) => void;
+	resizePanel: (panelIndex: number, delta: number) => void;
 }
 
 export const RESIZABLE_CTX_KEY = Symbol('resizable-ctx');

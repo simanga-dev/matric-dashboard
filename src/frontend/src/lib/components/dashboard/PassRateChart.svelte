@@ -55,10 +55,8 @@
 	let plotWidth = $derived(svgWidth - CHART_PADDING.left - CHART_PADDING.right);
 	let plotHeight = $derived(CHART_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom);
 
-	let minYear = $derived(filteredData.length > 0 ? filteredData[0].year : 2008);
-	let maxYear = $derived(
-		filteredData.length > 0 ? filteredData[filteredData.length - 1].year : 2024
-	);
+	let minYear = $derived(filteredData[0]?.year ?? 2008);
+	let maxYear = $derived(filteredData.at(-1)?.year ?? 2024);
 	let minPassRate = $derived(
 		filteredData.length > 0 ? Math.min(...filteredData.map((d) => d.passRate)) - 5 : 50
 	);
@@ -159,7 +157,7 @@
 				</defs>
 
 				<!-- Y axis grid lines -->
-				{#each yTicks as tick}
+				{#each yTicks as tick (tick)}
 					<line
 						x1={CHART_PADDING.left}
 						y1={yScale(tick)}
@@ -179,7 +177,7 @@
 				{/each}
 
 				<!-- X axis labels -->
-				{#each xTicks as tick}
+				{#each xTicks as tick (tick)}
 					<text
 						x={xScale(tick)}
 						y={CHART_HEIGHT - 8}
@@ -197,7 +195,7 @@
 				<polyline {points} fill="none" stroke="hsl(var(--primary))" stroke-width="2" />
 
 				<!-- Data dots -->
-				{#each filteredData as d}
+				{#each filteredData as d (d.year)}
 					<circle cx={xScale(d.year)} cy={yScale(d.passRate)} r="3" fill="hsl(var(--primary))" />
 				{/each}
 			</svg>

@@ -1,5 +1,9 @@
 namespace MatricDasbhoard.Api.Tests.Contracts;
 
+/// <summary>Frozen v1 school detail fields retained for existing API consumers.</summary>
+internal record SchoolDetailV1Contract(string Id, string Name, string Province, string Circuit,
+    int TotalWrote, int TotalPassed, double PassRate, int? TotalAchieved);
+
 // Auth
 internal record AuthTokensResponse(string AccessToken, string RefreshToken, bool RequiresTwoFactor, string? ChallengeToken);
 internal record TwoFactorSetupContract(string SharedKey, string AuthenticatorUri);

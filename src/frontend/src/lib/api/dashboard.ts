@@ -1,18 +1,18 @@
 import { browserClient } from './client';
-import type { DashboardStats, PassRateTrend, School, SchoolList } from '$lib/types/dashboard';
+import type { DashboardStats, PassRateTrend, SchoolDetail, SchoolList } from '$lib/types/dashboard';
 
 export async function fetchDashboardStats(): Promise<DashboardStats> {
 	const { data, error } = await browserClient.GET('/api/v1/dashboard/stats');
-	if (error) throw new Error('Failed to fetch dashboard stats');
-	return data as unknown as DashboardStats;
+	if (error || !data) throw new Error('Failed to fetch dashboard stats');
+	return data;
 }
 
 export async function fetchPassRateTrends(years?: string): Promise<PassRateTrend[]> {
 	const { data, error } = await browserClient.GET('/api/v1/dashboard/pass-rate-trends', {
-		params: { query: years ? ({ years } as never) : undefined }
+		params: { query: { years } }
 	});
-	if (error) throw new Error('Failed to fetch pass rate trends');
-	return data as unknown as PassRateTrend[];
+	if (error || !data) throw new Error('Failed to fetch pass rate trends');
+	return data;
 }
 
 export async function fetchSchools(
@@ -20,20 +20,18 @@ export async function fetchSchools(
 	pageSize = 10,
 	search?: string
 ): Promise<SchoolList> {
-	const params: Record<string, unknown> = { pageNumber, pageSize };
-	if (search) params.search = search;
 	const { data, error } = await browserClient.GET('/api/v1/dashboard/schools', {
-		params: { query: params } as never
+		params: { query: { pageNumber, pageSize, search } }
 	});
-	if (error) throw new Error('Failed to fetch schools');
-	return data as unknown as SchoolList;
+	if (error || !data) throw new Error('Failed to fetch schools');
+	return data;
 }
 
-export async function fetchSchoolById(id: string): Promise<School | null> {
-	const { data, error } = await browserClient.GET(
-		'/api/v1/dashboard/schools/{id}' as never,
-		{ params: { path: { id } } } as never
-	);
-	if (error) throw new Error('Failed to fetch school');
-	return data as unknown as School;
+export async function fetchSchoolById(id: string): Promise<SchoolDetail | null> {
+	const { data, error, response } = await browserClient.GET('/api/v1/dashboard/schools/{id}', {
+		params: { path: { id } }
+	});
+	if (response.status === 404) return null;
+	if (error || !data) throw new Error('Failed to fetch school');
+	return data;
 }

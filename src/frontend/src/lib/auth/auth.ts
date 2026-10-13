@@ -71,5 +71,5 @@ export async function logout() {
 		console.warn('Logout request failed:', e);
 	}
 	await invalidateAll();
-	await goto(resolve(routes.dashboard));
+	await goto(resolve(routes.overview));
 }

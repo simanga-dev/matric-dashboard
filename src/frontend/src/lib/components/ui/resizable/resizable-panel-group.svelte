@@ -2,6 +2,7 @@
 	import { setContext, type Snippet } from 'svelte';
 	import { cn } from '$lib/utils';
 	import { RESIZABLE_CTX_KEY, type ResizableContext } from './index.js';
+	import { resizePair } from './resize-pair';
 
 	interface Props {
 		children: Snippet;
@@ -74,12 +75,20 @@
 
 	function getPanelStyle(index: number): string {
 		if (index >= panelCount || index >= sizes.length) return '';
-		return `flex: 0 0 ${sizes[index]!}%; overflow: hidden; min-width: 0;`;
+		return `flex: ${sizes[index]!} 1 0; overflow: hidden; min-width: 0; min-height: 0;`;
 	}
 
 	function startResize(panelIndex: number, event: PointerEvent, containerEl: HTMLElement) {
 		const rect = containerEl.getBoundingClientRect();
-		const totalSize = orientation === 'horizontal' ? rect.width : rect.height;
+		const handlesSize = [
+			...containerEl.querySelectorAll<HTMLElement>('[data-resizable-handle]')
+		].reduce(
+			(total, handle) =>
+				total + (orientation === 'horizontal' ? handle.offsetWidth : handle.offsetHeight),
+			0
+		);
+		const totalSize = (orientation === 'horizontal' ? rect.width : rect.height) - handlesSize;
+		if (totalSize <= 0) return;
 
 		const startSize = sizes[panelIndex] ?? 50;
 		const startNextSize = sizes[panelIndex + 1] ?? 50;
@@ -92,6 +101,7 @@
 			startNextSize,
 			totalSize
 		};
+		isResizing = true;
 	}
 
 	function handlePointerMove(event: PointerEvent) {
@@ -103,13 +113,15 @@
 		const delta = currentPointer - dragState.startPointer;
 		const deltaPercent = (delta / dragState.totalSize) * 100;
 
-		const newSize = Math.max(8, Math.min(92, dragState.startSize + deltaPercent));
-		const newNextSize = Math.max(8, Math.min(92, dragState.startNextSize - deltaPercent));
-		const total = newSize + newNextSize;
+		const [first, second] = resizePair(dragState.startSize, dragState.startNextSize, deltaPercent);
+		sizes[dragState.panelIndex] = first;
+		sizes[dragState.nextPanelIndex] = second;
+	}
 
-		sizes[dragState.panelIndex] = Math.round((newSize / total) * 1000) / 10;
-		sizes[dragState.nextPanelIndex] = Math.round((newNextSize / total) * 1000) / 10;
-		sizes = sizes;
+	function resizePanel(panelIndex: number, delta: number) {
+		const [first, second] = resizePair(sizes[panelIndex] ?? 50, sizes[panelIndex + 1] ?? 50, delta);
+		sizes[panelIndex] = first;
+		sizes[panelIndex + 1] = second;
 	}
 
 	function handlePointerUp() {
@@ -129,7 +141,8 @@
 		},
 		registerPanel,
 		getPanelStyle,
-		startResize
+		startResize,
+		resizePanel
 	};
 
 	setContext(RESIZABLE_CTX_KEY, context);
@@ -138,6 +151,7 @@
 <svelte:window
 	onpointermove={isResizing ? handlePointerMove : undefined}
 	onpointerup={isResizing ? handlePointerUp : undefined}
+	onpointercancel={isResizing ? handlePointerUp : undefined}
 />
 
 <div

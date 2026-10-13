@@ -1,7 +1,12 @@
 import type { components } from '$lib/api/v1';
+import type { OverviewUrlState } from '$lib/components/dashboard/overview-url';
 
 declare global {
 	namespace App {
+		interface PageState {
+			overview?: OverviewUrlState;
+			overviewReveal?: number;
+		}
 		interface Locals {
 			user: components['schemas']['UserResponse'] | null;
 			locale: string;

@@ -63,4 +63,47 @@ internal static class DashboardMapper
         PageNumber = output.PageNumber,
         PageSize = output.PageSize
     };
+
+    /// <summary>
+    /// Maps full school detail.
+    /// </summary>
+    public static SchoolDetailResponse ToResponse(this SchoolDetailOutput output) => new()
+    {
+        Id = output.Id,
+        Name = output.Name,
+        Province = output.Province,
+        Circuit = output.Circuit,
+        CentreNumber = output.CentreNumber,
+        TotalAchieved = output.TotalAchieved,
+        Quintile = output.Quintile,
+        TotalWrote = output.TotalWrote,
+        TotalPassed = output.TotalPassed,
+        PassRate = output.PassRate,
+        Years = output.Years.Select(y => y.ToResponse()).ToList(),
+        Comparison = output.Comparison.ToResponse()
+    };
+
+    /// <summary>
+    /// Maps a single year's performance.
+    /// </summary>
+    public static SchoolYearResponse ToResponse(this SchoolYearOutput output) => new()
+    {
+        Year = output.Year,
+        Progressed = output.Progressed,
+        TotalWrote = output.TotalWrote,
+        TotalPassed = output.TotalPassed,
+        PassRate = output.PassRate
+    };
+
+    /// <summary>
+    /// Maps province and national comparison.
+    /// </summary>
+    public static SchoolComparisonResponse ToResponse(this SchoolComparisonOutput output) => new()
+    {
+        ProvinceRank = output.ProvinceRank,
+        Year = output.Year,
+        ProvinceSchoolCount = output.ProvinceSchoolCount,
+        ProvinceAveragePassRate = output.ProvinceAveragePassRate,
+        NationalAveragePassRate = output.NationalAveragePassRate
+    };
 }

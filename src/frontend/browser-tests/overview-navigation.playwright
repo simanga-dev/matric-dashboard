@@ -1,0 +1,119 @@
+async (page) => {
+	const origin = new URL(page.url()).origin;
+	const context = await page.context().browser().newContext({
+		viewport: { width: 1440, height: 900 }
+	});
+	const browser = await context.newPage();
+	const school = {
+		id: '1001', name: 'BROWSER TEST SCHOOL', province: 'GAUTENG', circuit: 'TEST CIRCUIT',
+		totalWrote: 10, totalPassed: 9, passRate: 90, totalAchieved: null
+	};
+	const schools = [
+		school,
+		{ ...school, id: '1002', name: 'OTHER SCHOOL' },
+		{ ...school, id: '2001', name: 'ANOTHER PROVINCE SCHOOL', province: 'LIMPOPO' },
+		...Array.from({ length: 30 }, (_, index) => ({
+			...school, id: String(3000 + index), name: `A NEIGHBOR ${String(index).padStart(2, '0')}`
+		}))
+	];
+	const check = (condition, message) => {
+		if (!condition) throw new Error(message);
+	};
+	const selectedHeading = (name) => browser.getByRole('region', { name: 'School details', exact: true })
+		.getByRole('heading', { name, exact: true });
+	const filter = browser.getByRole('textbox', { name: 'Filter schools by name, EMIS, province or circuit' });
+	const stored = () => browser.evaluate(() => JSON.parse(localStorage.getItem('overview-state')));
+	const navigationIndex = () => browser.evaluate(() => history.state['sveltekit:navigation']);
+	const searchForSchool = async () => {
+		await browser.getByRole('combobox').fill('Browser Test School');
+		const result = browser.getByRole('option', { name: /Browser Test School/ });
+		await result.waitFor();
+		const previous = await navigationIndex();
+		await result.click();
+		await browser.waitForFunction((index) => history.state['sveltekit:navigation'] !== index, previous);
+	};
+	try {
+		// These fixtures exercise the running SvelteKit router and components without
+		// depending on imported schools, authentication, or external map services.
+		await browser.route('**/api/v1/dashboard/schools**', async (route) => {
+			const url = new URL(route.request().url());
+			const id = url.pathname.split('/').at(-1);
+			const selected = schools.find((item) => item.id === id);
+			const search = (url.searchParams.get('search') ?? '').toUpperCase();
+			const matches = schools.filter((item) => item.name.includes(search));
+			await route.fulfill({ json: selected ? {
+				...selected, centreNumber: '1', quintile: 1,
+				years: [{ year: 2024, progressed: 0, totalWrote: 10, totalPassed: 9, passRate: 90 }],
+				comparison: { year: 2024, provinceRank: 1, provinceSchoolCount: 2,
+					provinceAveragePassRate: 90, nationalAveragePassRate: 90 }
+			} : { items: matches, totalCount: matches.length, pageNumber: 1, pageSize: 500,
+				totalPages: 1, hasPreviousPage: false, hasNextPage: false } });
+		});
+		await browser.route('**/api/geo/**', (route) => route.fulfill({
+			json: { type: 'FeatureCollection', features: [] }
+		}));
+		await browser.route(/https:\/\/[^/]*tile\.openstreetmap\.org\//, (route) => route.fulfill({
+			contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"/>'
+		}));
+
+		await browser.goto(`${origin}/overview?school=1001`);
+		await selectedHeading('Browser Test School').waitFor();
+		await browser.locator('.school-row.selected').waitFor();
+		await browser.getByRole('button', { name: 'Expand Limpopo', exact: true }).click();
+		await browser.getByRole('button', { name: 'Expand Test Circuit in Limpopo', exact: true }).click();
+		await browser.waitForFunction(() => history.state['sveltekit:states']?.overview?.expandedCircuits.length === 2);
+		const workspace = await stored();
+		const before = await navigationIndex();
+		await browser.getByRole('link', { name: 'Overview', exact: true }).first().click();
+		await browser.waitForFunction((index) => history.state['sveltekit:navigation'] !== index, before);
+		await browser.waitForFunction((expected) =>
+			JSON.stringify(history.state['sveltekit:states']?.overview) === expected, JSON.stringify(workspace));
+		await selectedHeading('Browser Test School').waitFor();
+		check(JSON.stringify(await stored()) === JSON.stringify(workspace), 'Sidebar Overview cleared localStorage');
+		check(await browser.getByRole('button', { name: 'Collapse Test Circuit in Limpopo', exact: true }).isVisible(),
+			'Sidebar Overview lost an expanded branch');
+
+		const sameSchoolUrl = browser.url();
+		await filter.fill('no-school-can-match-this-filter');
+		await browser.getByText('No matching schools', { exact: true }).waitFor();
+		await searchForSchool();
+		await browser.waitForFunction(() =>
+			document.querySelector('[aria-label="Filter schools by name, EMIS, province or circuit"]').value === ''
+			&& document.querySelector('.school-row.selected'));
+		check(browser.url() === sameSchoolUrl, 'The same-school action unexpectedly changed workspace URL');
+		check(await browser.locator('.school-row.selected').innerText() === 'Browser Test School',
+			'Same-school header search did not reveal the selected row');
+		await browser.waitForFunction(() => {
+			const row = document.querySelector('.school-row.selected')?.getBoundingClientRect();
+			const area = document.querySelector('[aria-label="School browser"] [aria-busy]')?.getBoundingClientRect();
+			return row && area && row.top >= area.top && row.bottom <= area.bottom;
+		});
+		await browser.getByRole('button', { name: 'Collapse Test Circuit in Gauteng', exact: true }).click();
+		await browser.waitForFunction(() => !document.querySelector('.school-row.selected'));
+		await browser.getByRole('button', { name: 'Expand Test Circuit in Gauteng', exact: true }).waitFor();
+		await filter.fill('no-school-can-match-this-filter');
+		await browser.getByText('No matching schools', { exact: true }).waitFor();
+		await searchForSchool();
+		await browser.locator('.school-row.selected').waitFor();
+		check(await filter.inputValue() === '', 'Reselecting a collapsed school retained an incompatible filter');
+
+		// This context is isolated, so removing its saved workspace does not affect users.
+		await browser.evaluate(() => localStorage.removeItem('overview-state'));
+		await browser.goto(`${origin}/overview`);
+		await browser.locator('[aria-label="Filter schools by name, EMIS, province or circuit"]:not(:disabled)').waitFor();
+		await browser.getByRole('heading', { name: 'Start with a school', exact: true }).waitFor();
+		await searchForSchool();
+		await browser.getByRole('button', { name: 'Other School', exact: true }).click();
+		await selectedHeading('Other School').waitFor();
+		await browser.goBack();
+		await browser.getByRole('heading', { name: 'Start with a school', exact: true }).waitFor();
+		check(new URL(browser.url()).search === '', 'Back to empty snapshot revived the saved workspace');
+		check((await stored()).school === null, 'Empty snapshot did not persist an empty selection');
+		await browser.goForward();
+		await selectedHeading('Other School').waitFor();
+		return { sidebarWorkspacePreserved: true, sameSchoolFilterClearedAndRevealed: true,
+			intentionalCollapseAllowed: true, emptyHistoryRestored: true, forwardSelectionRestored: true };
+	} finally {
+		await context.close();
+	}
+}

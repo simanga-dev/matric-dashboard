@@ -58,9 +58,9 @@ public class DashboardController(IDashboardService dashboardService) : ApiContro
     /// <response code="200">Returns the school details.</response>
     /// <response code="404">If no school matches the identifier.</response>
     [HttpGet("schools/{id}")]
-    [ProducesResponseType(typeof(Dtos.SchoolResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Dtos.SchoolDetailResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<Dtos.SchoolResponse>> GetSchoolById(string id, CancellationToken cancellationToken)
+    public async Task<ActionResult<Dtos.SchoolDetailResponse>> GetSchoolById(string id, CancellationToken cancellationToken)
     {
         var result = await dashboardService.GetSchoolByIdAsync(id, cancellationToken);
         if (!result.IsSuccess)

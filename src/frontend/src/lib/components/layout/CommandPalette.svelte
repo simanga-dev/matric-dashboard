@@ -10,8 +10,7 @@
 	import { logout } from '$lib/auth';
 	import * as m from '$lib/paraglide/messages';
 	import {
-		LayoutDashboard,
-		Eye,
+		MapPinned,
 		User,
 		Settings,
 		Users,
@@ -47,18 +46,10 @@
 	const navItems: CommandItem[] = [
 		{
 			label: m.nav_overview,
-			icon: Eye,
+			icon: MapPinned,
 			action: () => {
 				close();
 				goto(resolve(routes.overview));
-			}
-		},
-		{
-			label: m.nav_dashboard,
-			icon: LayoutDashboard,
-			action: () => {
-				close();
-				goto(resolve(routes.dashboard));
 			}
 		},
 		{

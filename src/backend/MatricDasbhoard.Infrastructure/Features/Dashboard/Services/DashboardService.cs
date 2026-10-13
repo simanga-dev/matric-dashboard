@@ -1,16 +1,27 @@
 using System.Text.Json.Serialization;
 using MatricDasbhoard.Application.Features.Dashboard;
 using MatricDasbhoard.Application.Features.Dashboard.Dtos;
+using MatricDasbhoard.Infrastructure.Persistence;
 using MatricDasbhoard.Shared;
 using Meilisearch;
+using Microsoft.EntityFrameworkCore;
 
 namespace MatricDasbhoard.Infrastructure.Features.Dashboard.Services;
 
 /// <summary>
-/// Returns paginated school data from the Meilisearch "schools" index.
+/// Returns dashboard statistics and school data. Browsing and by-id lookups are
+/// served from PostgreSQL (the <c>marks</c> schema) via EF Core; free-text search
+/// is served from the Meilisearch "schools" index, falling back to a case and
+/// accent insensitive database match when the index is unavailable.
 /// </summary>
 internal sealed class DashboardService : IDashboardService
 {
+    /// <summary>The performance year surfaced by the dashboard.</summary>
+    private const int LatestYear = 2024;
+
+    /// <summary>Name of the Meilisearch index populated by scripts/upload_to_meilisearch.py.</summary>
+    private const string SchoolsIndex = "schools";
+
     private static readonly IReadOnlyList<PassRateTrendOutput> PassRateTrends = new List<PassRateTrendOutput>
     {
         new(2008, 62.6, 533561),
@@ -32,15 +43,17 @@ internal sealed class DashboardService : IDashboardService
         new(2024, 87.3, 737472)
     };
 
-    private const string SchoolsIndex = "schools";
-
+    private readonly MatricDasbhoardDbContext _dbContext;
     private readonly MeilisearchClient _meilisearchClient;
 
-    public DashboardService(MeilisearchClient meilisearchClient)
+    /// <summary>Creates a dashboard service backed by PostgreSQL and Meilisearch.</summary>
+    public DashboardService(MatricDasbhoardDbContext dbContext, MeilisearchClient meilisearchClient)
     {
+        _dbContext = dbContext;
         _meilisearchClient = meilisearchClient;
     }
 
+    /// <inheritdoc />
     public Task<DashboardStatsOutput> GetStatsAsync()
     {
         var stats = new DashboardStatsOutput(
@@ -52,6 +65,7 @@ internal sealed class DashboardService : IDashboardService
         return Task.FromResult(stats);
     }
 
+    /// <inheritdoc />
     public Task<IReadOnlyList<PassRateTrendOutput>> GetPassRateTrendsAsync(string? years = null)
     {
         var data = years switch
@@ -63,53 +77,214 @@ internal sealed class DashboardService : IDashboardService
         return Task.FromResult<IReadOnlyList<PassRateTrendOutput>>(data);
     }
 
+    /// <inheritdoc />
     public async Task<SchoolListOutput> GetSchoolsAsync(int pageNumber, int pageSize, string? search = null)
     {
-        var index = _meilisearchClient.Index(SchoolsIndex);
-        var searchText = string.IsNullOrWhiteSpace(search) ? string.Empty : search;
-
-        var result = await index.SearchAsync<MeilisearchSchool>(
-            searchText,
-            new SearchQuery
+        var term = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
+        if (term is not null)
+        {
+            var fromIndex = await SearchSchoolsAsync(term, pageNumber, pageSize);
+            if (fromIndex is not null)
             {
-                Limit = pageSize,
-                Offset = (pageNumber - 1) * pageSize
-            }) as SearchResult<MeilisearchSchool>;
+                return fromIndex;
+            }
+        }
 
-        var schools = result!.Hits.Select(hit => ToSchoolOutput(hit)).ToList();
+        var query = _dbContext.Schools
+            .AsNoTracking()
+            .Where(s => !s.IsDeleted);
 
-        return new SchoolListOutput(schools, result.EstimatedTotalHits, pageNumber, pageSize);
+        if (term is not null)
+        {
+            // Normalize both operands in PostgreSQL, including decomposed accents.
+            // strpos treats user input literally, including SQL LIKE wildcards.
+            query = _dbContext.Schools.FromSqlInterpolated($"""
+                SELECT * FROM marks."Schools"
+                WHERE strpos(lower(public.unaccent('public.unaccent'::regdictionary, "CentreName")),
+                             lower(public.unaccent('public.unaccent'::regdictionary, {term}))) > 0
+                   OR strpos(lower(public.unaccent('public.unaccent'::regdictionary, "EmisNumber")),
+                             lower(public.unaccent('public.unaccent'::regdictionary, {term}))) > 0
+                """).AsNoTracking().Where(s => !s.IsDeleted);
+        }
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .OrderBy(s => s.CentreName)
+            .ThenBy(s => s.EmisNumber)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(s => new SchoolOutput(
+                s.EmisNumber,
+                s.CentreName,
+                s.Province,
+                s.DistrictName,
+                s.Performances.Where(p => p.Year == LatestYear && !p.IsDeleted)
+                    .Select(p => p.TotalWrote).FirstOrDefault(),
+                s.Performances.Where(p => p.Year == LatestYear && !p.IsDeleted)
+                    .Select(p => p.TotalAchieved).FirstOrDefault(),
+                (double)s.Performances.Where(p => p.Year == LatestYear && !p.IsDeleted)
+                    .Select(p => p.PercentAchieved).FirstOrDefault(),
+                null))
+            .ToListAsync();
+
+        return new SchoolListOutput(items, totalCount, pageNumber, pageSize);
     }
 
-    public async Task<MatricDasbhoard.Shared.Result<SchoolOutput>> GetSchoolByIdAsync(
+    /// <summary>
+    /// Free-text search against the Meilisearch "schools" index. Returns
+    /// <c>null</c> when the index is unreachable so the caller can fall back to
+    /// the database.
+    /// </summary>
+    private async Task<SchoolListOutput?> SearchSchoolsAsync(string term, int pageNumber, int pageSize)
+    {
+        try
+        {
+            var index = _meilisearchClient.Index(SchoolsIndex);
+            var result = await index.SearchAsync<MeilisearchSchool>(
+                term,
+                new SearchQuery
+                {
+                    Limit = pageSize,
+                    Offset = (pageNumber - 1) * pageSize
+                }) as SearchResult<MeilisearchSchool>;
+
+            if (result is null)
+            {
+                return null;
+            }
+
+            var schools = result.Hits.Select(ToSchoolOutput).ToList();
+            return new SchoolListOutput(schools, result.EstimatedTotalHits, pageNumber, pageSize);
+        }
+        catch (MeilisearchApiError)
+        {
+            return null;
+        }
+        catch (MeilisearchCommunicationError)
+        {
+            return null;
+        }
+        catch (HttpRequestException)
+        {
+            return null;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<MatricDasbhoard.Shared.Result<SchoolDetailOutput>> GetSchoolByIdAsync(
         string id,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(id))
         {
-            return MatricDasbhoard.Shared.Result<SchoolOutput>.Failure(
+            return MatricDasbhoard.Shared.Result<SchoolDetailOutput>.Failure(
                 ErrorMessages.Dashboard.SchoolNotFound, ErrorType.NotFound);
         }
 
-        var index = _meilisearchClient.Index(SchoolsIndex);
-        MeilisearchSchool? document;
-        try
+        var school = await _dbContext.Schools
+            .AsNoTracking()
+            .Where(s => s.EmisNumber == id && !s.IsDeleted)
+            .Select(s => new
+            {
+                s.EmisNumber,
+                s.CentreName,
+                s.Province,
+                s.DistrictName,
+                s.CentreNumber,
+                s.Quintile,
+                Performances = s.Performances
+                    .Where(p => !p.IsDeleted)
+                    .OrderBy(p => p.Year)
+                    .Select(p => new
+                    {
+                        p.Year,
+                        p.ProgressedNumber,
+                        p.TotalWrote,
+                        p.TotalAchieved,
+                        p.PercentAchieved
+                    })
+                    .ToList()
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (school is null)
         {
-            document = await index.GetDocumentAsync<MeilisearchSchool>(id, cancellationToken: cancellationToken);
-        }
-        catch (MeilisearchApiError)
-        {
-            return MatricDasbhoard.Shared.Result<SchoolOutput>.Failure(
+            return MatricDasbhoard.Shared.Result<SchoolDetailOutput>.Failure(
                 ErrorMessages.Dashboard.SchoolNotFound, ErrorType.NotFound);
         }
 
-        if (document is null)
-        {
-            return MatricDasbhoard.Shared.Result<SchoolOutput>.Failure(
-                ErrorMessages.Dashboard.SchoolNotFound, ErrorType.NotFound);
-        }
+        var years = school.Performances
+            .Select(p => new SchoolYearOutput(
+                p.Year,
+                p.ProgressedNumber,
+                p.TotalWrote,
+                p.TotalAchieved,
+                (double)p.PercentAchieved))
+            .ToList();
 
-        return MatricDasbhoard.Shared.Result<SchoolOutput>.Success(ToSchoolOutput(document));
+        var latest = years.LastOrDefault(y => y.Year == LatestYear) ?? years.LastOrDefault();
+
+        var comparison = await GetComparisonAsync(
+            school.Province, latest?.Year ?? LatestYear, latest?.PassRate, cancellationToken);
+
+        var detail = new SchoolDetailOutput(
+            school.EmisNumber,
+            school.CentreName,
+            school.Province,
+            school.DistrictName,
+            school.CentreNumber,
+            school.Quintile,
+            latest?.TotalWrote ?? 0,
+            latest?.TotalPassed ?? 0,
+            latest?.PassRate ?? 0,
+            years,
+            comparison);
+
+        return MatricDasbhoard.Shared.Result<SchoolDetailOutput>.Success(detail);
+    }
+
+    /// <summary>
+    /// Builds province and national context for a school using learner-weighted
+    /// pass rates for the selected year (total passed / total wrote).
+    /// </summary>
+    private async Task<SchoolComparisonOutput> GetComparisonAsync(
+        string province,
+        int year,
+        double? schoolPassRate,
+        CancellationToken cancellationToken)
+    {
+        var provinceQuery = _dbContext.SchoolPerformances
+            .Where(p => !p.IsDeleted &&
+                        p.Year == year &&
+                        !p.School.IsDeleted &&
+                        p.School.Province == province);
+
+        var provinceCount = await provinceQuery.CountAsync(cancellationToken);
+        var provinceWrote = await provinceQuery.SumAsync(p => (long)p.TotalWrote, cancellationToken);
+        var provincePassed = await provinceQuery.SumAsync(p => (long)p.TotalAchieved, cancellationToken);
+
+        var nationalQuery = _dbContext.SchoolPerformances
+            .Where(p => !p.IsDeleted && p.Year == year && !p.School.IsDeleted);
+
+        var nationalWrote = await nationalQuery.SumAsync(p => (long)p.TotalWrote, cancellationToken);
+        var nationalPassed = await nationalQuery.SumAsync(p => (long)p.TotalAchieved, cancellationToken);
+
+        var threshold = (decimal)(schoolPassRate ?? 0);
+        var higher = provinceCount > 0 && schoolPassRate.HasValue
+            ? await provinceQuery.CountAsync(p => p.PercentAchieved > threshold, cancellationToken)
+            : 0;
+
+        var rank = provinceCount == 0 || !schoolPassRate.HasValue
+            ? 0
+            : Math.Min(1 + higher, provinceCount);
+
+        return new SchoolComparisonOutput(
+            rank,
+            provinceCount,
+            provinceWrote > 0 ? Math.Round((double)provincePassed / provinceWrote * 100, 1) : null,
+            nationalWrote > 0 ? Math.Round((double)nationalPassed / nationalWrote * 100, 1) : null,
+            year);
     }
 
     private static SchoolOutput ToSchoolOutput(MeilisearchSchool hit) => new(
@@ -124,8 +299,8 @@ internal sealed class DashboardService : IDashboardService
     );
 
     /// <summary>
-    /// Maps to the Meilisearch school document schema (snake_case field names, per-year metrics).
-    /// The <c>school_id</c> field is the index primary key.
+    /// Maps a Meilisearch school document (snake_case field names, per-year
+    /// metrics). The <c>school_id</c> field is the index primary key.
     /// </summary>
     private sealed class MeilisearchSchool
     {

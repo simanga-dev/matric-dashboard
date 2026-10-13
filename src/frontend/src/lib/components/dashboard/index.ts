@@ -6,5 +6,5 @@ export { default as StatCard } from './StatCard.svelte';
 export { default as PassRateChart } from './PassRateChart.svelte';
 export { default as SchoolsTable } from './SchoolsTable.svelte';
 export { default as SchoolTree } from './SchoolTree.svelte';
-export { default as SchoolMap } from './SchoolMap.svelte';
-export { default as SchoolCards } from './SchoolCards.svelte';
+export { default as SchoolGeoMap } from './SchoolGeoMap.svelte';
+export { default as SchoolDetailPanel } from './SchoolDetailPanel.svelte';

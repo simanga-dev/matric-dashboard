@@ -112,7 +112,7 @@
 		if (onSuccess) {
 			await onSuccess();
 		} else {
-			await goto(resolve(routes.dashboard));
+			await goto(resolve(routes.overview));
 		}
 	}
 

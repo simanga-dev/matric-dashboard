@@ -1,10 +1,17 @@
 <script lang="ts">
 	import { Search, Loader2, School as SchoolIcon, MapPin, TrendingUp } from '@lucide/svelte';
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { fetchSchools } from '$lib/api/dashboard';
-	import { schoolPath } from '$lib/config';
+	import { routes } from '$lib/config';
 	import type { School } from '$lib/types/dashboard';
+	import { toTitleCase } from '$lib/utils';
+	import {
+		overviewHistoryState,
+		revealOverviewSchool,
+		serializeOverviewState
+	} from '$lib/components/dashboard/overview-url';
 
 	let query = $state('');
 	let results = $state<School[]>([]);
@@ -12,6 +19,8 @@
 	let open = $state(false);
 	let selectedIndex = $state(-1);
 	let debounceTimer: ReturnType<typeof setTimeout>;
+	const id = $props.id();
+	const resultsId = `${id}-school-search-results`;
 
 	function handleInput() {
 		clearTimeout(debounceTimer);
@@ -58,9 +67,15 @@
 
 	function navigateToSchool(school: School) {
 		open = false;
-		query = school.name;
+		query = toTitleCase(school.name);
 		results = [];
-		goto(resolve(schoolPath(school.id)));
+		// Deep-link into the explorer so the school is selected on the map and
+		// revealed in the hierarchy tree.
+		const current = overviewHistoryState(page.url.search, page.state.overview);
+		const queryString = serializeOverviewState(revealOverviewSchool(current, school));
+		goto(resolve(`${routes.overview}?${queryString}`), {
+			state: { overviewReveal: (page.state.overviewReveal ?? 0) + 1 }
+		});
 	}
 
 	function formatPassRate(rate: number): string {
@@ -97,6 +112,7 @@
 			class="w-40 bg-transparent text-sm outline-none placeholder:text-muted-foreground md:w-56"
 			role="combobox"
 			aria-expanded={open}
+			aria-controls={resultsId}
 			aria-autocomplete="list"
 		/>
 		<kbd
@@ -108,6 +124,7 @@
 
 	{#if open}
 		<div
+			id={resultsId}
 			class="absolute top-full left-0 z-50 mt-1 w-80 rounded-lg border bg-popover p-1 shadow-lg md:w-96"
 			role="listbox"
 		>
@@ -125,11 +142,11 @@
 					>
 						<SchoolIcon class="mt-0.5 size-4 shrink-0 text-muted-foreground" />
 						<div class="min-w-0 flex-1">
-							<div class="truncate text-sm font-medium">{school.name}</div>
+							<div class="truncate text-sm font-medium">{toTitleCase(school.name)}</div>
 							<div class="flex items-center gap-3 text-xs text-muted-foreground">
 								<span class="inline-flex items-center gap-1">
 									<MapPin class="size-3" />
-									{school.province}
+									{toTitleCase(school.province)}
 								</span>
 								<span class="inline-flex items-center gap-1">
 									<TrendingUp class="size-3" />
