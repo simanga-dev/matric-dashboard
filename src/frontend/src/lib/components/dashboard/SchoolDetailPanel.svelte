@@ -116,16 +116,21 @@
 	);
 
 	let timeline = $derived(school ? [...school.years].sort((a, b) => a.year - b.year) : []);
+	let latestYear = $derived(timeline.at(-1)?.year ?? null);
 	let delta = $derived(
 		timeline.length > 1 ? timeline[timeline.length - 1]!.passRate - timeline[0]!.passRate : null
 	);
-	let deltaClass = $derived(
-		delta === null || Math.abs(delta) < 0.05
-			? 'text-muted-foreground'
-			: delta > 0
-				? 'text-green-700 dark:text-green-400'
-				: 'text-red-700 dark:text-red-400'
+	let regionTimeline = $derived(region ? [...region.years].sort((a, b) => a.year - b.year) : []);
+	let regionDelta = $derived(
+		regionTimeline.length > 1
+			? regionTimeline[regionTimeline.length - 1]!.passRate - regionTimeline[0]!.passRate
+			: null
 	);
+
+	function deltaColor(value: number | null): string {
+		if (value === null || Math.abs(value) < 0.05) return 'text-muted-foreground';
+		return value > 0 ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400';
+	}
 
 	function passRateColor(rate: number): string {
 		if (rate >= 80) return 'text-green-700 dark:text-green-400';
@@ -157,7 +162,7 @@
 				<div role="status" class="space-y-4">
 					<span class="sr-only">Loading region stats…</span>
 					<Skeleton class="h-5 w-40 rounded-full" />
-					<div class="space-y-3 rounded-xl border bg-muted/20 p-4">
+					<div class="space-y-3 bg-muted/20 py-3">
 						<Skeleton class="h-3 w-28 rounded-full" />
 						<Skeleton class="h-9 w-24 rounded-md" />
 						<Skeleton class="h-1.5 w-full rounded-full" />
@@ -185,20 +190,30 @@
 						</p>
 					</div>
 
-					<div class="rounded-xl border bg-muted/20 p-4">
-						<p class="text-xs text-muted-foreground">NSC pass rate · {region.year}</p>
-						<p
-							class="mt-1 text-4xl font-semibold tracking-tight tabular-nums {passRateColor(
-								region.passRate
-							)}"
-						>
-							{formatRate(region.passRate)}
-						</p>
-						<div class="mt-3 h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden="true">
-							<div
-								class="h-full rounded-full bg-primary"
-								style:width={`${Math.min(100, Math.max(0, region.passRate))}%`}
-							></div>
+					<div class="bg-muted/20 py-3">
+						<div class="flex items-end justify-between gap-3">
+							<div>
+								<p class="text-xs text-muted-foreground">NSC pass rate · {region.year}</p>
+								<p
+									class="mt-1 text-4xl font-semibold tracking-tight tabular-nums {passRateColor(
+										region.passRate
+									)}"
+								>
+									{formatRate(region.passRate)}
+								</p>
+							</div>
+							{#if regionDelta !== null}
+								<span
+									class="pb-1 text-xs font-medium whitespace-nowrap tabular-nums {deltaColor(
+										regionDelta
+									)}"
+								>
+									{regionDelta >= 0 ? '+' : ''}{regionDelta.toFixed(1)} pts
+								</span>
+							{/if}
+						</div>
+						<div class="mt-3">
+							<SchoolPerformanceTimeline years={region.years} />
 						</div>
 						<p class="mt-2 text-xs text-muted-foreground">
 							{region.totalPassed.toLocaleString()} of {region.totalWrote.toLocaleString()} learners passed
@@ -262,7 +277,7 @@
 						<Skeleton class="h-3 w-24 rounded-full" />
 					</div>
 				</div>
-				<div class="space-y-3 rounded-xl border bg-muted/20 p-4">
+				<div class="space-y-3 bg-muted/20 py-3">
 					<Skeleton class="h-3 w-28 rounded-full" />
 					<Skeleton class="h-8 w-24 rounded-md" />
 					<Skeleton class="h-1.5 w-full rounded-full" />
@@ -296,6 +311,7 @@
 				School not found.
 			</div>
 		{:else if school}
+			{@const offered = school.subjectsOffered ?? []}
 			<div class="space-y-5">
 				<div class="flex items-start justify-between gap-3">
 					<div class="min-w-0">
@@ -307,10 +323,12 @@
 					</div>
 				</div>
 
-				<div class="rounded-xl border bg-muted/20 p-4">
+				<div class="bg-muted/20 py-3">
 					<div class="flex items-end justify-between gap-3">
 						<div>
-							<p class="text-xs text-muted-foreground">NSC pass rate · 2024</p>
+							<p class="text-xs text-muted-foreground">
+								NSC pass rate{latestYear ? ` · ${latestYear}` : ''}
+							</p>
 							<p
 								class="mt-1 text-4xl font-semibold tracking-tight tabular-nums {passRateColor(
 									school.passRate
@@ -320,7 +338,9 @@
 							</p>
 						</div>
 						{#if delta !== null}
-							<span class="pb-1 text-xs font-medium whitespace-nowrap tabular-nums {deltaClass}">
+							<span
+								class="pb-1 text-xs font-medium whitespace-nowrap tabular-nums {deltaColor(delta)}"
+							>
 								{delta >= 0 ? '+' : ''}{delta.toFixed(1)} pts
 							</span>
 						{/if}
@@ -369,7 +389,7 @@
 					<h3
 						class="mb-2 border-b pb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
 					>
-						NSC Results · 2024
+						NSC Results{latestYear ? ` · ${latestYear}` : ''}
 					</h3>
 					<dl class="space-y-1.5 text-sm">
 						<div class="flex items-baseline justify-between gap-4">
@@ -398,6 +418,48 @@
 							</dd>
 						</div>
 					</dl>
+				</section>
+
+				<section>
+					<div class="mb-2 flex items-baseline justify-between gap-2 border-b pb-1">
+						<h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+							Subjects offered{school.subjectsOfferedYear ? ` · ${school.subjectsOfferedYear}` : ''}
+						</h3>
+						<a
+							href={resolve(`/subjects?school=${encodeURIComponent(school.id)}`)}
+							class="shrink-0 text-xs font-medium text-primary underline-offset-4 hover:underline"
+						>
+							View all subjects
+						</a>
+					</div>
+					{#if offered.length === 0}
+						<p class="text-sm text-muted-foreground">No subject data</p>
+					{:else}
+						<ul class="flex flex-wrap gap-1.5">
+							{#each offered as subject (subject.code)}
+								<li
+									class="inline-flex items-baseline gap-1.5 rounded-md border bg-muted/30 px-2 py-1 text-xs"
+								>
+									<span class="font-medium">{subject.name}</span>
+									<span class="text-muted-foreground tabular-nums"
+										>{subject.totalWrote.toLocaleString()} wrote</span
+									>
+									{#if subject.percentAchieved === null}
+										<span class="text-muted-foreground">-</span>
+									{:else}
+										<span
+											class="font-semibold tabular-nums {passRateColor(subject.percentAchieved)}"
+										>
+											{formatRate(subject.percentAchieved)}
+										</span>
+									{/if}
+									{#if subject.year !== school.subjectsOfferedYear}
+										<span class="text-muted-foreground">· {subject.year}</span>
+									{/if}
+								</li>
+							{/each}
+						</ul>
+					{/if}
 				</section>
 			</div>
 		{/if}

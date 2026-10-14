@@ -25,7 +25,12 @@ public class DashboardMapperTests
                 new SchoolYearOutput(2023, 2, 90, 70, 77.8),
                 new SchoolYearOutput(2024, 3, 100, 85, 85)
             ],
-            Comparison: new SchoolComparisonOutput(5, 120, 82.4, 87.3, 2023));
+            Comparison: new SchoolComparisonOutput(5, 120, 82.4, 87.3, 2023),
+            SubjectsOfferedYear: 2024,
+            SubjectsOffered:
+            [
+                new OfferedSubjectOutput("history", "History", 2023, 20, 85.0)
+            ]);
 
         var response = output.ToResponse();
 
@@ -53,6 +58,19 @@ public class DashboardMapperTests
         Assert.Equal(120, response.Comparison.ProvinceSchoolCount);
         Assert.Equal(82.4, response.Comparison.ProvinceAveragePassRate);
         Assert.Equal(87.3, response.Comparison.NationalAveragePassRate);
+        Assert.Equal(2024, response.SubjectsOfferedYear);
+        var offered = Assert.Single(response.SubjectsOffered);
+        Assert.Equal("history", offered.Code);
+        Assert.Equal("History", offered.Name);
+        Assert.Equal(2023, offered.Year);
+        Assert.Equal(20, offered.TotalWrote);
+        Assert.Equal(85.0, offered.PercentAchieved);
+        var offeredJson = document.RootElement.GetProperty("subjectsOffered");
+        Assert.Equal(JsonValueKind.Array, offeredJson.ValueKind);
+        Assert.Equal("history", offeredJson[0].GetProperty("code").GetString());
+        Assert.Equal(2023, offeredJson[0].GetProperty("year").GetInt32());
+        Assert.Equal(85.0, offeredJson[0].GetProperty("percentAchieved").GetDouble());
+        Assert.Equal(2024, document.RootElement.GetProperty("subjectsOfferedYear").GetInt32());
     }
 
     [Fact]
@@ -78,5 +96,44 @@ public class DashboardMapperTests
         Assert.Equal(0, response.Comparison.ProvinceSchoolCount);
         Assert.Null(response.Comparison.ProvinceAveragePassRate);
         Assert.Null(response.Comparison.NationalAveragePassRate);
+        Assert.Null(response.SubjectsOfferedYear);
+        Assert.Empty(response.SubjectsOffered);
+    }
+
+    [Fact]
+    public void SchoolSubjects_MapsSelectedYearAndAvailableYears()
+    {
+        var output = new SchoolSubjectsOutput(
+            SchoolId: "1001",
+            Year: 2024,
+            AvailableYears: [2023, 2024],
+            Subjects:
+            [
+                new SchoolSubjectOutput("8f3c...", "accounting", "Accounting", 56, 54, 96.4),
+                new SchoolSubjectOutput("b211...", "mathematics", "Mathematics", 0, null, null)
+            ]);
+
+        var response = output.ToResponse();
+
+        Assert.Equal("1001", response.SchoolId);
+        Assert.Equal(2024, response.Year);
+        Assert.Equal([2023, 2024], response.AvailableYears);
+        Assert.Equal(2, response.Subjects.Count);
+        Assert.Equal("accounting", response.Subjects[0].Code);
+        Assert.Equal(96.4, response.Subjects[0].PercentAchieved);
+        Assert.Equal(0, response.Subjects[1].TotalWrote);
+        Assert.Null(response.Subjects[1].Achieved);
+        Assert.Null(response.Subjects[1].PercentAchieved);
+
+        var json = JsonSerializer.Serialize(response, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        using var document = JsonDocument.Parse(json);
+        Assert.Equal(2024, document.RootElement.GetProperty("year").GetInt32());
+        Assert.Equal(2023, document.RootElement.GetProperty("availableYears")[0].GetInt32());
+        Assert.Equal("accounting", document.RootElement.GetProperty("subjects")[0].GetProperty("code").GetString());
+        Assert.Equal(JsonValueKind.Null, document.RootElement.GetProperty("subjects")[1].GetProperty("achieved").ValueKind);
+        var contract = JsonSerializer.Deserialize<SchoolSubjectsContract>(json, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+        Assert.NotNull(contract);
+        Assert.Equal("1001", contract.SchoolId);
+        Assert.Equal(2, contract.Subjects.Count);
     }
 }

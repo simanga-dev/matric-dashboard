@@ -13,6 +13,7 @@
 	import { Maximize, Home, AlertCircle, MapPin, ExternalLink } from '@lucide/svelte';
 	import { toTitleCase } from '$lib/utils';
 	import { passRateColor } from './school-hierarchy';
+	import { loadGeoJson, GeoLayerUnavailableError } from '$lib/state';
 	/**
 	 * School points served by GeoServer over WFS, proxied through the API.
 	 * The GeoServer layer is a PostGIS table (geo.school_locations).
@@ -70,6 +71,7 @@
 	let districtFeatures: Feature[] = [];
 	let highlightProvince: string | null = null;
 	let highlightDistrict: string | null = null;
+	let highlightCountry = false;
 	let resizeObserver: ResizeObserver | null = null;
 	let selectedEmis: string | null = null;
 	let disposed = false;
@@ -87,12 +89,46 @@
 		return String(value ?? '').toUpperCase() === target.toUpperCase();
 	}
 
-	/** Highlights the selected province or district and zooms to it. */
+	/** Union of the geometry extents of the given features. */
+	function boundaryExtent(features: Feature[]): [number, number, number, number] | null {
+		let minX = Infinity;
+		let minY = Infinity;
+		let maxX = -Infinity;
+		let maxY = -Infinity;
+		let found = false;
+		for (const feature of features) {
+			const box = feature.getGeometry()?.getExtent();
+			if (!box) continue;
+			const [x0, y0, x1, y1] = box;
+			if (x0 === undefined || y0 === undefined || x1 === undefined || y1 === undefined) continue;
+			if (!Number.isFinite(x0)) continue;
+			minX = Math.min(minX, x0);
+			minY = Math.min(minY, y0);
+			maxX = Math.max(maxX, x1);
+			maxY = Math.max(maxY, y1);
+			found = true;
+		}
+		return found ? [minX, minY, maxX, maxY] : null;
+	}
+
+	/**
+	 * Reflects the current selection on the boundary layers: the whole country
+	 * when nothing narrower is selected, otherwise a province or district.
+	 */
 	function applyRegionFocus() {
 		highlightProvince = selectedProvince;
 		highlightDistrict = selectedDistrict;
+		highlightCountry = !selectedSchoolId && !selectedProvince && !selectedDistrict;
 		for (const layer of boundaryLayers) layer.changed();
 		if (!olMap) return;
+
+		if (highlightCountry) {
+			const country = boundaryExtent(provinceFeatures);
+			if (country) {
+				olMap.getView().fit(country, { padding: [40, 40, 40, 40], duration: 400 });
+			}
+			return;
+		}
 
 		const target = highlightDistrict
 			? districtFeatures.find(
@@ -211,18 +247,7 @@
 		loading = true;
 		error = null;
 		try {
-			const response = await fetch(WFS_URL);
-			const contentType = response.headers.get('content-type') ?? '';
-
-			// GeoServer returns an OGC XML exception with HTTP 200 when the layer
-			// is not published yet - do not feed that to JSON.parse.
-			if (!response.ok || !contentType.includes('json')) {
-				throw new Error(
-					'School map layer is not available. Publish it with scripts/geoserver/bootstrap.sh.'
-				);
-			}
-
-			const geojson = await response.json();
+			const geojson = await loadGeoJson(WFS_URL);
 			if (disposed) return;
 
 			const [
@@ -269,19 +294,19 @@
 			const provinceSource = new VectorSource();
 			const districtSource = new VectorSource();
 			try {
-				const [provinceResponse, districtResponse] = await Promise.all([
-					fetch(wfsUrl('matric:provinces')),
-					fetch(wfsUrl('matric:districts'))
+				const [provinceGeo, districtGeo] = await Promise.all([
+					loadGeoJson(wfsUrl('matric:provinces')).catch(() => null),
+					loadGeoJson(wfsUrl('matric:districts')).catch(() => null)
 				]);
-				if (provinceResponse.ok && provinceResponse.headers.get('content-type')?.includes('json')) {
-					provinceFeatures = reader.readFeatures(await provinceResponse.json(), {
+				if (provinceGeo) {
+					provinceFeatures = reader.readFeatures(provinceGeo, {
 						dataProjection: 'EPSG:4326',
 						featureProjection: 'EPSG:3857'
 					});
 					provinceSource.addFeatures(provinceFeatures);
 				}
-				if (districtResponse.ok && districtResponse.headers.get('content-type')?.includes('json')) {
-					districtFeatures = reader.readFeatures(await districtResponse.json(), {
+				if (districtGeo) {
+					districtFeatures = reader.readFeatures(districtGeo, {
 						dataProjection: 'EPSG:4326',
 						featureProjection: 'EPSG:3857'
 					});
@@ -324,12 +349,13 @@
 				});
 
 			const provinceStyle: StyleFunction = (feature: FeatureLike) => {
+				if (highlightCountry) return regionStyle();
 				if (highlightDistrict) return undefined;
 				return sameName(feature.get('name'), highlightProvince) ? regionStyle() : undefined;
 			};
 
 			const districtStyle: StyleFunction = (feature: FeatureLike) => {
-				if (!highlightDistrict) return undefined;
+				if (highlightCountry || !highlightDistrict) return undefined;
 				return sameName(feature.get('name'), highlightDistrict) &&
 					sameName(feature.get('province'), highlightProvince)
 					? regionStyle()
@@ -420,7 +446,14 @@
 			applySelection(selectedSchoolId);
 			olMap.updateSize();
 		} catch (e) {
-			if (!disposed) error = e instanceof Error ? e.message : 'Failed to load school locations.';
+			if (!disposed) {
+				error =
+					e instanceof GeoLayerUnavailableError
+						? 'School map layer is not available. Publish it with scripts/geoserver/bootstrap.sh.'
+						: e instanceof Error
+							? e.message
+							: 'Failed to load school locations.';
+			}
 		} finally {
 			if (!disposed) loading = false;
 		}

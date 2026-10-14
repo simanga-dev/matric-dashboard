@@ -4,7 +4,6 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
 	import { Search, ChevronLeft, ChevronRight, ExternalLink } from '@lucide/svelte';
-	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { fetchSchools } from '$lib/api/dashboard';
@@ -25,19 +24,21 @@
 	let page = $state(1);
 	const pageSize = 10;
 
+	// One effect drives every fetch: a page or query change reruns it, and the
+	// initial mount is covered too. Calling loadData() explicitly as well used
+	// to double every request.
+	let request = $derived({ page, search: searchQuery });
+
 	$effect(() => {
-		loadData();
+		const { page: currentPage, search } = request;
+		void loadData(currentPage, search);
 	});
 
-	onMount(() => {
-		loadData();
-	});
-
-	async function loadData() {
+	async function loadData(currentPage: number, query: string) {
 		loading = true;
 		error = null;
 		try {
-			schoolData = await fetchSchools(page, pageSize, searchQuery || undefined);
+			schoolData = await fetchSchools(currentPage, pageSize, query || undefined);
 		} catch (e) {
 			error = e instanceof Error ? e.message : 'Failed to load schools';
 		} finally {
@@ -47,12 +48,10 @@
 
 	function handleSearch() {
 		page = 1;
-		loadData();
 	}
 
 	function goToPage(newPage: number) {
 		page = newPage;
-		loadData();
 	}
 
 	function formatPassRate(rate: number): string {

@@ -27,10 +27,24 @@ export function circuitParts(key: string): [string, string] | null {
 	return null;
 }
 
+/** Returns a name-sorted copy, leaving the input untouched. */
+export function sortSchoolsByName(schools: School[]): School[] {
+	return [...schools].sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export function groupSchools(schools: School[], search = '') {
+	return groupSortedSchools(sortSchoolsByName(schools), search);
+}
+
+/**
+ * Groups an already name-sorted directory. Callers that regroup on every
+ * keystroke should sort once and reuse it instead of re-sorting thousands
+ * of rows per filter edit.
+ */
+export function groupSortedSchools(schools: School[], search = '') {
 	const query = search.trim().toLocaleLowerCase();
 	const groups = new Map<string, Map<string, School[]>>();
-	for (const school of [...schools].sort((a, b) => a.name.localeCompare(b.name))) {
+	for (const school of schools) {
 		if (
 			query &&
 			![school.name, String(school.id), school.province, school.circuit].some((value) =>

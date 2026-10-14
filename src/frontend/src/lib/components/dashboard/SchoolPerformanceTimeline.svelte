@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { SchoolYear } from '$lib/types/dashboard';
+	type TrendPoint = { year: number; passRate: number };
 
-	let { years }: { years: SchoolYear[] } = $props();
+	let { years }: { years: TrendPoint[] } = $props();
 
 	const HEIGHT = 156;
 	const PADDING = { top: 22, right: 18, bottom: 24, left: 30 };

@@ -14,6 +14,7 @@
 		CircleHelp,
 		LogIn,
 		BookOpen,
+		BookMarked,
 		MapPinned,
 		Trophy,
 		List,
@@ -49,6 +50,11 @@
 			title: () => 'Top Achievers',
 			href: '/top-achievers',
 			icon: Trophy
+		},
+		{
+			title: () => 'Subjects',
+			href: '/subjects',
+			icon: BookMarked
 		}
 	];
 

@@ -457,7 +457,7 @@ $RECYCLE.BIN/
 !.vscode/extensions.json
 
 ## Data from docker
-/data/attachments/*
+/data/
 
 # Legacy root .env (not used - config is in appsettings.json and src/frontend/.env.local)
 /.env

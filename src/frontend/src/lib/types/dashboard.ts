@@ -1,4 +1,5 @@
 export interface DashboardStats {
+	year: number;
 	topSchools: StatItem;
 	examCenters: StatItem;
 	totalLearners: StatItem;
@@ -43,6 +44,14 @@ export interface SchoolComparison {
 	nationalAveragePassRate: number | null;
 }
 
+export interface OfferedSubject {
+	code: string;
+	name: string;
+	year: number;
+	totalWrote: number;
+	percentAchieved: number | null;
+}
+
 export interface SchoolDetail {
 	id: string;
 	name: string;
@@ -56,6 +65,8 @@ export interface SchoolDetail {
 	totalAchieved?: number | null;
 	years: SchoolYear[];
 	comparison: SchoolComparison;
+	subjectsOfferedYear: number | null;
+	subjectsOffered: OfferedSubject[];
 }
 
 export interface SchoolList {
@@ -68,6 +79,29 @@ export interface SchoolList {
 	hasNextPage: boolean;
 }
 
+export interface SchoolSubject {
+	subjectId: string;
+	code: string;
+	name: string;
+	totalWrote: number;
+	achieved: number | null;
+	percentAchieved: number | null;
+}
+
+export interface SchoolSubjects {
+	schoolId: string;
+	year: number | null;
+	availableYears: number[];
+	subjects: SchoolSubject[];
+}
+
+export interface RegionYear {
+	year: number;
+	totalWrote: number;
+	totalPassed: number;
+	passRate: number;
+}
+
 export interface RegionStats {
 	scope: 'country' | 'province' | 'district';
 	name: string;
@@ -77,4 +111,5 @@ export interface RegionStats {
 	totalWrote: number;
 	totalPassed: number;
 	passRate: number;
+	years: RegionYear[];
 }

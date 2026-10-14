@@ -43,4 +43,16 @@ public interface IDashboardService
     /// <param name="id">The school's stable identifier from the search index.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     Task<Result<SchoolDetailOutput>> GetSchoolByIdAsync(string id, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns per-subject NSC performance for a school in a selected academic year.
+    /// </summary>
+    /// <param name="id">The school's stable identifier from the search index.</param>
+    /// <param name="year">Optional academic year; defaults to the latest year with subject data.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A successful result, or a not-found failure when the school does not exist.</returns>
+    Task<Result<SchoolSubjectsOutput>> GetSchoolSubjectsAsync(
+        string id,
+        int? year = null,
+        CancellationToken cancellationToken = default);
 }

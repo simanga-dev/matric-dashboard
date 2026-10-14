@@ -7,21 +7,18 @@
 		CardTitle
 	} from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
-	import { onMount } from 'svelte';
 	import type { PassRateTrend } from '$lib/types/dashboard';
-	import { fetchPassRateTrends } from '$lib/api/dashboard';
 
-	let data: PassRateTrend[] = $state([]);
-	let loading = $state(true);
+	let { trends }: { trends: PassRateTrend[] } = $props();
+
 	let timeRange = $state('all');
-	let error = $state<string | null>(null);
 
 	let filteredData = $derived.by(() => {
-		if (timeRange === 'all') return data;
+		if (timeRange === 'all') return trends;
 		const yearsToShow = timeRange === '5y' ? 5 : 10;
 		const currentYear = 2024;
 		const startYear = currentYear - yearsToShow + 1;
-		return data.filter((d) => d.year >= startYear);
+		return trends.filter((d) => d.year >= startYear);
 	});
 
 	let rangeLabel = $derived.by(() => {
@@ -29,22 +26,6 @@
 		if (timeRange === '10y') return 'Last 10 years (2015 - 2024)';
 		return '2008 - 2024';
 	});
-
-	onMount(() => {
-		loadData();
-	});
-
-	async function loadData() {
-		loading = true;
-		error = null;
-		try {
-			data = await fetchPassRateTrends();
-		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to load chart data';
-		} finally {
-			loading = false;
-		}
-	}
 
 	const CHART_HEIGHT = 300;
 	const CHART_PADDING = { top: 20, right: 20, bottom: 40, left: 60 };
@@ -138,11 +119,7 @@
 		</div>
 	</CardHeader>
 	<CardContent>
-		{#if loading}
-			<div class="flex h-[300px] items-center justify-center text-muted-foreground">Loading...</div>
-		{:else if error}
-			<div class="flex h-[300px] items-center justify-center text-destructive">{error}</div>
-		{:else if filteredData.length > 0}
+		{#if filteredData.length > 0}
 			<svg
 				bind:clientWidth={chartWidth}
 				viewBox="0 0 {svgWidth} {CHART_HEIGHT}"

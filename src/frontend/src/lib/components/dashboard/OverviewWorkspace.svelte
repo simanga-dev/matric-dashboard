@@ -12,8 +12,10 @@
 		type ResizableContext
 	} from '$lib/components/ui/resizable';
 	import { overviewWidths } from './overview-layout';
+	import type { School } from '$lib/types/dashboard';
 
 	let {
+		schools = [],
 		selectedSchoolId = $bindable(null),
 		selectedProvince = $bindable(null),
 		selectedDistrict = $bindable(null),
@@ -22,6 +24,7 @@
 		restoredSchoolId = null,
 		revealRequest = 0
 	}: {
+		schools?: School[];
 		selectedSchoolId?: string | null;
 		selectedProvince?: string | null;
 		selectedDistrict?: string | null;
@@ -89,6 +92,7 @@
 					{#snippet child({ props, open })}
 						<div {...props} hidden={!open} inert={!open} class="h-full min-h-0">
 							<SchoolTree
+								initialSchools={schools}
 								{restoredSchoolId}
 								{revealRequest}
 								bind:selectedSchoolId

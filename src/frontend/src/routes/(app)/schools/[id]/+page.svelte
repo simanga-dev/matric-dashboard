@@ -1,18 +1,15 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
-	import { LoadingSpinner, EmptyState } from '$lib/components/common';
+	import { EmptyState } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import { toast } from '$lib/components/ui/sonner';
-	import { fetchSchoolById } from '$lib/api/dashboard';
 	import { passRateColor } from '$lib/components/dashboard/school-hierarchy';
 	import { routes } from '$lib/config';
-	import type { SchoolDetail } from '$lib/types/dashboard';
 	import { cn, toTitleCase } from '$lib/utils';
+	import type { PageData } from './$types';
 	import {
 		School as SchoolIcon,
 		Users,
@@ -32,26 +29,11 @@
 		Award
 	} from '@lucide/svelte';
 
-	let school = $state<SchoolDetail | null>(null);
-	let loading = $state(true);
-	let error = $state<string | null>(null);
+	let { data }: { data: PageData } = $props();
 
-	let schoolId = $derived(page.params.id ?? '');
-
-	onMount(async () => {
-		if (!schoolId) {
-			error = 'Invalid school.';
-			loading = false;
-			return;
-		}
-		try {
-			school = await fetchSchoolById(schoolId);
-		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to load school.';
-		} finally {
-			loading = false;
-		}
-	});
+	// The server load resolves the school for the current route param, so the
+	// page renders on first paint and stays correct across param changes.
+	let school = $derived(data.school);
 
 	function formatPassRate(rate: number): string {
 		return `${rate.toFixed(1)}%`;
@@ -131,12 +113,8 @@
 		</Button>
 	</div>
 
-	{#if loading}
-		<div class="flex justify-center py-24">
-			<LoadingSpinner />
-		</div>
-	{:else if error || !school}
-		<EmptyState icon={SchoolIcon} message={error ?? 'School not found.'} />
+	{#if !school}
+		<EmptyState icon={SchoolIcon} message="School not found." />
 	{:else}
 		<Card.Root class="overflow-hidden bg-gradient-to-br from-primary/10 via-card to-card">
 			<Card.Content class="flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:justify-between">

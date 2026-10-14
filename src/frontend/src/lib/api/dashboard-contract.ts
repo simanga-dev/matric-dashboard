@@ -3,7 +3,8 @@ import type {
 	PassRateTrend,
 	RegionStats,
 	SchoolDetail,
-	SchoolList
+	SchoolList,
+	SchoolSubjects
 } from '$lib/types/dashboard';
 import type { components } from './v1';
 
@@ -33,6 +34,12 @@ export interface DashboardPaths {
 		get: {
 			parameters: { path: { id: string } };
 			responses: GetResponse<SchoolDetail>;
+		};
+	};
+	'/api/v1/dashboard/schools/{id}/subjects': {
+		get: {
+			parameters: { path: { id: string }; query?: { year?: number } };
+			responses: GetResponse<SchoolSubjects>;
 		};
 	};
 	'/api/v1/dashboard/regions/stats': {

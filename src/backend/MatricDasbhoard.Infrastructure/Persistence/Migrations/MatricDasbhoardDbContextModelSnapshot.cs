@@ -158,6 +158,123 @@ namespace MatricDasbhoard.Infrastructure.Persistence.Migrations
                     b.ToTable("SchoolPerformances", "marks");
                 });
 
+            modelBuilder.Entity("MatricDasbhoard.Domain.Entities.SchoolSubjectPerformance", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("Achieved")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<decimal?>("PercentAchieved")
+                        .HasPrecision(5, 1)
+                        .HasColumnType("numeric(5,1)");
+
+                    b.Property<Guid>("SchoolId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("SubjectId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("TotalWrote")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsDeleted");
+
+                    b.HasIndex("Year")
+                        .HasDatabaseName("IX_SchoolSubjectPerformances_Year");
+
+                    b.HasIndex("SubjectId", "Year")
+                        .HasDatabaseName("IX_SchoolSubjectPerformances_SubjectId_Year");
+
+                    b.HasIndex("SchoolId", "SubjectId", "Year")
+                        .IsUnique()
+                        .HasDatabaseName("IX_SchoolSubjectPerformances_SchoolId_SubjectId_Year");
+
+                    b.ToTable("SchoolSubjectPerformances", "marks");
+                });
+
+            modelBuilder.Entity("MatricDasbhoard.Domain.Entities.Subject", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsGateway")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("IsDeleted");
+
+                    b.ToTable("Subjects", "marks");
+                });
+
             modelBuilder.Entity("MatricDasbhoard.Infrastructure.Features.Audit.Models.AuditEvent", b =>
                 {
                     b.Property<Guid>("Id")
@@ -668,6 +785,25 @@ namespace MatricDasbhoard.Infrastructure.Persistence.Migrations
                     b.Navigation("School");
                 });
 
+            modelBuilder.Entity("MatricDasbhoard.Domain.Entities.SchoolSubjectPerformance", b =>
+                {
+                    b.HasOne("MatricDasbhoard.Domain.Entities.School", "School")
+                        .WithMany("SubjectPerformances")
+                        .HasForeignKey("SchoolId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MatricDasbhoard.Domain.Entities.Subject", "Subject")
+                        .WithMany("Performances")
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("School");
+
+                    b.Navigation("Subject");
+                });
+
             modelBuilder.Entity("MatricDasbhoard.Infrastructure.Features.Authentication.Models.EmailToken", b =>
                 {
                     b.HasOne("MatricDasbhoard.Infrastructure.Features.Authentication.Models.ApplicationUser", "User")
@@ -763,6 +899,13 @@ namespace MatricDasbhoard.Infrastructure.Persistence.Migrations
                 });
 
             modelBuilder.Entity("MatricDasbhoard.Domain.Entities.School", b =>
+                {
+                    b.Navigation("Performances");
+
+                    b.Navigation("SubjectPerformances");
+                });
+
+            modelBuilder.Entity("MatricDasbhoard.Domain.Entities.Subject", b =>
                 {
                     b.Navigation("Performances");
                 });

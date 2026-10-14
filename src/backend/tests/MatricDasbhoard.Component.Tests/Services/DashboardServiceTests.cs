@@ -2,6 +2,7 @@ using MatricDasbhoard.Component.Tests.Fixtures;
 using MatricDasbhoard.Domain.Entities;
 using MatricDasbhoard.Infrastructure.Features.Dashboard.Services;
 using MatricDasbhoard.Infrastructure.Persistence;
+using MatricDasbhoard.Shared;
 using Meilisearch;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -171,6 +172,299 @@ public class DashboardServiceTests
         Assert.Equal("district", district.Scope);
         Assert.Equal("GAUTENG", district.Province);
         Assert.Equal(2, district.SchoolCount);
+    }
+
+    /// <summary>Region stats expose a learner-weighted pass rate trend by year.</summary>
+    [Fact]
+    public async Task RegionStats_BuildsYearlyWeightedTrend()
+    {
+        await using var db = TestDbContextFactory.Create();
+        var a = School("100", "A");
+        a.AddPerformance(new SchoolPerformance(2024, 0, 100, 80, 80));
+        a.AddPerformance(new SchoolPerformance(2025, 0, 200, 180, 90));
+        var b = School("200", "B");
+        b.AddPerformance(new SchoolPerformance(2025, 0, 100, 60, 60));
+        db.Schools.AddRange(a, b);
+        await db.SaveChangesAsync();
+        using var http = UnreachableSearch();
+        var service = new DashboardService(db, new MeilisearchClient(http));
+
+        var province = await service.GetRegionStatsAsync("GAUTENG", null);
+
+        Assert.Equal(2, province.Years.Count);
+        Assert.Equal(2024, province.Years[0].Year);
+        Assert.Equal(80, province.Years[0].PassRate);
+        Assert.Equal(2025, province.Years[1].Year);
+        Assert.Equal(300, province.Years[1].TotalWrote);
+        Assert.Equal(240, province.Years[1].TotalPassed);
+        Assert.Equal(80, province.Years[1].PassRate);
+    }
+
+    /// <summary>Stats, detail and listings follow the latest year present, not a fixed year.</summary>
+    [Fact]
+    public async Task Stats_FollowLatestAvailableYear()
+    {
+        await using var db = TestDbContextFactory.Create();
+        var a = School("100", "A");
+        a.AddPerformance(new SchoolPerformance(2024, 0, 100, 80, 80));
+        a.AddPerformance(new SchoolPerformance(2025, 0, 200, 180, 90));
+        var b = School("200", "B");
+        b.AddPerformance(new SchoolPerformance(2025, 0, 100, 60, 60));
+        db.Schools.AddRange(a, b);
+        await db.SaveChangesAsync();
+        using var http = UnreachableSearch();
+        var service = new DashboardService(db, new MeilisearchClient(http));
+
+        var stats = await service.GetStatsAsync();
+
+        Assert.Equal(2025, stats.Year);
+        Assert.Equal(2, stats.ExamCenters.Total);
+        Assert.Equal(100.0, stats.ExamCenters.Trend);
+        Assert.Equal(300, stats.TotalLearners.Total);
+        Assert.Equal(200.0, stats.TotalLearners.Trend);
+        Assert.Equal(800, stats.PassRate.Total);
+        Assert.Equal(0.0, stats.PassRate.Trend);
+
+        var detail = await service.GetSchoolByIdAsync("100");
+        Assert.True(detail.IsSuccess);
+        Assert.Equal(2025, detail.Value.Years[^1].Year);
+        Assert.Equal(200, detail.Value.TotalWrote);
+
+        var list = await service.GetSchoolsAsync(1, 10);
+        Assert.Equal(200, list.Items.Single(s => s.Id == "100").TotalWrote);
+    }
+
+    /// <summary>Detail carries the latest subject year and skips subjects with no learners.</summary>
+    [Fact]
+    public async Task Detail_IncludesLatestYearSubjectsExcludingNotOffered()
+    {
+        await using var db = TestDbContextFactory.Create();
+        var school = School("100", "With Subjects");
+        var accounting = db.AddSubject("accounting", "Accounting");
+        var mathematics = db.AddSubject("mathematics", "Mathematics");
+        school.AddSubjectResult(accounting, 2023, 40, 30, 75.0m);
+        school.AddSubjectResult(accounting, 2024, 56, 54, 96.4m);
+        school.AddSubjectResult(mathematics, 2024, 0, null, null);
+        db.Schools.Add(school);
+        await db.SaveChangesAsync();
+        using var http = UnreachableSearch();
+        var service = new DashboardService(db, new MeilisearchClient(http));
+
+        var result = await service.GetSchoolByIdAsync("100");
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2024, result.Value.SubjectsOfferedYear);
+        var offered = Assert.Single(result.Value.SubjectsOffered!);
+        Assert.Equal("accounting", offered.Code);
+        Assert.Equal("Accounting", offered.Name);
+        Assert.Equal(2024, offered.Year);
+        Assert.Equal(56, offered.TotalWrote);
+        Assert.Equal(96.4, offered.PercentAchieved);
+    }
+
+    /// <summary>Detail offers every subject the school has ever offered, even if last run in an earlier year.</summary>
+    [Fact]
+    public async Task Detail_IncludesSubjectsOfferedInEarlierYears()
+    {
+        await using var db = TestDbContextFactory.Create();
+        var school = School("100", "Cumulative");
+        var history = db.AddSubject("history", "History");
+        var accounting = db.AddSubject("accounting", "Accounting");
+        school.AddSubjectResult(history, 2023, 20, 17, 85.0m);
+        school.AddSubjectResult(accounting, 2023, 40, 30, 75.0m);
+        school.AddSubjectResult(accounting, 2024, 56, 54, 96.4m);
+        db.Schools.Add(school);
+        await db.SaveChangesAsync();
+        using var http = UnreachableSearch();
+        var service = new DashboardService(db, new MeilisearchClient(http));
+
+        var result = await service.GetSchoolByIdAsync("100");
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2024, result.Value.SubjectsOfferedYear);
+        Assert.Equal(["Accounting", "History"], result.Value.SubjectsOffered!.Select(s => s.Name));
+        var historyRow = result.Value.SubjectsOffered!.Single(s => s.Code == "history");
+        Assert.Equal(2023, historyRow.Year);
+        Assert.Equal(20, historyRow.TotalWrote);
+        Assert.Equal(85.0, historyRow.PercentAchieved);
+        var accountingRow = result.Value.SubjectsOffered!.Single(s => s.Code == "accounting");
+        Assert.Equal(2024, accountingRow.Year);
+        Assert.Equal(56, accountingRow.TotalWrote);
+    }
+
+    /// <summary>Detail omits subject data for schools that have none.</summary>
+    [Fact]
+    public async Task Detail_WithoutSubjectsReturnsNullYearAndEmptyList()
+    {
+        await using var db = TestDbContextFactory.Create();
+        db.Schools.Add(School("100", "No Subjects"));
+        await db.SaveChangesAsync();
+        using var http = UnreachableSearch();
+        var service = new DashboardService(db, new MeilisearchClient(http));
+
+        var result = await service.GetSchoolByIdAsync("100");
+
+        Assert.True(result.IsSuccess);
+        Assert.Null(result.Value.SubjectsOfferedYear);
+        Assert.Null(result.Value.SubjectsOffered);
+    }
+
+    /// <summary>Subjects endpoint lists available years and defaults to the latest.</summary>
+    [Fact]
+    public async Task Subjects_ReturnsAvailableYearsAndFallsBackToLatest()
+    {
+        await using var db = TestDbContextFactory.Create();
+        var school = School("100", "With Subjects");
+        var accounting = db.AddSubject("accounting", "Accounting");
+        var mathematics = db.AddSubject("mathematics", "Mathematics");
+        school.AddSubjectResult(accounting, 2023, 40, 30, 75.0m);
+        school.AddSubjectResult(accounting, 2024, 56, 54, 96.4m);
+        school.AddSubjectResult(mathematics, 2024, 0, null, null);
+        db.Schools.Add(school);
+        db.Schools.Add(School("200", "No Subjects"));
+        await db.SaveChangesAsync();
+        using var http = UnreachableSearch();
+        var service = new DashboardService(db, new MeilisearchClient(http));
+
+        var latest = await service.GetSchoolSubjectsAsync("100");
+
+        Assert.True(latest.IsSuccess);
+        Assert.Equal("100", latest.Value.SchoolId);
+        Assert.Equal(2024, latest.Value.Year);
+        Assert.Equal([2023, 2024], latest.Value.AvailableYears);
+        Assert.Equal(["Accounting", "Mathematics"], latest.Value.Subjects.Select(s => s.Name));
+        Assert.Equal(56, latest.Value.Subjects[0].TotalWrote);
+        Assert.Equal(54, latest.Value.Subjects[0].Achieved);
+        Assert.Equal(96.4, latest.Value.Subjects[0].PercentAchieved);
+        var notOffered = latest.Value.Subjects.Single(s => s.Code == "mathematics");
+        Assert.Equal(0, notOffered.TotalWrote);
+        Assert.Null(notOffered.PercentAchieved);
+
+        var selected = await service.GetSchoolSubjectsAsync("100", 2023);
+
+        Assert.True(selected.IsSuccess);
+        Assert.Equal(2023, selected.Value.Year);
+        var only = Assert.Single(selected.Value.Subjects);
+        Assert.Equal("accounting", only.Code);
+        Assert.Equal(30, only.Achieved);
+
+        var empty = await service.GetSchoolSubjectsAsync("200");
+
+        Assert.True(empty.IsSuccess);
+        Assert.Null(empty.Value.Year);
+        Assert.Empty(empty.Value.AvailableYears);
+        Assert.Empty(empty.Value.Subjects);
+    }
+
+    /// <summary>Unknown school ids fail with the shared not-found error.</summary>
+    [Fact]
+    public async Task Subjects_UnknownSchoolReturnsNotFound()
+    {
+        await using var db = TestDbContextFactory.Create();
+        db.Schools.Add(School("100", "Known"));
+        await db.SaveChangesAsync();
+        using var http = UnreachableSearch();
+        var service = new DashboardService(db, new MeilisearchClient(http));
+
+        var result = await service.GetSchoolSubjectsAsync("missing");
+
+        Assert.True(result.IsFailure);
+        Assert.Equal(ErrorType.NotFound, result.ErrorType);
+        Assert.Equal(ErrorMessages.Dashboard.SchoolNotFound, result.Error);
+    }
+
+    /// <summary>Soft-deleted subject rows and subjects are excluded from detail and subject results.</summary>
+    [Fact]
+    public async Task Subjects_ExcludeSoftDeletedRowsAndSubjects()
+    {
+        await using var db = TestDbContextFactory.Create();
+        var school = School("100", "With Subjects");
+        var accounting = db.AddSubject("accounting", "Accounting");
+        var physics = db.AddSubject("physics", "Physical Sciences");
+        school.AddSubjectResult(accounting, 2023, 40, 30, 75.0m);
+        var removed = school.AddSubjectResult(accounting, 2024, 56, 54, 96.4m);
+        school.AddSubjectResult(physics, 2024, 20, 15, 75.0m);
+        removed.SoftDelete();
+        physics.SoftDelete();
+        db.Schools.Add(school);
+        await db.SaveChangesAsync();
+        using var http = UnreachableSearch();
+        var service = new DashboardService(db, new MeilisearchClient(http));
+
+        var detail = await service.GetSchoolByIdAsync("100");
+        var subjects = await service.GetSchoolSubjectsAsync("100");
+
+        Assert.True(detail.IsSuccess);
+        Assert.Equal(2023, detail.Value.SubjectsOfferedYear);
+        var offered = Assert.Single(detail.Value.SubjectsOffered!);
+        Assert.Equal("accounting", offered.Code);
+        Assert.Equal(2023, offered.Year);
+        Assert.True(subjects.IsSuccess);
+        Assert.Equal([2023], subjects.Value.AvailableYears);
+        Assert.Equal(2023, subjects.Value.Year);
+        Assert.Equal("accounting", Assert.Single(subjects.Value.Subjects).Code);
+    }
+
+    /// <summary>Subject rows are ordered by display name in detail and subject results.</summary>
+    [Fact]
+    public async Task Subjects_AreOrderedByName()
+    {
+        await using var db = TestDbContextFactory.Create();
+        var school = School("100", "Ordered");
+        var mathematics = db.AddSubject("mathematics", "Mathematics");
+        var accounting = db.AddSubject("accounting", "Accounting");
+        var english = db.AddSubject("english", "English Home Language");
+        school.AddSubjectResult(mathematics, 2024, 10, 8, 80.0m);
+        school.AddSubjectResult(accounting, 2024, 20, 18, 90.0m);
+        school.AddSubjectResult(english, 2024, 30, 27, 90.0m);
+        db.Schools.Add(school);
+        await db.SaveChangesAsync();
+        using var http = UnreachableSearch();
+        var service = new DashboardService(db, new MeilisearchClient(http));
+
+        var detail = await service.GetSchoolByIdAsync("100");
+        var subjects = await service.GetSchoolSubjectsAsync("100");
+
+        Assert.Equal(
+            ["Accounting", "English Home Language", "Mathematics"],
+            detail.Value.SubjectsOffered!.Select(s => s.Name));
+        Assert.Equal(
+            ["Accounting", "English Home Language", "Mathematics"],
+            subjects.Value.Subjects.Select(s => s.Name));
+    }
+
+    /// <summary>Detail falls back to the latest year with an offered subject, or null when none exists.</summary>
+    [Fact]
+    public async Task Detail_FallsBackToLatestYearWithOfferedSubject()
+    {
+        await using var db = TestDbContextFactory.Create();
+        var school = School("100", "Fallback");
+        var accounting = db.AddSubject("accounting", "Accounting");
+        var mathematics = db.AddSubject("mathematics", "Mathematics");
+        school.AddSubjectResult(accounting, 2023, 40, 30, 75.0m);
+        school.AddSubjectResult(mathematics, 2024, 0, null, null);
+        var noOffers = School("200", "No Offers");
+        var lifeOrientation = db.AddSubject("life-orientation", "Life Orientation");
+        noOffers.AddSubjectResult(lifeOrientation, 2024, 0, null, null);
+        db.Schools.AddRange(school, noOffers);
+        await db.SaveChangesAsync();
+        using var http = UnreachableSearch();
+        var service = new DashboardService(db, new MeilisearchClient(http));
+
+        var fallback = await service.GetSchoolByIdAsync("100");
+
+        Assert.True(fallback.IsSuccess);
+        Assert.Equal(2023, fallback.Value.SubjectsOfferedYear);
+        var offered = Assert.Single(fallback.Value.SubjectsOffered!);
+        Assert.Equal("accounting", offered.Code);
+        Assert.Equal(2023, offered.Year);
+        Assert.Equal(40, offered.TotalWrote);
+
+        var none = await service.GetSchoolByIdAsync("200");
+
+        Assert.True(none.IsSuccess);
+        Assert.Null(none.Value.SubjectsOfferedYear);
+        Assert.Null(none.Value.SubjectsOffered);
     }
 
     private static School School(string id, string name, string province = "GAUTENG") =>

@@ -12,6 +12,7 @@ namespace MatricDasbhoard.Application.Features.Dashboard.Dtos;
 /// <param name="TotalWrote">Learners who wrote in the scope.</param>
 /// <param name="TotalPassed">Learners who passed in the scope.</param>
 /// <param name="PassRate">Learner-weighted pass rate percentage for the scope.</param>
+/// <param name="Years">Learner-weighted pass rate trend by year, oldest first.</param>
 public record RegionStatsOutput(
     string Scope,
     string Name,
@@ -20,5 +21,6 @@ public record RegionStatsOutput(
     int SchoolCount,
     int TotalWrote,
     int TotalPassed,
-    double PassRate
+    double PassRate,
+    IReadOnlyList<RegionYearOutput> Years
 );

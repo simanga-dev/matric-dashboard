@@ -28,4 +28,7 @@ public class RegionStatsResponse
 
     /// <summary>Learner-weighted pass rate percentage for the scope.</summary>
     public double PassRate { get; init; }
+
+    /// <summary>Learner-weighted pass rate trend by year, oldest first.</summary>
+    public IReadOnlyList<RegionYearResponse> Years { get; init; } = [];
 }

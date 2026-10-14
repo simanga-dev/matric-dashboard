@@ -88,4 +88,29 @@ public class DashboardController(IDashboardService dashboardService) : ApiContro
 
         return Ok(result.Value.ToResponse());
     }
+
+    /// <summary>
+    /// Returns per-subject NSC performance for a single school.
+    /// </summary>
+    /// <param name="id">The school's stable identifier from the search index.</param>
+    /// <param name="year">Optional academic year; defaults to the latest year with subject data.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <response code="200">Returns the school's subject results.</response>
+    /// <response code="404">If no school matches the identifier.</response>
+    [HttpGet("schools/{id}/subjects")]
+    [ProducesResponseType(typeof(Dtos.SchoolSubjectsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<Dtos.SchoolSubjectsResponse>> GetSchoolSubjects(
+        string id,
+        [FromQuery] int? year = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await dashboardService.GetSchoolSubjectsAsync(id, year, cancellationToken);
+        if (!result.IsSuccess)
+        {
+            return ProblemFactory.Create(result.Error, result.ErrorType);
+        }
+
+        return Ok(result.Value.ToResponse());
+    }
 }

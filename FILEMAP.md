@@ -122,7 +122,24 @@ School lists and lookups are read from PostgreSQL via EF (`DashboardService`). T
 | **`School`/`SchoolPerformance` entity** (fields) | EF configuration, migration, `scripts/import_schools_to_db.py`, `DashboardService` mapping, `SchoolOutput` / `SchoolDetailOutput` DTOs |
 | **`DashboardService.GetSchoolsAsync`** | `IDashboardService`, `DashboardController`, `SchoolOutput` DTO, `DashboardMapper` |
 | **`DashboardService.GetSchoolByIdAsync`** | `IDashboardService`, `DashboardController`, `SchoolDetailOutput` DTO, `DashboardMapper`, `MatricDasbhoard.Api.Tests/Features/Dashboard/DashboardMapperTests.cs` |
+| **`DashboardService.GetSchoolSubjectsAsync`** (per-school subjects) | `IDashboardService`, `DashboardController` (`GET schools/{id}/subjects?year=`), `SchoolSubjectsOutput` / `SchoolSubjectOutput` / `OfferedSubjectOutput` DTOs, `DashboardMapper`, frontend `api/dashboard.ts` (`fetchSchoolSubjects`), `routes/(app)/subjects/+page.svelte`, `SchoolDetailPanel.svelte` |
+| **`Subject` / `SchoolSubjectPerformance` entities** (fields) | EF configurations (`SubjectConfiguration`, `SchoolSubjectPerformanceConfiguration`), migration `AddSchoolSubjects`, `scripts/import_subject_results.py` column list, `DashboardService` subject projections, `ResponseContracts.cs` |
+| **`scripts/import_subject_results.py`** (SQL shape/school matching) | `scripts/import_subject_results.sh`, `marks."SchoolSubjectPerformances"` columns + unique (SchoolId, SubjectId, Year), `NSC_DB_PATH`, `scripts/import_subject_results.py` centre->EMIS fallback |
+| **`DashboardService.GetRegionStatsAsync`** | `IDashboardService`, `DashboardController`, `RegionStatsOutput` / `RegionYearOutput` DTOs, `DashboardMapper`, frontend `api/dashboard.ts` (`fetchRegionStats`), `SchoolDetailPanel.svelte` |
+| **`RegionStatsOutput` / `RegionStatsResponse`** (fields) | `DashboardMapper`, `MatricDasbhoard.Api.Tests/Contracts/ResponseContracts.cs`, frontend `types/dashboard.ts` (`RegionStats` / `RegionYear`) |
 | **`scripts/import_schools_to_db.py`** (import shape/identity validation) | `scripts/import_schools_to_db.sh`, entity columns, `scripts/tests/test_spatial_operations.py`, `docs/spatial-operations.md`; quarantine placeholders without synthesizing EMIS identifiers |
+
+### NSC Results (SQLite `data/nsc/matric.db`)
+
+Single SQLite file: per-school overall results (`schools`, `results`) and per-school subject results (`subjects`, `subject_aliases`, `report_sources`, `subject_results`). Each extractor refreshes only its own tables. `.env` `DATABASE_URL` / `DB_UI_NSC` point here for vim-dadbod.
+
+| When you change... | Also update... |
+|---|---|
+| **`scripts/extract_nsc_results.py`** (overall-report layout/columns) | `schools`/`results` schema, `scripts/import_nsc_history.py` (`DEFAULT_DB`, `NSC_DB_PATH`), `scripts/import_nsc_history.sh` |
+| **`scripts/extract_subject_results.py`** (layout detection/anchors) | `METRICS_PER_SUBJECT` per report year (2 vs 3 metrics), `SUBJECT_ALIASES`, `data/nsc/matric.db` tables (`subjects`, `subject_aliases`, `report_sources`, `subject_results`) |
+| **`subject_results` schema** (`subject_id` primary key) | `scripts/extract_subject_results.py` upsert statement; downstream joins to `schools.centre_number` (centres, not EMIS numbers) |
+| **Report PDFs in `data/school_subject_reports/`** | `scripts/extract_subject_results.py` file discovery (report year from filename, one file per province for 2014) and `--pdf-dir` defaults (`data/school_subject_reports`, `data/nsc/subject_pdfs`) |
+| **`scripts/download_dbe_reports.py`** (source page/parsing) | `data/reports/` folder layout; re-run is safe and skips existing files |
 
 ---
 

@@ -14,6 +14,9 @@
 	} from '$lib/components/dashboard/overview-url';
 	import { ResizablePanelGroup } from '$lib/components/ui/resizable';
 	import * as m from '$lib/paraglide/messages';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
 
 	const STORAGE_KEY = 'overview-state';
 
@@ -167,6 +170,7 @@
 <div class="workspace overflow-hidden rounded-b-xl border shadow-sm">
 	<ResizablePanelGroup orientation="horizontal" class="explorer-panels">
 		<OverviewWorkspace
+			schools={data.schools}
 			{restoredSchoolId}
 			{revealRequest}
 			bind:selectedSchoolId

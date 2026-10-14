@@ -13,6 +13,7 @@ internal static class DashboardMapper
     /// </summary>
     public static DashboardStatsResponse ToResponse(this DashboardStatsOutput output) => new()
     {
+        Year = output.Year,
         TopSchools = output.TopSchools.ToResponse(),
         ExamCenters = output.ExamCenters.ToResponse(),
         TotalLearners = output.TotalLearners.ToResponse(),
@@ -48,6 +49,18 @@ internal static class DashboardMapper
         Province = output.Province,
         Year = output.Year,
         SchoolCount = output.SchoolCount,
+        TotalWrote = output.TotalWrote,
+        TotalPassed = output.TotalPassed,
+        PassRate = output.PassRate,
+        Years = output.Years.Select(y => y.ToResponse()).ToList()
+    };
+
+    /// <summary>
+    /// Maps a single year of region performance.
+    /// </summary>
+    public static RegionYearResponse ToResponse(this RegionYearOutput output) => new()
+    {
+        Year = output.Year,
         TotalWrote = output.TotalWrote,
         TotalPassed = output.TotalPassed,
         PassRate = output.PassRate
@@ -95,8 +108,55 @@ internal static class DashboardMapper
         TotalPassed = output.TotalPassed,
         PassRate = output.PassRate,
         Years = output.Years.Select(y => y.ToResponse()).ToList(),
-        Comparison = output.Comparison.ToResponse()
+        Comparison = output.Comparison.ToResponse(),
+        SubjectsOfferedYear = output.SubjectsOfferedYear,
+        SubjectsOffered = output.SubjectsOffered?.Select(s => s.ToResponse()).ToList() ?? []
     };
+
+    extension(OfferedSubjectOutput output)
+    {
+        /// <summary>
+        /// Maps a subject offered by a school.
+        /// </summary>
+        public OfferedSubjectResponse ToResponse() => new()
+        {
+            Code = output.Code,
+            Name = output.Name,
+            Year = output.Year,
+            TotalWrote = output.TotalWrote,
+            PercentAchieved = output.PercentAchieved
+        };
+    }
+
+    extension(SchoolSubjectOutput output)
+    {
+        /// <summary>
+        /// Maps a single subject result for a school.
+        /// </summary>
+        public SchoolSubjectResponse ToResponse() => new()
+        {
+            SubjectId = output.SubjectId,
+            Code = output.Code,
+            Name = output.Name,
+            TotalWrote = output.TotalWrote,
+            Achieved = output.Achieved,
+            PercentAchieved = output.PercentAchieved
+        };
+    }
+
+    extension(SchoolSubjectsOutput output)
+    {
+        /// <summary>
+        /// Maps per-subject school results for the selected year.
+        /// </summary>
+        public SchoolSubjectsResponse ToResponse() => new()
+        {
+            SchoolId = output.SchoolId,
+            Year = output.Year,
+            AvailableYears = output.AvailableYears,
+            Subjects = output.Subjects.Select(s => s.ToResponse()).ToList()
+        };
+    }
 
     /// <summary>
     /// Maps a single year's performance.
