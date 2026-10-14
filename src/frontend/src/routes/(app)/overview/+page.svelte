@@ -167,7 +167,7 @@
 	<meta name="description" content={m.meta_overview_description()} />
 </svelte:head>
 
-<div class="workspace overflow-hidden rounded-b-xl border shadow-sm">
+<div class="workspace overflow-hidden">
 	<ResizablePanelGroup orientation="horizontal" class="explorer-panels">
 		<OverviewWorkspace
 			schools={data.schools}

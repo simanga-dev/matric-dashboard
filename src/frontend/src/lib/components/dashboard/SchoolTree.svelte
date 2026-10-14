@@ -158,30 +158,32 @@
 	class="flex h-full min-h-0 flex-col overflow-hidden bg-card text-card-foreground"
 	style:--tree-row={`${rowHeight}px`}
 >
-	<header class="flex h-11 shrink-0 items-center gap-3 border-b bg-muted/30 px-4">
-		<Network class="size-4 shrink-0 text-primary" />
+	<header class="flex min-h-14 shrink-0 items-center gap-2 bg-muted/60 px-3">
+		<Network class="size-4 shrink-0 text-muted-foreground" />
 		<div class="min-w-0 flex-1">
 			<h2 class="text-sm font-semibold">School browser</h2>
 		</div>
-		<span class="rounded-md border bg-background px-2 py-1 text-xs tabular-nums"
+		<span class="rounded-md bg-muted/70 px-2 py-1 text-xs text-muted-foreground tabular-nums"
 			>{schools.length.toLocaleString()}</span
 		>
 		{@render headerAction?.()}
 	</header>
-	<div class="space-y-2 border-b p-3">
+	<div class="space-y-3 p-3 pb-2">
 		<div class="relative">
-			<Search class="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground" />
+			<Search
+				class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+			/>
 			<input
 				aria-label="Filter schools by name, EMIS, province or circuit"
 				placeholder="Find school, EMIS or area…"
 				bind:value={search}
-				class="h-9 w-full rounded-md border bg-background pr-9 pl-9 text-xs outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+				class="min-h-[44px] w-full rounded-lg border border-transparent bg-muted/50 ps-9 pe-9 text-xs outline-none focus-visible:border-ring/30 focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
 			/>
 			{#if search}<button
 					type="button"
 					aria-label="Clear school filter"
 					onclick={() => (search = '')}
-					class="absolute top-1 right-1 rounded p-1.5 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+					class="absolute end-1 top-1/2 -translate-y-1/2 rounded-md p-1.5 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
 					><X class="size-4" /></button
 				>{/if}
 		</div>
@@ -192,7 +194,7 @@
 					type="button"
 					disabled={!matchCount}
 					onclick={expandAll}
-					class="rounded px-2 py-1 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+					class="min-h-8 rounded-md px-2 py-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 pointer-coarse:min-h-[44px]"
 					>Expand all</button
 				>
 				<button
@@ -202,7 +204,7 @@
 						expandedProvinces = new Set();
 						expandedCircuits = new Set();
 					}}
-					class="rounded px-2 py-1 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+					class="min-h-8 rounded-md px-2 py-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 pointer-coarse:min-h-[44px]"
 					>Collapse all</button
 				>
 			</div>
@@ -251,7 +253,7 @@
 						>
 					</div>
 					{#if provincesVisible}
-						<ul class="ml-4 border-l border-border pl-1">
+						<ul class="ms-4 border-s border-border/40 ps-1">
 							{#each [...grouped] as [province, circuits] (province)}
 								<li>
 									<div
@@ -286,7 +288,7 @@
 										>
 									</div>
 									{#if openProvinces.has(province)}
-										<ul class="ml-4 border-l border-border pl-1">
+										<ul class="ms-4 border-s border-border/40 ps-1">
 											{#each [...circuits] as [circuit, schoolList] (circuit)}
 												{@const key = circuitKey(province, circuit)}
 												<li>
@@ -320,7 +322,7 @@
 														>
 													</div>
 													{#if openCircuits.has(key)}
-														<ul class="ml-3 border-l border-border pl-1">
+														<ul class="ms-3 border-s border-border/40 ps-1">
 															{#each schoolList as school (school.id)}<li>
 																	<div
 																		class="school-row"
@@ -369,7 +371,7 @@
 	.branch {
 		display: flex;
 		align-items: center;
-		border-radius: 0.375rem;
+		border-radius: var(--radius);
 	}
 	/* Ancestor rows pin to the top of the scroll area so the current
 	   province and district stay visible while schools scroll past. The
@@ -399,14 +401,14 @@
 		flex: 1;
 		align-items: center;
 		gap: 0.5rem;
-		border-radius: 0.375rem;
+		border-radius: var(--radius);
 		padding: 0.5rem;
-		text-align: left;
-		font-size: 0.75rem;
+		text-align: start;
+		font-size: max(0.75rem, 12px);
 	}
 	.disclosure {
 		flex-shrink: 0;
-		border-radius: 0.375rem;
+		border-radius: var(--radius);
 		padding: 0.5rem;
 	}
 	.node:hover,
@@ -419,13 +421,13 @@
 		outline-offset: -2px;
 	}
 	.selected {
-		background: color-mix(in oklab, hsl(var(--primary)) 18%, hsl(var(--card)));
-		color: hsl(var(--primary));
+		background: color-mix(in oklab, hsl(var(--primary)) 10%, hsl(var(--card)));
+		color: hsl(var(--foreground));
 	}
 	.school-row {
 		display: flex;
 		align-items: center;
-		border-radius: 0.375rem;
+		border-radius: var(--radius);
 	}
 	.school-row:hover {
 		background: hsl(var(--muted));
@@ -438,7 +440,7 @@
 	}
 	.school-row.selected:hover,
 	.branch.selected:hover {
-		background: color-mix(in oklab, hsl(var(--primary)) 28%, hsl(var(--card)));
+		background: color-mix(in oklab, hsl(var(--primary)) 16%, hsl(var(--card)));
 	}
 	.row-action {
 		flex-shrink: 0;

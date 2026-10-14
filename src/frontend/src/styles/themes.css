@@ -99,3 +99,280 @@
 	--sidebar-border: 24 5% 16%;
 	--sidebar-ring: 220 50% 55%;
 }
+
+/* Tweakcn-style presets. Stone preserves the original neutral palette.
+   Keep these IDs in sync with theme-presets.ts and the app.html startup script. */
+:root {
+	--theme-hue: 221;
+	--theme-saturation: 83%;
+	--theme-lightness: 45%;
+	--theme-dark-lightness: 72%;
+	--theme-dark-saturation: 75%;
+}
+
+:root[data-theme-preset='zinc'],
+:root[data-theme-preset='gray'],
+:root[data-theme-preset='neutral'],
+:root[data-theme-preset='slate'] {
+	--theme-saturation: 8%;
+	--theme-lightness: 23%;
+	--theme-dark-saturation: 8%;
+	--theme-dark-lightness: 85%;
+}
+
+:root[data-theme-preset='zinc'] {
+	--theme-hue: 240;
+}
+:root[data-theme-preset='gray'] {
+	--theme-hue: 220;
+}
+:root[data-theme-preset='neutral'] {
+	--theme-hue: 0;
+}
+:root[data-theme-preset='slate'] {
+	--theme-hue: 215;
+}
+:root[data-theme-preset='red'] {
+	--theme-hue: 0;
+	--theme-saturation: 72%;
+	--theme-lightness: 42%;
+	--theme-dark-lightness: 72%;
+}
+:root[data-theme-preset='yellow'] {
+	--theme-hue: 45;
+	--theme-saturation: 95%;
+	--theme-lightness: 28%;
+	--theme-dark-lightness: 65%;
+}
+:root[data-theme-preset='amber'] {
+	--theme-hue: 35;
+	--theme-saturation: 92%;
+	--theme-lightness: 30%;
+	--theme-dark-lightness: 68%;
+}
+:root[data-theme-preset='purple'] {
+	--theme-hue: 280;
+	--theme-saturation: 70%;
+	--theme-lightness: 42%;
+	--theme-dark-lightness: 75%;
+}
+:root[data-theme-preset='teal'] {
+	--theme-hue: 173;
+	--theme-saturation: 80%;
+	--theme-lightness: 27%;
+	--theme-dark-lightness: 65%;
+}
+
+:root[data-theme-preset='iris'] {
+	--theme-hue: 263;
+	--theme-saturation: 70%;
+	--theme-lightness: 48%;
+	--theme-dark-lightness: 76%;
+}
+
+:root[data-theme-preset='forest'] {
+	--theme-hue: 161;
+	--theme-saturation: 80%;
+	--theme-lightness: 26%;
+	--theme-dark-lightness: 65%;
+}
+
+:root[data-theme-preset='rose'] {
+	--theme-hue: 335;
+	--theme-saturation: 77%;
+	--theme-lightness: 38%;
+	--theme-dark-lightness: 76%;
+}
+
+:root[data-theme-preset='sunset'] {
+	--theme-hue: 17;
+	--theme-saturation: 88%;
+	--theme-lightness: 35%;
+	--theme-dark-lightness: 73%;
+}
+
+:root:not([data-theme-preset='stone']) {
+	--background: var(--theme-hue) 35% 97%;
+	--foreground: var(--theme-hue) 30% 14%;
+	--card: var(--theme-hue) 25% 99%;
+	--card-foreground: var(--foreground);
+	--popover: var(--theme-hue) 25% 99%;
+	--popover-foreground: var(--foreground);
+	--primary: var(--theme-hue) var(--theme-saturation) var(--theme-lightness);
+	--primary-foreground: 0 0% 100%;
+	--secondary: var(--theme-hue) 35% 93%;
+	--secondary-foreground: var(--theme-hue) 45% 25%;
+	--muted: var(--theme-hue) 25% 94%;
+	--muted-foreground: var(--theme-hue) 15% 43%;
+	--accent: var(--theme-hue) 55% 92%;
+	--accent-foreground: var(--theme-hue) 55% 25%;
+	--border: var(--theme-hue) 25% 87%;
+	--input: var(--border);
+	--ring: var(--primary);
+	--radius: 0.75rem;
+	--sidebar-background: var(--theme-hue) 38% 95%;
+	--sidebar-foreground: var(--theme-hue) 25% 28%;
+	--sidebar-primary: var(--primary);
+	--sidebar-primary-foreground: var(--primary-foreground);
+	--sidebar-accent: var(--theme-hue) 50% 90%;
+	--sidebar-accent-foreground: var(--theme-hue) 55% 25%;
+	--sidebar-border: var(--theme-hue) 30% 86%;
+	--sidebar-ring: var(--primary);
+}
+
+:root.dark:not([data-theme-preset='stone']) {
+	--background: var(--theme-hue) 22% 9%;
+	--foreground: var(--theme-hue) 20% 93%;
+	--card: var(--theme-hue) 20% 12%;
+	--popover: var(--theme-hue) 20% 12%;
+	--primary: var(--theme-hue) var(--theme-dark-saturation) var(--theme-dark-lightness);
+	--primary-foreground: var(--theme-hue) 45% 12%;
+	--secondary: var(--theme-hue) 20% 18%;
+	--secondary-foreground: var(--foreground);
+	--muted: var(--theme-hue) 18% 17%;
+	--muted-foreground: var(--theme-hue) 15% 67%;
+	--accent: var(--theme-hue) 30% 22%;
+	--accent-foreground: var(--theme-hue) 50% 90%;
+	--border: var(--theme-hue) 20% 23%;
+	--sidebar-background: var(--theme-hue) 25% 8%;
+	--sidebar-foreground: var(--theme-hue) 20% 87%;
+	--sidebar-accent: var(--theme-hue) 30% 19%;
+	--sidebar-accent-foreground: var(--theme-hue) 50% 90%;
+	--sidebar-border: var(--theme-hue) 20% 20%;
+}
+
+/* Independent appearance settings apply to every palette. */
+:root[data-theme-radius='none'] {
+	--radius: 0rem;
+}
+:root[data-theme-radius='small'] {
+	--radius: 0.25rem;
+}
+:root[data-theme-radius='medium'] {
+	--radius: 0.5rem;
+}
+:root[data-theme-radius='large'] {
+	--radius: 0.75rem;
+}
+
+:root {
+	--appearance-shadow:
+		0 1px 3px hsl(var(--foreground) / 0.08), 0 1px 2px hsl(var(--foreground) / 0.04);
+	--chart-1: var(--primary);
+	--chart-lightness: 42%;
+}
+:root[data-theme-shadow='none'] {
+	--appearance-shadow: 0 0 #0000;
+}
+:root[data-theme-shadow='medium'] {
+	--appearance-shadow:
+		0 4px 12px -2px hsl(var(--foreground) / 0.12), 0 2px 4px hsl(var(--foreground) / 0.06);
+}
+:root[data-theme-shadow='large'] {
+	--appearance-shadow:
+		0 12px 28px -6px hsl(var(--foreground) / 0.18), 0 4px 8px hsl(var(--foreground) / 0.08);
+}
+:root[data-theme-font='small'] {
+	font-size: 14px;
+}
+:root[data-theme-font='default'] {
+	font-size: 16px;
+}
+
+:root.dark {
+	--chart-lightness: 70%;
+}
+:root[data-theme-chart='palette'] {
+	--chart-hue: 17;
+}
+:root[data-theme-chart='sapphire'] {
+	--chart-hue: 221;
+}
+:root[data-theme-chart='ruby'] {
+	--chart-hue: 346;
+}
+:root[data-theme-chart='emerald'] {
+	--chart-hue: 161;
+}
+:root[data-theme-chart='daylight'] {
+	--chart-hue: 38;
+}
+:root[data-theme-chart='midnight'] {
+	--chart-hue: 245;
+}
+:root[data-theme-chart]:not([data-theme-chart='default']) {
+	--chart-1: var(--chart-hue) 75% var(--chart-lightness);
+}
+
+/* Neutral palettes should not inherit the colour presets' tinted surfaces. */
+:root:is(
+	[data-theme-preset='zinc'],
+	[data-theme-preset='slate'],
+	[data-theme-preset='gray'],
+	[data-theme-preset='neutral']
+) {
+	--background: var(--theme-hue) var(--neutral-saturation, 3%) 97%;
+	--foreground: var(--theme-hue) var(--neutral-saturation, 3%) 14%;
+	--card: var(--theme-hue) var(--neutral-saturation, 3%) 99%;
+	--popover: var(--card);
+	--secondary: var(--theme-hue) var(--neutral-saturation, 3%) 93%;
+	--secondary-foreground: var(--foreground);
+	--muted: var(--secondary);
+	--muted-foreground: var(--theme-hue) var(--neutral-saturation, 3%) 43%;
+	--accent: var(--theme-hue) var(--neutral-saturation, 3%) 91%;
+	--accent-foreground: var(--foreground);
+	--border: var(--theme-hue) var(--neutral-saturation, 3%) 87%;
+	--sidebar-background: var(--theme-hue) var(--neutral-saturation, 3%) 95%;
+	--sidebar-foreground: var(--foreground);
+	--sidebar-accent: var(--accent);
+	--sidebar-accent-foreground: var(--foreground);
+	--sidebar-border: var(--border);
+}
+
+:root.dark:is(
+		[data-theme-preset='zinc'],
+		[data-theme-preset='slate'],
+		[data-theme-preset='gray'],
+		[data-theme-preset='neutral']
+	) {
+	--background: var(--theme-hue) var(--neutral-saturation, 3%) 4%;
+	--foreground: var(--theme-hue) var(--neutral-saturation, 3%) 93%;
+	--card: var(--theme-hue) var(--neutral-saturation, 3%) 7%;
+	--popover: var(--card);
+	--primary-foreground: var(--background);
+	--secondary: var(--theme-hue) var(--neutral-saturation, 3%) 15%;
+	--muted: var(--secondary);
+	--muted-foreground: var(--theme-hue) var(--neutral-saturation, 3%) 65%;
+	--accent: var(--theme-hue) var(--neutral-saturation, 3%) 17%;
+	--accent-foreground: var(--foreground);
+	--border: var(--theme-hue) var(--neutral-saturation, 3%) 18%;
+	--sidebar-background: var(--theme-hue) var(--neutral-saturation, 3%) 6%;
+	--sidebar-foreground: var(--foreground);
+	--sidebar-accent: var(--accent);
+	--sidebar-accent-foreground: var(--foreground);
+	--sidebar-border: var(--border);
+}
+
+:root[data-theme-preset='neutral'] {
+	--neutral-saturation: 0%;
+	--theme-saturation: 0%;
+	--theme-dark-saturation: 0%;
+}
+
+/* Snow-inspired overview surfaces, separate from status and chart colours. */
+:root {
+	--overview-hue: var(--theme-hue);
+	--overview-metric: var(--overview-hue) 65% 95%;
+	--overview-summary: calc(var(--overview-hue) + 24) 35% 96%;
+	--overview-muted-foreground: var(--overview-hue) 10% 36%;
+}
+
+:root:is([data-theme-preset='neutral'], [data-theme-preset='stone']) {
+	--overview-hue: 221;
+}
+
+:root.dark {
+	--overview-metric: var(--overview-hue) 22% 16%;
+	--overview-summary: calc(var(--overview-hue) + 24) 14% 15%;
+	--overview-muted-foreground: var(--overview-hue) 12% 70%;
+}

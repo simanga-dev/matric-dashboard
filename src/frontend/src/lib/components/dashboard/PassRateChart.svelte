@@ -8,6 +8,7 @@
 	} from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import type { PassRateTrend } from '$lib/types/dashboard';
+	import SmoothTrendChart from './SmoothTrendChart.svelte';
 
 	let { trends }: { trends: PassRateTrend[] } = $props();
 
@@ -25,61 +26,6 @@
 		if (timeRange === '5y') return 'Last 5 years (2020 - 2024)';
 		if (timeRange === '10y') return 'Last 10 years (2015 - 2024)';
 		return '2008 - 2024';
-	});
-
-	const CHART_HEIGHT = 300;
-	const CHART_PADDING = { top: 20, right: 20, bottom: 40, left: 60 };
-
-	let chartWidth = $state(600);
-
-	let svgWidth = $derived(Math.max(chartWidth, 300));
-	let plotWidth = $derived(svgWidth - CHART_PADDING.left - CHART_PADDING.right);
-	let plotHeight = $derived(CHART_HEIGHT - CHART_PADDING.top - CHART_PADDING.bottom);
-
-	let minYear = $derived(filteredData[0]?.year ?? 2008);
-	let maxYear = $derived(filteredData.at(-1)?.year ?? 2024);
-	let minPassRate = $derived(
-		filteredData.length > 0 ? Math.min(...filteredData.map((d) => d.passRate)) - 5 : 50
-	);
-	let maxPassRate = $derived(
-		filteredData.length > 0 ? Math.max(...filteredData.map((d) => d.passRate)) + 5 : 100
-	);
-
-	function xScale(year: number): number {
-		return CHART_PADDING.left + ((year - minYear) / (maxYear - minYear || 1)) * plotWidth;
-	}
-
-	function yScale(passRate: number): number {
-		return (
-			CHART_PADDING.top +
-			plotHeight -
-			((passRate - minPassRate) / (maxPassRate - minPassRate || 1)) * plotHeight
-		);
-	}
-
-	let points = $derived(
-		filteredData.map((d) => `${xScale(d.year)},${yScale(d.passRate)}`).join(' ')
-	);
-	let areaPoints = $derived(
-		`${xScale(minYear)},${yScale(minPassRate)} ${points} ${xScale(maxYear)},${yScale(minPassRate)}`
-	);
-
-	let yTicks = $derived.by(() => {
-		const step = Math.max(5, Math.round((maxPassRate - minPassRate) / 5 / 5) * 5);
-		const ticks: number[] = [];
-		for (let v = Math.ceil(minPassRate / step) * step; v <= maxPassRate; v += step) {
-			ticks.push(v);
-		}
-		return ticks;
-	});
-
-	let xTicks = $derived.by(() => {
-		const step = Math.max(1, Math.floor((maxYear - minYear) / 6));
-		const ticks: number[] = [];
-		for (let y = minYear; y <= maxYear; y += step) {
-			ticks.push(y);
-		}
-		return ticks;
 	});
 </script>
 
@@ -120,62 +66,7 @@
 	</CardHeader>
 	<CardContent>
 		{#if filteredData.length > 0}
-			<svg
-				bind:clientWidth={chartWidth}
-				viewBox="0 0 {svgWidth} {CHART_HEIGHT}"
-				class="w-full"
-				preserveAspectRatio="xMidYMid meet"
-			>
-				<defs>
-					<linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
-						<stop offset="0%" stop-color="hsl(var(--primary))" stop-opacity="0.2" />
-						<stop offset="100%" stop-color="hsl(var(--primary))" stop-opacity="0.02" />
-					</linearGradient>
-				</defs>
-
-				<!-- Y axis grid lines -->
-				{#each yTicks as tick (tick)}
-					<line
-						x1={CHART_PADDING.left}
-						y1={yScale(tick)}
-						x2={svgWidth - CHART_PADDING.right}
-						y2={yScale(tick)}
-						stroke="hsl(var(--border))"
-						stroke-width="1"
-					/>
-					<text
-						x={CHART_PADDING.left - 8}
-						y={yScale(tick) + 4}
-						text-anchor="end"
-						class="fill-muted-foreground text-[11px]"
-					>
-						{tick}%
-					</text>
-				{/each}
-
-				<!-- X axis labels -->
-				{#each xTicks as tick (tick)}
-					<text
-						x={xScale(tick)}
-						y={CHART_HEIGHT - 8}
-						text-anchor="middle"
-						class="fill-muted-foreground text-[11px]"
-					>
-						{tick}
-					</text>
-				{/each}
-
-				<!-- Area fill -->
-				<polygon points={areaPoints} fill="url(#areaGradient)" />
-
-				<!-- Line -->
-				<polyline {points} fill="none" stroke="hsl(var(--primary))" stroke-width="2" />
-
-				<!-- Data dots -->
-				{#each filteredData as d (d.year)}
-					<circle cx={xScale(d.year)} cy={yScale(d.passRate)} r="3" fill="hsl(var(--primary))" />
-				{/each}
-			</svg>
+			<SmoothTrendChart years={filteredData} height={300} />
 		{:else}
 			<div class="flex h-[300px] items-center justify-center text-muted-foreground">No data</div>
 		{/if}

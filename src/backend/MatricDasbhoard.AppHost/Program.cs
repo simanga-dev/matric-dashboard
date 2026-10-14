@@ -15,7 +15,6 @@ var mailpitSmtpPort = frontendPort + 7;
 var mailpitHttpPort = frontendPort + 8;
 var meilisearchPort = frontendPort + 9;
 var geoserverPort = frontendPort + 10;
-var geoserverBaseUrl = $"http://localhost:{geoserverPort}/geoserver";
 
 // ── Infrastructure ──────────────────────────────────────────────────────────
 // Container resources use session lifetime (default) - containers stop on
@@ -85,7 +84,9 @@ var geoserver = builder.AddContainer("geoserver", "docker.osgeo.org/geoserver", 
     .WithEnvironment("GEOSERVER_ADMIN_USER", "admin")
     .WithEnvironment("GEOSERVER_ADMIN_PASSWORD", geoserverPassword)
     .WithEnvironment("CORS_ENABLED", "false")
-    .WithEnvironment("EXTRA_JAVA_OPTS", "-Xms512m -Xmx1g");
+    .WithEnvironment("EXTRA_JAVA_OPTS", "-Xms512m -Xmx1g")
+    // The PostGIS datastore connection is configured by the bootstrap script.
+    .WaitFor(db);
 
 // ── API ─────────────────────────────────────────────────────────────────────
 // Migrations and seeding are handled by the API on startup (development only).
@@ -101,6 +102,7 @@ var api = builder.AddProject<Projects.MatricDasbhoard_WebApi>("api")
     .WaitFor(db)
     .WaitFor(storage)
     .WaitFor(meilisearch)
+    .WaitFor(geoserver)
     .WithEnvironment("Authentication__Jwt__Key", jwtSecret)
     .WithEnvironment("FileStorage__Endpoint", storage.GetEndpoint("http"))
     .WithEnvironment("FileStorage__AccessKey", storageUser)
@@ -110,7 +112,7 @@ var api = builder.AddProject<Projects.MatricDasbhoard_WebApi>("api")
     .WithEnvironment("MEILI_URL", meilisearch.GetEndpoint("http"))
     .WithEnvironment("MEILI_MASTER_KEY", meilisearchMasterKey)
     .WithEnvironment("GeoServer__Enabled", "true")
-    .WithEnvironment("GeoServer__BaseUrl", geoserverBaseUrl)
+    .WithEnvironment("GeoServer__BaseUrl", ReferenceExpression.Create($"{geoserver.GetEndpoint("http")}/geoserver"))
     ;
 
 // Mailpit only for local development - production uses real SMTP (configured via environment variables)

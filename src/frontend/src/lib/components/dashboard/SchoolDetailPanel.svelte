@@ -3,6 +3,7 @@
 	import { resolve } from '$app/paths';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { Button } from '$lib/components/ui/button';
+	import * as Card from '$lib/components/ui/card';
 	import { fetchSchoolById, fetchRegionStats } from '$lib/api/dashboard';
 	import type { RegionStats, SchoolDetail } from '$lib/types/dashboard';
 	import { schoolPath } from '$lib/config';
@@ -145,10 +146,10 @@
 
 <section
 	aria-label="School details"
-	class="flex h-full min-h-0 flex-col bg-card text-card-foreground"
+	class="@container/details flex h-full min-h-0 flex-col bg-card text-card-foreground"
 >
-	<header class="flex h-11 shrink-0 items-center gap-3 border-b bg-muted/30 px-4">
-		<Building2 class="size-4 shrink-0 text-primary" />
+	<header class="flex min-h-14 shrink-0 items-center gap-2 bg-muted/60 px-3">
+		<Building2 class="size-4 shrink-0 text-muted-foreground" />
 		<div class="min-w-0 flex-1">
 			<h2 class="text-sm font-semibold">
 				{selectedSchoolId ? 'School details' : 'Region details'}
@@ -156,13 +157,13 @@
 		</div>
 		{@render headerAction?.()}
 	</header>
-	<div class="min-h-0 flex-1 overflow-y-auto p-4" aria-busy={loading}>
+	<div class="min-h-0 flex-1 overflow-y-auto p-3 pt-5 @[320px]/details:p-4" aria-busy={loading}>
 		{#if !selectedSchoolId}
 			{#if regionLoading}
 				<div role="status" class="space-y-4">
 					<span class="sr-only">Loading region stats…</span>
 					<Skeleton class="h-5 w-40 rounded-full" />
-					<div class="space-y-3 bg-muted/20 py-3">
+					<div class="space-y-3 rounded-xl bg-overview-metric p-3">
 						<Skeleton class="h-3 w-28 rounded-full" />
 						<Skeleton class="h-9 w-24 rounded-md" />
 						<Skeleton class="h-1.5 w-full rounded-full" />
@@ -175,12 +176,12 @@
 					<p class="text-xs text-muted-foreground">{regionError}</p>
 				</div>
 			{:else if region}
-				<div class="space-y-5">
-					<div class="min-w-0">
-						<h3 class="text-base leading-tight font-semibold">
+				<div class="space-y-4">
+					<div class="min-w-0 px-1">
+						<h3 class="text-base leading-snug font-semibold tracking-tight">
 							{region.scope === 'country' ? 'South Africa' : toTitleCase(region.name)}
 						</h3>
-						<p class="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+						<p class="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
 							<Network class="size-3" />
 							{region.scope === 'country'
 								? 'National overview'
@@ -190,81 +191,94 @@
 						</p>
 					</div>
 
-					<div class="bg-muted/20 py-3">
-						<div class="flex items-end justify-between gap-3">
-							<div>
-								<p class="text-xs text-muted-foreground">NSC pass rate · {region.year}</p>
-								<p
-									class="mt-1 text-4xl font-semibold tracking-tight tabular-nums {passRateColor(
-										region.passRate
-									)}"
-								>
-									{formatRate(region.passRate)}
-								</p>
+					<Card.Root
+						class="border-0 bg-overview-metric shadow-sm"
+						style="--muted-foreground: var(--overview-muted-foreground)"
+						data-overview-metric
+					>
+						<Card.Content class="p-3 @[320px]/details:p-4">
+							<div class="flex items-end justify-between gap-3">
+								<div>
+									<p class="text-xs text-muted-foreground">NSC pass rate · {region.year}</p>
+									<p
+										class="mt-1 text-4xl font-semibold tracking-tight tabular-nums {passRateColor(
+											region.passRate
+										)}"
+									>
+										{formatRate(region.passRate)}
+									</p>
+								</div>
+								{#if regionDelta !== null}
+									<span
+										class="pb-1 text-xs font-medium whitespace-nowrap tabular-nums {deltaColor(
+											regionDelta
+										)}"
+									>
+										{regionDelta >= 0 ? '+' : ''}{regionDelta.toFixed(1)} pts
+									</span>
+								{/if}
 							</div>
-							{#if regionDelta !== null}
-								<span
-									class="pb-1 text-xs font-medium whitespace-nowrap tabular-nums {deltaColor(
-										regionDelta
-									)}"
-								>
-									{regionDelta >= 0 ? '+' : ''}{regionDelta.toFixed(1)} pts
-								</span>
-							{/if}
-						</div>
-						<div class="mt-3">
-							<SchoolPerformanceTimeline years={region.years} />
-						</div>
-						<p class="mt-2 text-xs text-muted-foreground">
-							{region.totalPassed.toLocaleString()} of {region.totalWrote.toLocaleString()} learners passed
-						</p>
-					</div>
+							<div class="mt-3">
+								<SchoolPerformanceTimeline years={region.years} />
+							</div>
+							<p class="mt-2 text-xs text-muted-foreground">
+								{region.totalPassed.toLocaleString()} of {region.totalWrote.toLocaleString()} learners
+								passed
+							</p>
+						</Card.Content>
+					</Card.Root>
 
-					<section>
-						<h3
-							class="mb-2 border-b pb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
-						>
-							{region.scope === 'country'
-								? 'Country'
-								: region.scope === 'province'
-									? 'Province'
-									: 'District'} summary
-						</h3>
-						<dl class="space-y-1.5 text-sm">
-							<div class="flex items-baseline justify-between gap-4">
-								<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
-									<SchoolIcon class="size-3.5" />
-									Schools
-								</dt>
-								<dd class="tabular-nums">{region.schoolCount.toLocaleString()}</dd>
-							</div>
-							<div class="flex items-baseline justify-between gap-4">
-								<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
-									<Users class="size-3.5" />
-									Learners wrote
-								</dt>
-								<dd class="tabular-nums">{region.totalWrote.toLocaleString()}</dd>
-							</div>
-							<div class="flex items-baseline justify-between gap-4">
-								<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
-									<GraduationCap class="size-3.5" />
-									Passed
-								</dt>
-								<dd class="text-green-700 tabular-nums dark:text-green-400">
-									{region.totalPassed.toLocaleString()}
-								</dd>
-							</div>
-							<div class="flex items-baseline justify-between gap-4">
-								<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
-									<XCircle class="size-3.5" />
-									Did not pass
-								</dt>
-								<dd class="text-red-700 tabular-nums dark:text-red-400">
-									{regionFailedCount.toLocaleString()}
-								</dd>
-							</div>
-						</dl>
-					</section>
+					<Card.Root
+						class="border-0 bg-overview-summary shadow-sm"
+						style="--muted-foreground: var(--overview-muted-foreground)"
+						data-overview-summary
+					>
+						<Card.Header class="p-3 pb-2 @[320px]/details:px-4">
+							<Card.Title class="text-sm font-semibold" role="heading" aria-level={3}>
+								{region.scope === 'country'
+									? 'Country'
+									: region.scope === 'province'
+										? 'Province'
+										: 'District'} summary
+							</Card.Title>
+						</Card.Header>
+						<Card.Content class="px-3 pb-3 @[320px]/details:px-4">
+							<dl class="space-y-3 text-sm">
+								<div class="flex items-baseline justify-between gap-4">
+									<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
+										<SchoolIcon class="size-3.5" />
+										Schools
+									</dt>
+									<dd class="tabular-nums">{region.schoolCount.toLocaleString()}</dd>
+								</div>
+								<div class="flex items-baseline justify-between gap-4">
+									<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
+										<Users class="size-3.5" />
+										Learners wrote
+									</dt>
+									<dd class="tabular-nums">{region.totalWrote.toLocaleString()}</dd>
+								</div>
+								<div class="flex items-baseline justify-between gap-4">
+									<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
+										<GraduationCap class="size-3.5" />
+										Passed
+									</dt>
+									<dd class="text-green-700 tabular-nums dark:text-green-400">
+										{region.totalPassed.toLocaleString()}
+									</dd>
+								</div>
+								<div class="flex items-baseline justify-between gap-4">
+									<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
+										<XCircle class="size-3.5" />
+										Did not pass
+									</dt>
+									<dd class="text-red-700 tabular-nums dark:text-red-400">
+										{regionFailedCount.toLocaleString()}
+									</dd>
+								</div>
+							</dl>
+						</Card.Content>
+					</Card.Root>
 				</div>
 			{/if}
 		{:else if selectedSchoolId && loading}
@@ -277,7 +291,7 @@
 						<Skeleton class="h-3 w-24 rounded-full" />
 					</div>
 				</div>
-				<div class="space-y-3 bg-muted/20 py-3">
+				<div class="space-y-3 rounded-xl bg-overview-metric p-3">
 					<Skeleton class="h-3 w-28 rounded-full" />
 					<Skeleton class="h-8 w-24 rounded-md" />
 					<Skeleton class="h-1.5 w-full rounded-full" />
@@ -312,50 +326,60 @@
 			</div>
 		{:else if school}
 			{@const offered = school.subjectsOffered ?? []}
-			<div class="space-y-5">
-				<div class="flex items-start justify-between gap-3">
+			<div class="space-y-4">
+				<div class="flex items-start justify-between gap-3 px-1">
 					<div class="min-w-0">
-						<h3 class="text-base leading-tight font-semibold">{toTitleCase(school.name)}</h3>
-						<p class="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+						<h3 class="text-base leading-snug font-semibold tracking-tight">
+							{toTitleCase(school.name)}
+						</h3>
+						<p class="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
 							<MapPin class="size-3" />
 							{toTitleCase(school.province)}
 						</p>
 					</div>
 				</div>
 
-				<div class="bg-muted/20 py-3">
-					<div class="flex items-end justify-between gap-3">
-						<div>
-							<p class="text-xs text-muted-foreground">
-								NSC pass rate{latestYear ? ` · ${latestYear}` : ''}
-							</p>
-							<p
-								class="mt-1 text-4xl font-semibold tracking-tight tabular-nums {passRateColor(
-									school.passRate
-								)}"
-							>
-								{formatRate(school.passRate)}
-							</p>
+				<Card.Root
+					class="border-0 bg-overview-metric shadow-sm"
+					style="--muted-foreground: var(--overview-muted-foreground)"
+					data-overview-metric
+				>
+					<Card.Content class="p-3 @[320px]/details:p-4">
+						<div class="flex items-end justify-between gap-3">
+							<div>
+								<p class="text-xs text-muted-foreground">
+									NSC pass rate{latestYear ? ` · ${latestYear}` : ''}
+								</p>
+								<p
+									class="mt-1 text-4xl font-semibold tracking-tight tabular-nums {passRateColor(
+										school.passRate
+									)}"
+								>
+									{formatRate(school.passRate)}
+								</p>
+							</div>
+							{#if delta !== null}
+								<span
+									class="pb-1 text-xs font-medium whitespace-nowrap tabular-nums {deltaColor(
+										delta
+									)}"
+								>
+									{delta >= 0 ? '+' : ''}{delta.toFixed(1)} pts
+								</span>
+							{/if}
 						</div>
-						{#if delta !== null}
-							<span
-								class="pb-1 text-xs font-medium whitespace-nowrap tabular-nums {deltaColor(delta)}"
-							>
-								{delta >= 0 ? '+' : ''}{delta.toFixed(1)} pts
-							</span>
-						{/if}
-					</div>
-					<div class="mt-3">
-						<SchoolPerformanceTimeline years={school.years} />
-					</div>
-					<p class="mt-2 text-xs text-muted-foreground">
-						{school.totalPassed.toLocaleString()} of {school.totalWrote.toLocaleString()} learners passed
-					</p>
-				</div>
+						<div class="mt-3">
+							<SchoolPerformanceTimeline years={school.years} />
+						</div>
+						<p class="mt-2 text-xs text-muted-foreground">
+							{school.totalPassed.toLocaleString()} of {school.totalWrote.toLocaleString()} learners passed
+						</p>
+					</Card.Content>
+				</Card.Root>
 
 				<Button
 					variant="outline"
-					class="w-full gap-1.5"
+					class="w-full gap-1.5 shadow-none"
 					href={resolve(schoolPath(school.id))}
 					aria-label={`View full page for ${toTitleCase(school.name)}`}
 				>
@@ -363,66 +387,68 @@
 					View full school page
 				</Button>
 
-				<section>
-					<h3
-						class="mb-2 border-b pb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
-					>
-						Identification
-					</h3>
-					<dl class="space-y-1.5 text-sm">
+				<section class="rounded-xl bg-muted/30 p-3">
+					<h3 class="mb-3 text-sm font-semibold">Identification</h3>
+					<dl class="space-y-3 text-sm">
 						<div class="flex items-baseline justify-between gap-4">
 							<dt class="text-xs text-muted-foreground">EMIS number</dt>
 							<dd class="tabular-nums">{school.id}</dd>
 						</div>
 						<div class="flex items-baseline justify-between gap-4">
 							<dt class="text-xs text-muted-foreground">Province</dt>
-							<dd class="text-right">{toTitleCase(school.province)}</dd>
+							<dd class="min-w-0 text-end break-words">{toTitleCase(school.province)}</dd>
 						</div>
 						<div class="flex items-baseline justify-between gap-4">
 							<dt class="text-xs text-muted-foreground">Circuit</dt>
-							<dd class="text-right">{toTitleCase(school.circuit)}</dd>
+							<dd class="min-w-0 text-end break-words">{toTitleCase(school.circuit)}</dd>
 						</div>
 					</dl>
 				</section>
 
-				<section>
-					<h3
-						class="mb-2 border-b pb-1 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
-					>
-						NSC Results{latestYear ? ` · ${latestYear}` : ''}
-					</h3>
-					<dl class="space-y-1.5 text-sm">
-						<div class="flex items-baseline justify-between gap-4">
-							<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
-								<Users class="size-3.5" />
-								Learners wrote
-							</dt>
-							<dd class="tabular-nums">{school.totalWrote.toLocaleString()}</dd>
-						</div>
-						<div class="flex items-baseline justify-between gap-4">
-							<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
-								<GraduationCap class="size-3.5" />
-								Passed
-							</dt>
-							<dd class="text-green-700 tabular-nums dark:text-green-400">
-								{school.totalPassed.toLocaleString()}
-							</dd>
-						</div>
-						<div class="flex items-baseline justify-between gap-4">
-							<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
-								<XCircle class="size-3.5" />
-								Did not pass
-							</dt>
-							<dd class="text-red-700 tabular-nums dark:text-red-400">
-								{failedCount.toLocaleString()}
-							</dd>
-						</div>
-					</dl>
-				</section>
+				<Card.Root
+					class="border-0 bg-overview-summary shadow-sm"
+					style="--muted-foreground: var(--overview-muted-foreground)"
+					data-overview-summary
+				>
+					<Card.Header class="p-3 pb-2 @[320px]/details:px-4">
+						<Card.Title class="text-sm font-semibold" role="heading" aria-level={3}>
+							NSC Results{latestYear ? ` · ${latestYear}` : ''}
+						</Card.Title>
+					</Card.Header>
+					<Card.Content class="px-3 pb-3 @[320px]/details:px-4">
+						<dl class="space-y-3 text-sm">
+							<div class="flex items-baseline justify-between gap-4">
+								<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
+									<Users class="size-3.5" />
+									Learners wrote
+								</dt>
+								<dd class="tabular-nums">{school.totalWrote.toLocaleString()}</dd>
+							</div>
+							<div class="flex items-baseline justify-between gap-4">
+								<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
+									<GraduationCap class="size-3.5" />
+									Passed
+								</dt>
+								<dd class="text-green-700 tabular-nums dark:text-green-400">
+									{school.totalPassed.toLocaleString()}
+								</dd>
+							</div>
+							<div class="flex items-baseline justify-between gap-4">
+								<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
+									<XCircle class="size-3.5" />
+									Did not pass
+								</dt>
+								<dd class="text-red-700 tabular-nums dark:text-red-400">
+									{failedCount.toLocaleString()}
+								</dd>
+							</div>
+						</dl>
+					</Card.Content>
+				</Card.Root>
 
-				<section>
-					<div class="mb-2 flex items-baseline justify-between gap-2 border-b pb-1">
-						<h3 class="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+				<section class="px-1 pt-1">
+					<div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+						<h3 class="text-sm font-semibold">
 							Subjects offered{school.subjectsOfferedYear ? ` · ${school.subjectsOfferedYear}` : ''}
 						</h3>
 						<a
@@ -438,7 +464,7 @@
 						<ul class="flex flex-wrap gap-1.5">
 							{#each offered as subject (subject.code)}
 								<li
-									class="inline-flex items-baseline gap-1.5 rounded-md border bg-muted/30 px-2 py-1 text-xs"
+									class="inline-flex items-baseline gap-1.5 rounded-md bg-muted/50 px-2 py-1.5 text-xs"
 								>
 									<span class="font-medium">{subject.name}</span>
 									<span class="text-muted-foreground tabular-nums"

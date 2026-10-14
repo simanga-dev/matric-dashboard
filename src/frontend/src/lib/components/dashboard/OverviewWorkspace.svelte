@@ -106,7 +106,7 @@
 										bind:ref={treeCollapseButton}
 										aria-label="Collapse school browser"
 										title="Collapse school browser"
-										class="shrink-0 rounded-md p-1.5 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+										class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
 										><ChevronLeft class="size-4" /></Collapsible.Trigger
 									>
 								{/snippet}
@@ -146,7 +146,7 @@
 													bind:ref={detailsCollapseButton}
 													aria-label="Collapse school details"
 													title="Collapse school details"
-													class="shrink-0 rounded-md p-1.5 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+													class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
 													><ChevronRight class="size-4" /></Collapsible.Trigger
 												>
 											{/snippet}
@@ -203,12 +203,6 @@
 	.panel-rail {
 		background: hsl(var(--card));
 	}
-	.browser-rail {
-		border-right: 1px solid hsl(var(--border));
-	}
-	.details-rail {
-		border-left: 1px solid hsl(var(--border));
-	}
 	.panel-rail :global(.restore-button) {
 		width: 100%;
 		padding: 1rem 0.5rem;
@@ -233,7 +227,6 @@
 		}
 		.overview-panels > :global([data-resizable-panel-index='1']) {
 			height: 30rem;
-			border-block: 1px solid hsl(var(--border));
 		}
 		.overview-panels > :global([data-resizable-panel-index='2']) {
 			min-height: 22rem !important;
@@ -244,10 +237,6 @@
 		}
 		.overview-panels > :global([data-resizable-handle]) {
 			display: none;
-		}
-		.browser-rail,
-		.details-rail {
-			border: 0;
 		}
 		.panel-rail :global(.restore-button) {
 			height: 100%;

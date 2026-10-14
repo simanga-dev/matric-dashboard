@@ -261,7 +261,8 @@
 				{ default: Overlay },
 				proj,
 				style,
-				{ defaults: defaultControls }
+				{ defaults: defaultControls },
+				{ defaults: defaultInteractions }
 			] = await Promise.all([
 				import('ol/Map'),
 				import('ol/View'),
@@ -273,7 +274,8 @@
 				import('ol/Overlay'),
 				import('ol/proj'),
 				import('ol/style'),
-				import('ol/control')
+				import('ol/control'),
+				import('ol/interaction/defaults')
 			]);
 
 			const { fromLonLat } = proj;
@@ -377,8 +379,11 @@
 			olMap = new OlMapCtor({
 				target: mapHost,
 				controls: defaultControls({ rotate: false }),
+				// Accept wheel zoom over the map without requiring a click or stealing focus.
+				interactions: defaultInteractions({ onFocusOnly: false }),
 				layers: [
-					new TileLayer({ source: new OSM() }),
+					// Theme only the raster background, never the performance markers.
+					new TileLayer({ source: new OSM(), className: 'school-basemap' }),
 					provinceLayer,
 					districtLayer,
 					new VectorLayerCtor({ source, style: styleFor })
@@ -513,10 +518,10 @@
 						tabindex="0"
 						role="region"
 						aria-label="Interactive school map. Use arrow keys to pan and plus or minus to zoom."
-						class="h-full w-full bg-muted/20 focus-visible:outline-2 focus-visible:outline-ring"
+						class="school-map h-full w-full bg-background focus-visible:outline-2 focus-visible:outline-ring"
 					></div>
 					<div
-						class="absolute top-3 right-3 z-20 flex items-center gap-1 rounded-lg border bg-background/85 p-1 shadow-md backdrop-blur"
+						class="absolute end-3 top-3 z-20 flex items-center gap-1 rounded-lg bg-background/85 p-1 shadow-md backdrop-blur"
 					>
 						<button
 							type="button"
@@ -602,3 +607,61 @@
 		{/if}
 	</div>
 </section>
+
+<style>
+	/* Keep filters on the tile canvas so vector layers and popups retain their colours. */
+	.school-map :global(.school-basemap canvas) {
+		filter: grayscale(1);
+		transition: filter 250ms ease;
+	}
+
+	:global(.dark) .school-map :global(.school-basemap canvas) {
+		filter: grayscale(1) invert(1) brightness(0.9) contrast(0.85);
+	}
+
+	.school-map :global(.school-basemap)::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: hsl(var(--primary) / 0.06);
+		pointer-events: none;
+	}
+
+	.school-map :global(.ol-control) {
+		background: hsl(var(--background) / 0.9);
+		color: hsl(var(--foreground));
+		border: 0;
+		border-radius: var(--radius);
+	}
+
+	.school-map :global(.ol-control button) {
+		background: hsl(var(--card));
+		color: hsl(var(--foreground));
+	}
+
+	.school-map :global(.ol-control button:hover),
+	.school-map :global(.ol-control button:focus-visible) {
+		background: hsl(var(--accent));
+		color: hsl(var(--accent-foreground));
+	}
+
+	.school-map :global(.ol-control button:focus-visible) {
+		outline: 2px solid hsl(var(--ring));
+		outline-offset: 2px;
+	}
+
+	.school-map :global(.ol-attribution a) {
+		color: hsl(var(--primary));
+	}
+
+	.school-map :global(.ol-attribution ul) {
+		color: hsl(var(--foreground));
+		text-shadow: none;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.school-map :global(.school-basemap canvas) {
+			transition: none;
+		}
+	}
+</style>
