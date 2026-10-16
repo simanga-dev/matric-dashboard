@@ -1,5 +1,8 @@
 <script lang="ts">
+	import InfoTooltip from '$lib/components/common/InfoTooltip.svelte';
+	import { metricHelp } from '$lib/components/common/metric-help';
 	import type { Snippet } from 'svelte';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { resolve } from '$app/paths';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { Button } from '$lib/components/ui/button';
@@ -144,7 +147,7 @@
 	});
 
 	let regionSubjectsHref = $derived.by(() => {
-		const params = new URLSearchParams();
+		const params = new SvelteURLSearchParams();
 		if (selectedProvince) params.set('province', selectedProvince);
 		if (selectedDistrict) params.set('district', selectedDistrict);
 		if (regionSubjects?.year) params.set('year', String(regionSubjects.year));
@@ -241,7 +244,12 @@
 						<Card.Content class="p-3 @[320px]/details:p-4">
 							<div class="flex items-end justify-between gap-3">
 								<div>
-									<p class="text-xs text-muted-foreground">NSC pass rate · {region.year}</p>
+									<p class="text-xs text-muted-foreground">
+										NSC pass rate · {region.year}<InfoTooltip
+											label="NSC pass rate"
+											text={metricHelp.passRate}
+										/>
+									</p>
 									<p
 										class="mt-1 text-4xl font-semibold tracking-tight tabular-nums {passRateColor(
 											region.passRate
@@ -256,7 +264,10 @@
 											regionDelta
 										)}"
 									>
-										{regionDelta >= 0 ? '+' : ''}{regionDelta.toFixed(1)} pts
+										{regionDelta >= 0 ? '+' : ''}{regionDelta.toFixed(1)} pts<InfoTooltip
+											label="pass rate change"
+											text={`${metricHelp.points} Compares ${regionTimeline[0]?.year} with ${regionTimeline.at(-1)?.year}.`}
+										/>
 									</span>
 								{/if}
 							</div>
@@ -296,7 +307,7 @@
 								<div class="flex items-baseline justify-between gap-4">
 									<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
 										<Users class="size-3.5" />
-										Learners wrote
+										Learners wrote<InfoTooltip label="learners who wrote" text={metricHelp.wrote} />
 									</dt>
 									<dd class="tabular-nums">{region.totalWrote.toLocaleString()}</dd>
 								</div>
@@ -349,7 +360,10 @@
 							</div>
 						{:else if regionSubjects && regionSubjects.subjects.length > 0}
 							<p class="mb-3 text-xs text-muted-foreground">
-								Across {regionSubjects.schoolCount.toLocaleString()} schools with subject data
+								Across {regionSubjects.schoolCount.toLocaleString()} schools with subject data<InfoTooltip
+									label="subject data coverage"
+									text={metricHelp.coverage}
+								/>
 							</p>
 							<SubjectPerformanceBars
 								subjects={regionSubjects.subjects}
@@ -431,7 +445,10 @@
 						<div class="flex items-end justify-between gap-3">
 							<div>
 								<p class="text-xs text-muted-foreground">
-									NSC pass rate{latestYear ? ` · ${latestYear}` : ''}
+									NSC pass rate{latestYear ? ` · ${latestYear}` : ''}<InfoTooltip
+										label="NSC pass rate"
+										text={metricHelp.passRate}
+									/>
 								</p>
 								<p
 									class="mt-1 text-4xl font-semibold tracking-tight tabular-nums {passRateColor(
@@ -447,7 +464,10 @@
 										delta
 									)}"
 								>
-									{delta >= 0 ? '+' : ''}{delta.toFixed(1)} pts
+									{delta >= 0 ? '+' : ''}{delta.toFixed(1)} pts<InfoTooltip
+										label="pass rate change"
+										text={`${metricHelp.points} Compares ${timeline[0]?.year} with ${latestYear}.`}
+									/>
 								</span>
 							{/if}
 						</div>
@@ -474,7 +494,9 @@
 					<h3 class="mb-3 text-sm font-semibold">Identification</h3>
 					<dl class="space-y-3 text-sm">
 						<div class="flex items-baseline justify-between gap-4">
-							<dt class="text-xs text-muted-foreground">EMIS number</dt>
+							<dt class="text-xs text-muted-foreground">
+								EMIS number<InfoTooltip label="EMIS number" text={metricHelp.emis} />
+							</dt>
 							<dd class="tabular-nums">{school.id}</dd>
 						</div>
 						<div class="flex items-baseline justify-between gap-4">
@@ -503,7 +525,7 @@
 							<div class="flex items-baseline justify-between gap-4">
 								<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
 									<Users class="size-3.5" />
-									Learners wrote
+									Learners wrote<InfoTooltip label="learners who wrote" text={metricHelp.wrote} />
 								</dt>
 								<dd class="tabular-nums">{school.totalWrote.toLocaleString()}</dd>
 							</div>
@@ -532,7 +554,10 @@
 				<section class="px-1 pt-1">
 					<div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
 						<h3 class="text-sm font-semibold">
-							Subjects offered{school.subjectsOfferedYear ? ` · ${school.subjectsOfferedYear}` : ''}
+							Subjects offered<InfoTooltip
+								label="subjects offered"
+								text={metricHelp.gateway}
+							/>{school.subjectsOfferedYear ? ` · ${school.subjectsOfferedYear}` : ''}
 						</h3>
 						<a
 							href={resolve(`/subjects?school=${encodeURIComponent(school.id)}`)}

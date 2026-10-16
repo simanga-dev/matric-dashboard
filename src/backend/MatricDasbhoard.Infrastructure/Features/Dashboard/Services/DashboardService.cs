@@ -227,25 +227,28 @@ internal sealed class DashboardService : IDashboardService
                 Code = p.Subject == null ? string.Empty : p.Subject.Code,
                 SubjectName = p.Subject == null ? string.Empty : p.Subject.Name,
                 p.TotalWrote,
-                p.Achieved
+                p.Achieved,
+                p.PercentAchieved
             })
             .ToListAsync(cancellationToken);
 
         var schoolCount = rows.Select(r => r.SchoolId).Distinct().Count();
 
-        // Sum learners and achievement per subject; the pass percentage is
-        // recomputed from the totals so it stays learner-weighted when a
-        // subject's per-school percentages are missing.
+        // Historical reports can provide rates without exact achievement counts.
+        // Weight those rates by cohort size; never interpret unknown results as failures.
         var subjects = rows
             .GroupBy(r => new { r.Code, r.SubjectName })
             .Select(g =>
             {
                 var wrote = g.Sum(r => r.TotalWrote);
-                var achieved = g.Any(r => r.Achieved.HasValue)
-                    ? g.Sum(r => r.Achieved ?? 0)
+                var achieved = g.All(r => r.Achieved.HasValue)
+                    ? g.Sum(r => r.Achieved!.Value)
                     : (int?)null;
-                var percent = achieved is not null && wrote > 0
-                    ? (double?)Math.Round((double)achieved.Value / wrote * 100, 1)
+                var hasCompleteResults = g.All(r => r.Achieved.HasValue || r.PercentAchieved.HasValue);
+                var percent = hasCompleteResults && wrote > 0
+                    ? (double?)Math.Round(g.Sum(r => r.Achieved.HasValue
+                        ? (decimal)r.Achieved.Value
+                        : r.PercentAchieved!.Value * r.TotalWrote / 100m) / wrote * 100m, 1)
                     : null;
                 return new RegionSubjectOutput(
                     g.Key.Code,

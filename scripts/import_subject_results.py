@@ -92,36 +92,41 @@ def emit_batch(out, batch: list[tuple]) -> None:
             f"{int(wrote or 0)},{achieved_literal},{percent_literal})"
         )
     out.write(
-        "WITH data(centre, emis, subject, year, wrote, achieved, percent) AS (VALUES\n"
-        + ",\n".join(values)
-        + "\n),\n"
-        # Fallback centre -> school map, only for centre numbers that are unique
-        # so a duplicate CentreNumber cannot fan a batch row out twice. Used when
-        # the centre's mapped EMIS number no longer exists in the serving store.
-        "centre_map AS (\n"
-        '    SELECT "CentreNumber" AS centre, MIN("Id"::text)::uuid AS school_id\n'
-        '    FROM marks."Schools"\n'
-        '    WHERE NOT "IsDeleted" AND "CentreNumber" IS NOT NULL AND "CentreNumber" <> \'\'\n'
-        '    GROUP BY "CentreNumber" HAVING COUNT(*) = 1\n'
-        ")\n"
-        'INSERT INTO marks."SchoolSubjectPerformances" '
-        '("Id","SchoolId","SubjectId","Year","TotalWrote","Achieved",'
-        '"PercentAchieved","CreatedAt","IsDeleted")\n'
-        'SELECT gen_random_uuid(), COALESCE(s."Id", cm.school_id), sub."Id", '
-        "d.year, d.wrote, d.achieved, d.percent, now(), false\n"
-        "FROM data d\n"
-        'LEFT JOIN marks."Schools" s ON d.emis <> \'\' AND s."EmisNumber" = d.emis '
-        'AND NOT s."IsDeleted"\n'
-        # Match on the mapped EMIS when it exists; otherwise fall back to the
-        # unique centre number, so centres whose masterlist EMIS was renamed or
-        # removed still land on the school that owns the centre today.
-        'LEFT JOIN centre_map cm ON cm.centre = d.centre\n'
-        'JOIN marks."Subjects" sub ON sub."Code" = d.subject AND NOT sub."IsDeleted"\n'
-        'WHERE COALESCE(s."Id", cm.school_id) IS NOT NULL\n'
-        'ON CONFLICT ("SchoolId","SubjectId","Year") DO UPDATE SET '
-        '"TotalWrote"=EXCLUDED."TotalWrote","Achieved"=EXCLUDED."Achieved",'
-        '"PercentAchieved"=EXCLUDED."PercentAchieved","UpdatedAt"=now();\n'
+        "INSERT INTO subject_import_rows(centre, emis, subject, year, wrote, achieved, percent) VALUES\n"
+        + ",\n".join(values) + ";\n"
     )
+
+
+def emit_aggregated_results(out) -> None:
+    """Resolve all centres before grouping, including collisions across batches."""
+    out.write('''WITH centre_map AS (
+    SELECT "CentreNumber" AS centre, MIN("Id"::text)::uuid AS school_id
+    FROM marks."Schools"
+    WHERE NOT "IsDeleted" AND "CentreNumber" IS NOT NULL AND "CentreNumber" <> ''
+    GROUP BY "CentreNumber" HAVING COUNT(*) = 1
+), resolved AS (
+    SELECT COALESCE(s."Id", cm.school_id) AS school_id, sub."Id" AS subject_id, d.*
+    FROM subject_import_rows d
+    LEFT JOIN marks."Schools" s ON d.emis <> '' AND s."EmisNumber" = d.emis AND NOT s."IsDeleted"
+    LEFT JOIN centre_map cm ON cm.centre = d.centre
+    JOIN marks."Subjects" sub ON sub."Code" = d.subject AND NOT sub."IsDeleted"
+    WHERE COALESCE(s."Id", cm.school_id) IS NOT NULL
+)
+INSERT INTO marks."SchoolSubjectPerformances"
+    ("Id","SchoolId","SubjectId","Year","TotalWrote","Achieved","PercentAchieved","CreatedAt","IsDeleted")
+SELECT gen_random_uuid(), school_id, subject_id, year, SUM(wrote),
+    CASE WHEN COUNT(*) FILTER (WHERE wrote > 0 AND achieved IS NULL) = 0
+         THEN SUM(achieved) ELSE NULL END,
+    CASE WHEN SUM(wrote) > 0 AND COUNT(*) FILTER (WHERE wrote > 0 AND achieved IS NULL AND percent IS NULL) = 0
+         THEN ROUND(100.0 * SUM(COALESCE(achieved::numeric, percent * wrote / 100.0)) / SUM(wrote), 1)
+         ELSE NULL END,
+    now(), false
+FROM resolved
+GROUP BY school_id, subject_id, year
+ON CONFLICT ("SchoolId","SubjectId","Year") DO UPDATE SET
+    "TotalWrote"=EXCLUDED."TotalWrote", "Achieved"=EXCLUDED."Achieved",
+    "PercentAchieved"=EXCLUDED."PercentAchieved", "IsDeleted"=false, "UpdatedAt"=now();
+''')
 
 
 def main() -> None:
@@ -138,8 +143,11 @@ def main() -> None:
     out = sys.stdout
     out.write("BEGIN;\n")
     emit_subjects(out, subjects)
+    out.write("CREATE TEMP TABLE subject_import_rows (centre text, emis text, subject text, "
+              "year integer, wrote integer, achieved integer, percent numeric) ON COMMIT DROP;\n")
     for start in range(0, len(rows), BATCH_SIZE):
         emit_batch(out, rows[start : start + BATCH_SIZE])
+    emit_aggregated_results(out)
     out.write("COMMIT;\n")
 
     centres = {row[0] for row in rows}

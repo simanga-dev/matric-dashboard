@@ -130,7 +130,7 @@
 			</ResizablePanel>
 			<ResizableHandle />
 			<ResizablePanel defaultSize={60}>
-				<SchoolGeoMap bind:selectedSchoolId {selectedProvince} {selectedDistrict} />
+				<SchoolGeoMap {schools} bind:selectedSchoolId {selectedProvince} {selectedDistrict} />
 			</ResizablePanel>
 			<ResizableHandle />
 			<ResizablePanel defaultSize={20}>

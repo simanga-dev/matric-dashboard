@@ -1,4 +1,6 @@
 <script lang="ts">
+	import InfoTooltip from '$lib/components/common/InfoTooltip.svelte';
+	import { metricHelp } from '$lib/components/common/metric-help';
 	import { TrendingUp } from '@lucide/svelte';
 	import * as Tooltip from '$lib/components/ui/tooltip';
 
@@ -60,7 +62,10 @@
 		aria-label="Chart legend"
 	>
 		<span class="flex items-center gap-1.5"
-			><span class="h-2 w-3 rounded-sm bg-emerald-500" aria-hidden="true"></span>Passed</span
+			><span class="h-2 w-3 rounded-sm bg-emerald-500" aria-hidden="true"></span>Passed<InfoTooltip
+				label="subject achievement"
+				text={metricHelp.subjectPassRate}
+			/></span
 		>
 		<span class="flex items-center gap-1.5"
 			><span class="h-2 w-3 rounded-sm bg-rose-500" aria-hidden="true"></span>Not passed</span
@@ -162,7 +167,10 @@
 		<TrendingUp class="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
 		<div class="text-xs">
 			<p class="font-medium">
-				{subjects.reduce((total, s) => total + s.totalWrote, 0).toLocaleString()} subject entries
+				{subjects.reduce((total, s) => total + s.totalWrote, 0).toLocaleString()} subject entries<InfoTooltip
+					label="subject entries"
+					text={metricHelp.subjectEntries}
+				/>
 			</p>
 			<p class="text-muted-foreground">
 				Across {subjects.length} subjects{headlineYear ? ` in ${headlineYear}` : ''}

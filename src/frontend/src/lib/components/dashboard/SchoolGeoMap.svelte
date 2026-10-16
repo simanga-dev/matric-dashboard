@@ -4,6 +4,8 @@
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
 	import { schoolPath } from '$lib/config';
+	import type { School } from '$lib/types/dashboard';
+	import { schoolMapGeoJson } from './school-map-data';
 	import type Feature from 'ol/Feature';
 	import type { FeatureLike } from 'ol/Feature';
 	import type { StyleFunction } from 'ol/style/Style';
@@ -45,10 +47,12 @@
 	}
 
 	let {
+		schools,
 		selectedSchoolId = $bindable(null),
 		selectedProvince = null,
 		selectedDistrict = null
 	}: {
+		schools: School[];
 		selectedSchoolId?: string | null;
 		selectedProvince?: string | null;
 		selectedDistrict?: string | null;
@@ -284,7 +288,7 @@
 
 			const reader = new GeoJSON();
 			const source = new VectorSource();
-			const features = reader.readFeatures(geojson, {
+			const features = reader.readFeatures(schoolMapGeoJson(geojson, schools), {
 				dataProjection: 'EPSG:4326',
 				featureProjection: 'EPSG:3857'
 			});

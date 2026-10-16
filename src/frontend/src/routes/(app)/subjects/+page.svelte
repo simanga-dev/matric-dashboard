@@ -1,8 +1,12 @@
 <script lang="ts">
+	import InfoTooltip from '$lib/components/common/InfoTooltip.svelte';
+	import { metricHelp } from '$lib/components/common/metric-help';
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import { browser } from '$app/environment';
 	import { replaceState } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { EmptyState } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card';
 	import * as Table from '$lib/components/ui/table';
@@ -141,7 +145,7 @@
 	// Keep the scope in the URL so the view can be shared or bookmarked.
 	$effect(() => {
 		if (!browser || !ready) return;
-		const params = new URLSearchParams();
+		const params = new SvelteURLSearchParams();
 		if (schoolId) params.set('school', schoolId);
 		else {
 			if (province) params.set('province', province);
@@ -149,7 +153,7 @@
 		}
 		if (year) params.set('year', String(year));
 		const query = params.toString();
-		replaceState(query ? `/subjects?${query}` : '/subjects', page.state);
+		replaceState(resolve(query ? `/subjects?${query}` : '/subjects'), page.state);
 	});
 
 	function reload(requestedYear?: number | null) {
@@ -444,7 +448,9 @@
 				{:else}
 					<section class="rounded-lg border bg-muted/20 p-4">
 						<div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-							<h3 class="text-sm font-semibold">Pass rate by subject</h3>
+							<h3 class="text-sm font-semibold">
+								Subject results<InfoTooltip label="subject coverage" text={metricHelp.gateway} />
+							</h3>
 							<span class="text-xs text-muted-foreground tabular-nums">
 								{rows.length} subjects · {totalWrote.toLocaleString()} wrote
 							</span>
@@ -456,11 +462,31 @@
 						<Table.Header>
 							<Table.Row>
 								<Table.Head>Subject</Table.Head>
-								<Table.Head class="text-right">Wrote</Table.Head>
-								<Table.Head class="text-right">Achieved</Table.Head>
-								<Table.Head class="text-right">Pass rate</Table.Head>
+								<Table.Head class="text-right"
+									>Wrote<InfoTooltip
+										label="subject learners who wrote"
+										text={metricHelp.subjectWrote}
+									/></Table.Head
+								>
+								<Table.Head class="text-right"
+									>Achieved<InfoTooltip
+										label="subject achievement"
+										text={metricHelp.achieved}
+									/></Table.Head
+								>
+								<Table.Head class="text-right"
+									>Pass rate<InfoTooltip
+										label="subject pass rate"
+										text={metricHelp.subjectPassRate}
+									/></Table.Head
+								>
 								{#if !isSchoolScope}
-									<Table.Head class="text-right">Schools</Table.Head>
+									<Table.Head class="text-right"
+										>Schools<InfoTooltip
+											label="subject data coverage"
+											text={metricHelp.coverage}
+										/></Table.Head
+									>
 								{/if}
 							</Table.Row>
 						</Table.Header>

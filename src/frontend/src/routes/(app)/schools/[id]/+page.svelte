@@ -1,4 +1,6 @@
 <script lang="ts">
+	import InfoTooltip from '$lib/components/common/InfoTooltip.svelte';
+	import { metricHelp } from '$lib/components/common/metric-help';
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
 	import { EmptyState } from '$lib/components/common';
@@ -139,11 +141,23 @@
 							</span>
 						</div>
 						<div class="flex flex-wrap gap-1.5 pt-1">
-							<Badge variant="outline" class="tabular-nums">EMIS {school.id}</Badge>
+							<Badge variant="outline" class="tabular-nums"
+								>EMIS {school.id}<InfoTooltip label="EMIS number" text={metricHelp.emis} /></Badge
+							>
 							{#if school.centreNumber}
-								<Badge variant="outline" class="tabular-nums">Centre {school.centreNumber}</Badge>
+								<Badge variant="outline" class="tabular-nums"
+									>Centre {school.centreNumber}<InfoTooltip
+										label="examination centre"
+										text={metricHelp.centre}
+									/></Badge
+								>
 							{/if}
-							<Badge variant="secondary">Quintile {school.quintile}</Badge>
+							<Badge variant="secondary"
+								>Quintile {school.quintile}<InfoTooltip
+									label="quintile"
+									text={metricHelp.quintile}
+								/></Badge
+							>
 							{#if latest}
 								<Badge variant="outline" class="gap-1">
 									<Calendar class="size-3" />
@@ -155,7 +169,9 @@
 				</div>
 				<div class="flex items-end gap-6">
 					<div class="text-right">
-						<p class="text-xs text-muted-foreground">Pass rate</p>
+						<p class="text-xs text-muted-foreground">
+							Pass rate<InfoTooltip label="NSC pass rate" text={metricHelp.passRate} />
+						</p>
 						<p
 							class="text-3xl font-semibold tracking-tight tabular-nums"
 							style:color={passRateColor(school.passRate)}
@@ -172,7 +188,10 @@
 								{#if yoy >= 0}<TrendingUp class="size-3.5" />{:else}<TrendingDown
 										class="size-3.5"
 									/>{/if}
-								{Math.abs(yoy).toFixed(1)} pts YoY
+								{Math.abs(yoy).toFixed(1)} pts YoY<InfoTooltip
+									label="year-on-year change"
+									text={metricHelp.points}
+								/>
 							</p>
 						{/if}
 					</div>
@@ -202,7 +221,9 @@
 						<p class="text-2xl font-semibold tabular-nums">
 							{school.totalWrote.toLocaleString()}
 						</p>
-						<p class="truncate text-xs text-muted-foreground">Learners wrote</p>
+						<p class="truncate text-xs text-muted-foreground">
+							Learners wrote<InfoTooltip label="learners who wrote" text={metricHelp.wrote} />
+						</p>
 					</div>
 				</Card.Content>
 			</Card.Root>
@@ -248,7 +269,9 @@
 						>
 							{formatPassRate(school.passRate)}
 						</p>
-						<p class="truncate text-xs text-muted-foreground">Pass rate</p>
+						<p class="truncate text-xs text-muted-foreground">
+							Pass rate<InfoTooltip label="NSC pass rate" text={metricHelp.passRate} />
+						</p>
 					</div>
 				</Card.Content>
 			</Card.Root>
@@ -316,7 +339,10 @@
 							<span class="font-semibold"
 								>{school.comparison.provinceSchoolCount.toLocaleString()}</span
 							>
-							schools in {toTitleCase(school.province)}.
+							schools in {toTitleCase(school.province)}.<InfoTooltip
+								label="school ranking"
+								text={metricHelp.ranking}
+							/>
 						</p>
 					{/if}
 					<ul class="space-y-3">
