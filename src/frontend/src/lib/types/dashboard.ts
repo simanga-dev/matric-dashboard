@@ -113,3 +113,22 @@ export interface RegionStats {
 	passRate: number;
 	years: RegionYear[];
 }
+
+export interface RegionSubject {
+	code: string;
+	name: string;
+	totalWrote: number;
+	achieved: number | null;
+	percentAchieved: number | null;
+	schoolCount: number;
+}
+
+export interface RegionSubjects {
+	scope: 'country' | 'province' | 'district';
+	name: string;
+	province: string | null;
+	year: number | null;
+	availableYears: number[];
+	schoolCount: number;
+	subjects: RegionSubject[];
+}

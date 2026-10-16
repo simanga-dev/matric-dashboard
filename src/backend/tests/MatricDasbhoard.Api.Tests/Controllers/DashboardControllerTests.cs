@@ -176,6 +176,44 @@ public class DashboardControllerTests(CustomWebApplicationFactory factory) : ICl
         Assert.Equal(404, json.RootElement.GetProperty("status").GetInt32());
     }
 
+    /// <summary>The region subjects endpoint aggregates offered subjects for a province scope.</summary>
+    [Fact]
+    public async Task RegionSubjects_AggregatesProvinceSubjectResults()
+    {
+        using var client = factory.CreateClient();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MatricDasbhoardDbContext>();
+        // A province unique to this test keeps it isolated from other tests that
+        // share the in-memory database in this fixture.
+        var school = new School("NORTHERN CAPE", "Frances Baard", "region-subject-school", "654", "Region Subject School", 3);
+        var accounting = new Subject("accounting", "Accounting");
+        var performance = new SchoolSubjectPerformance(2024, 30, 24, 80.0m);
+        school.AddSubjectPerformance(performance);
+        accounting.AddPerformance(performance);
+        db.Subjects.Add(accounting);
+        db.Schools.Add(school);
+        await db.SaveChangesAsync();
+
+        using var response = await client.GetAsync("/api/v1/dashboard/regions/subjects?province=NORTHERN%20CAPE");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var contract = await response.Content.ReadFromJsonAsync<RegionSubjectsContract>();
+        Assert.NotNull(contract);
+        Assert.Equal("province", contract.Scope);
+        Assert.Equal("NORTHERN CAPE", contract.Name);
+        Assert.Equal("NORTHERN CAPE", contract.Province);
+        Assert.Equal(2024, contract.Year);
+        Assert.Equal([2024], contract.AvailableYears);
+        Assert.Equal(1, contract.SchoolCount);
+        var row = Assert.Single(contract.Subjects);
+        Assert.Equal("accounting", row.Code);
+        Assert.Equal("Accounting", row.Name);
+        Assert.Equal(30, row.TotalWrote);
+        Assert.Equal(24, row.Achieved);
+        Assert.Equal(80.0, row.PercentAchieved);
+        Assert.Equal(1, row.SchoolCount);
+    }
+
     /// <summary>A missing school continues to use the v1 not-found ProblemDetails response.</summary>
     [Fact]
     public async Task Detail_MissingSchoolReturns404ProblemDetails()

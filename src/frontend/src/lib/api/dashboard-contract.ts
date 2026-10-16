@@ -2,6 +2,7 @@ import type {
 	DashboardStats,
 	PassRateTrend,
 	RegionStats,
+	RegionSubjects,
 	SchoolDetail,
 	SchoolList,
 	SchoolSubjects
@@ -46,6 +47,12 @@ export interface DashboardPaths {
 		get: {
 			parameters: { query?: { province?: string; district?: string } };
 			responses: GetResponse<RegionStats>;
+		};
+	};
+	'/api/v1/dashboard/regions/subjects': {
+		get: {
+			parameters: { query?: { province?: string; district?: string; year?: number } };
+			responses: GetResponse<RegionSubjects>;
 		};
 	};
 }

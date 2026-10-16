@@ -75,7 +75,9 @@
 
 	function getPanelStyle(index: number): string {
 		if (index >= panelCount || index >= sizes.length) return '';
-		return `flex: ${sizes[index]!} 1 0; overflow: hidden; min-width: 0; min-height: 0;`;
+		// A fixed basis reserves each panel's space even while the browser is
+		// still parsing its later siblings from the server-rendered response.
+		return `flex: 0 1 ${sizes[index]!}%; overflow: hidden; min-width: 0; min-height: 0;`;
 	}
 
 	function startResize(panelIndex: number, event: PointerEvent, containerEl: HTMLElement) {

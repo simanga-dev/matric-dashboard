@@ -56,6 +56,26 @@ public class DashboardController(IDashboardService dashboardService) : ApiContro
     }
 
     /// <summary>
+    /// Returns per-subject NSC performance aggregated across the country, or
+    /// narrowed to a province and/or education district.
+    /// </summary>
+    /// <param name="province">Optional province filter (exact name, e.g. "GAUTENG").</param>
+    /// <param name="district">Optional district filter (exact name), typically with a province.</param>
+    /// <param name="year">Optional academic year; defaults to the latest year with subject data.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpGet("regions/subjects")]
+    [ProducesResponseType(typeof(Dtos.RegionSubjectsResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<Dtos.RegionSubjectsResponse>> GetRegionSubjects(
+        [FromQuery] string? province = null,
+        [FromQuery] string? district = null,
+        [FromQuery] int? year = null,
+        CancellationToken cancellationToken = default)
+    {
+        var subjects = await dashboardService.GetRegionSubjectsAsync(province, district, year, cancellationToken);
+        return Ok(subjects.ToResponse());
+    }
+
+    /// <summary>
     /// Returns a paginated list of schools with optional search.
     /// </summary>
     [HttpGet("schools")]

@@ -158,6 +158,39 @@ internal static class DashboardMapper
         };
     }
 
+    extension(RegionSubjectsOutput output)
+    {
+        /// <summary>
+        /// Maps aggregated per-subject region results for the selected year.
+        /// </summary>
+        public RegionSubjectsResponse ToResponse() => new()
+        {
+            Scope = output.Scope,
+            Name = output.Name,
+            Province = output.Province,
+            Year = output.Year,
+            AvailableYears = output.AvailableYears,
+            SchoolCount = output.SchoolCount,
+            Subjects = output.Subjects.Select(s => s.ToResponse()).ToList()
+        };
+    }
+
+    extension(RegionSubjectOutput output)
+    {
+        /// <summary>
+        /// Maps a single aggregated subject row.
+        /// </summary>
+        public RegionSubjectResponse ToResponse() => new()
+        {
+            Code = output.Code,
+            Name = output.Name,
+            TotalWrote = output.TotalWrote,
+            Achieved = output.Achieved,
+            PercentAchieved = output.PercentAchieved,
+            SchoolCount = output.SchoolCount
+        };
+    }
+
     /// <summary>
     /// Maps a single year's performance.
     /// </summary>

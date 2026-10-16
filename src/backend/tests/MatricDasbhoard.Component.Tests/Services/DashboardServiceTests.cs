@@ -200,6 +200,124 @@ public class DashboardServiceTests
         Assert.Equal(80, province.Years[1].PassRate);
     }
 
+    /// <summary>Region subjects aggregate wrote/achieved per subject, excluding other scopes.</summary>
+    [Fact]
+    public async Task RegionSubjects_AggregatesSubjectsAcrossScope()
+    {
+        await using var db = TestDbContextFactory.Create();
+        var accounting = db.AddSubject("accounting", "Accounting");
+        var mathematics = db.AddSubject("mathematics", "Mathematics");
+        var a = School("100", "A");
+        a.AddSubjectResult(accounting, 2024, 60, 48, 80.0m);
+        a.AddSubjectResult(mathematics, 2024, 40, 10, 25.0m);
+        var b = School("200", "B");
+        b.AddSubjectResult(accounting, 2024, 40, 32, 80.0m);
+        var other = School("300", "C", "LIMPOPO");
+        other.AddSubjectResult(accounting, 2024, 100, 90, 90.0m);
+        db.Schools.AddRange(a, b, other);
+        await db.SaveChangesAsync();
+        using var http = UnreachableSearch();
+        var service = new DashboardService(db, new MeilisearchClient(http));
+
+        var country = await service.GetRegionSubjectsAsync(null, null);
+
+        Assert.Equal("country", country.Scope);
+        Assert.Equal("South Africa", country.Name);
+        Assert.Equal([2024], country.AvailableYears);
+        Assert.Equal(3, country.SchoolCount);
+        Assert.Equal(["Accounting", "Mathematics"], country.Subjects.Select(s => s.Name));
+        var nationalAccounting = country.Subjects[0];
+        Assert.Equal(200, nationalAccounting.TotalWrote);
+        Assert.Equal(170, nationalAccounting.Achieved);
+        Assert.Equal(85.0, nationalAccounting.PercentAchieved);
+        Assert.Equal(3, nationalAccounting.SchoolCount);
+
+        var province = await service.GetRegionSubjectsAsync("GAUTENG", null);
+
+        Assert.Equal("province", province.Scope);
+        Assert.Equal(2, province.SchoolCount);
+        var provinceAccounting = province.Subjects.Single(s => s.Name == "Accounting");
+        Assert.Equal(100, provinceAccounting.TotalWrote);
+        Assert.Equal(80, provinceAccounting.Achieved);
+        Assert.Equal(80.0, provinceAccounting.PercentAchieved);
+    }
+
+    /// <summary>District subjects exclude other districts and provinces, even when names match.</summary>
+    [Fact]
+    public async Task RegionSubjects_DistrictAggregatesOnlySelectedProvinceAndDistrict()
+    {
+        await using var db = TestDbContextFactory.Create();
+        var mathematics = db.AddSubject("mathematics", "Mathematics");
+        var first = School("100", "First");
+        first.AddSubjectResult(mathematics, 2024, 60, 48, 80.0m);
+        var second = School("200", "Second");
+        second.AddSubjectResult(mathematics, 2024, 40, 12, 30.0m);
+        var otherDistrict = new School("GAUTENG", "Other district", "300", "300", "Other district school", 3);
+        otherDistrict.AddSubjectResult(mathematics, 2024, 100, 100, 100.0m);
+        var otherProvince = School("400", "Other province", "LIMPOPO");
+        otherProvince.AddSubjectResult(mathematics, 2024, 100, 100, 100.0m);
+        db.Schools.AddRange(first, second, otherDistrict, otherProvince);
+        await db.SaveChangesAsync();
+        using var http = UnreachableSearch();
+        var service = new DashboardService(db, new MeilisearchClient(http));
+
+        var result = await service.GetRegionSubjectsAsync("GAUTENG", "District", 2024);
+
+        Assert.Equal("district", result.Scope);
+        Assert.Equal("District", result.Name);
+        Assert.Equal(2024, result.Year);
+        Assert.Equal(2, result.SchoolCount);
+        var subject = Assert.Single(result.Subjects);
+        Assert.Equal(100, subject.TotalWrote);
+        Assert.Equal(60, subject.Achieved);
+        Assert.Equal(60.0, subject.PercentAchieved);
+        Assert.Equal(2, subject.SchoolCount);
+    }
+
+    /// <summary>Region subjects default to the latest year and honour an explicit year.</summary>
+    [Fact]
+    public async Task RegionSubjects_DefaultsToLatestYearAndHonoursExplicitYear()
+    {
+        await using var db = TestDbContextFactory.Create();
+        var accounting = db.AddSubject("accounting", "Accounting");
+        var school = School("100", "A");
+        school.AddSubjectResult(accounting, 2023, 40, 30, 75.0m);
+        school.AddSubjectResult(accounting, 2024, 50, 45, 90.0m);
+        db.Schools.Add(school);
+        await db.SaveChangesAsync();
+        using var http = UnreachableSearch();
+        var service = new DashboardService(db, new MeilisearchClient(http));
+
+        var latest = await service.GetRegionSubjectsAsync("GAUTENG", null);
+
+        Assert.Equal(2024, latest.Year);
+        Assert.Equal([2023, 2024], latest.AvailableYears);
+        Assert.Equal(50, Assert.Single(latest.Subjects).TotalWrote);
+
+        var older = await service.GetRegionSubjectsAsync("GAUTENG", null, 2023);
+
+        Assert.Equal(2023, older.Year);
+        Assert.Equal(40, Assert.Single(older.Subjects).TotalWrote);
+    }
+
+    /// <summary>A scope with no offered subjects returns empty years and rows.</summary>
+    [Fact]
+    public async Task RegionSubjects_EmptyScopeReturnsNoSubjects()
+    {
+        await using var db = TestDbContextFactory.Create();
+        db.Schools.Add(School("100", "A"));
+        await db.SaveChangesAsync();
+        using var http = UnreachableSearch();
+        var service = new DashboardService(db, new MeilisearchClient(http));
+
+        var result = await service.GetRegionSubjectsAsync(null, null);
+
+        Assert.Null(result.Year);
+        Assert.Empty(result.AvailableYears);
+        Assert.Empty(result.Subjects);
+        Assert.Equal(0, result.SchoolCount);
+    }
+
     /// <summary>Stats, detail and listings follow the latest year present, not a fixed year.</summary>
     [Fact]
     public async Task Stats_FollowLatestAvailableYear()

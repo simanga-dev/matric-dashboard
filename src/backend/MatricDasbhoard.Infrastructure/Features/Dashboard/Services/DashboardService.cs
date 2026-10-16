@@ -181,6 +181,94 @@ internal sealed class DashboardService : IDashboardService
     }
 
     /// <inheritdoc />
+    public async Task<RegionSubjectsOutput> GetRegionSubjectsAsync(
+        string? province,
+        string? district,
+        int? year = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Only subjects with learners who wrote count as offered.
+        var scoped = _dbContext.SchoolSubjectPerformances
+            .Where(p => !p.IsDeleted && p.TotalWrote > 0 && p.School != null && !p.School.IsDeleted);
+
+        var scope = "country";
+        var name = "South Africa";
+        if (!string.IsNullOrWhiteSpace(province))
+        {
+            scoped = scoped.Where(p => p.School != null && p.School.Province == province);
+            scope = "province";
+            name = province;
+        }
+
+        if (!string.IsNullOrWhiteSpace(district))
+        {
+            scoped = scoped.Where(p => p.School != null && p.School.DistrictName == district);
+            scope = "district";
+            name = district;
+        }
+
+        var availableYears = await scoped
+            .Select(p => p.Year)
+            .Distinct()
+            .OrderBy(y => y)
+            .ToListAsync(cancellationToken);
+
+        var selectedYear = year ?? (availableYears.Count > 0 ? (int?)availableYears[^1] : null);
+        if (selectedYear is null)
+        {
+            return new RegionSubjectsOutput(scope, name, province, null, availableYears, 0, []);
+        }
+
+        var rows = await scoped
+            .Where(p => p.Year == selectedYear)
+            .Select(p => new
+            {
+                p.SchoolId,
+                Code = p.Subject == null ? string.Empty : p.Subject.Code,
+                SubjectName = p.Subject == null ? string.Empty : p.Subject.Name,
+                p.TotalWrote,
+                p.Achieved
+            })
+            .ToListAsync(cancellationToken);
+
+        var schoolCount = rows.Select(r => r.SchoolId).Distinct().Count();
+
+        // Sum learners and achievement per subject; the pass percentage is
+        // recomputed from the totals so it stays learner-weighted when a
+        // subject's per-school percentages are missing.
+        var subjects = rows
+            .GroupBy(r => new { r.Code, r.SubjectName })
+            .Select(g =>
+            {
+                var wrote = g.Sum(r => r.TotalWrote);
+                var achieved = g.Any(r => r.Achieved.HasValue)
+                    ? g.Sum(r => r.Achieved ?? 0)
+                    : (int?)null;
+                var percent = achieved is not null && wrote > 0
+                    ? (double?)Math.Round((double)achieved.Value / wrote * 100, 1)
+                    : null;
+                return new RegionSubjectOutput(
+                    g.Key.Code,
+                    g.Key.SubjectName,
+                    wrote,
+                    achieved,
+                    percent,
+                    g.Select(r => r.SchoolId).Distinct().Count());
+            })
+            .OrderBy(s => s.Name)
+            .ToList();
+
+        return new RegionSubjectsOutput(
+            scope,
+            name,
+            string.IsNullOrWhiteSpace(province) ? null : province,
+            selectedYear,
+            availableYears,
+            schoolCount,
+            subjects);
+    }
+
+    /// <inheritdoc />
     public async Task<SchoolListOutput> GetSchoolsAsync(int pageNumber, int pageSize, string? search = null)
     {
         var term = string.IsNullOrWhiteSpace(search) ? null : search.Trim();

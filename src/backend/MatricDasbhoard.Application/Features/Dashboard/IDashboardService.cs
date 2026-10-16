@@ -37,6 +37,20 @@ public interface IDashboardService
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Returns per-subject NSC performance aggregated across the country, or
+    /// narrowed to a province and/or education district.
+    /// </summary>
+    /// <param name="province">Optional province filter (exact name).</param>
+    /// <param name="district">Optional district filter (exact name), typically with a province.</param>
+    /// <param name="year">Optional academic year; defaults to the latest year with subject data.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    Task<RegionSubjectsOutput> GetRegionSubjectsAsync(
+        string? province,
+        string? district,
+        int? year = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Returns a single school by its stable document identifier (EMIS number),
     /// including multi-year performance and province/national comparison.
     /// </summary>

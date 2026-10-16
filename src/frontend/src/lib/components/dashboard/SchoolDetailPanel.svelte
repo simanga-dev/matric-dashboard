@@ -4,11 +4,12 @@
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
-	import { fetchSchoolById, fetchRegionStats } from '$lib/api/dashboard';
-	import type { RegionStats, SchoolDetail } from '$lib/types/dashboard';
+	import { fetchSchoolById, fetchRegionStats, fetchRegionSubjects } from '$lib/api/dashboard';
+	import type { RegionStats, RegionSubjects, SchoolDetail } from '$lib/types/dashboard';
 	import { schoolPath } from '$lib/config';
 	import { toTitleCase } from '$lib/utils';
 	import SchoolPerformanceTimeline from './SchoolPerformanceTimeline.svelte';
+	import SubjectPerformanceBars from './SubjectPerformanceBars.svelte';
 	import {
 		Building2,
 		School as SchoolIcon,
@@ -33,7 +34,7 @@
 	} = $props();
 
 	let school = $state<SchoolDetail | null>(null);
-	let loading = $state(false);
+	let loading = $state(true);
 	let error = $state<string | null>(null);
 	let retry = $state(0);
 	let request = $derived({ id: selectedSchoolId, attempt: retry });
@@ -76,7 +77,11 @@
 	// When no school is selected the panel describes the selected scope:
 	// a district, a province, or the whole country.
 	let region = $state<RegionStats | null>(null);
-	let regionLoading = $state(false);
+	let regionSubjects = $state<RegionSubjects | null>(null);
+	let subjectsLoading = $state(false);
+	let subjectsError = $state<string | null>(null);
+	let subjectsRetry = $state(0);
+	let regionLoading = $state(true);
 	let regionError = $state<string | null>(null);
 	let regionRequest = $derived({
 		enabled: !selectedSchoolId,
@@ -110,6 +115,40 @@
 		return () => {
 			cancelled = true;
 		};
+	});
+
+	$effect(() => {
+		const currentRegion = region;
+		const { enabled, province, district } = regionRequest;
+		void subjectsRetry;
+		regionSubjects = null;
+		subjectsError = null;
+		subjectsLoading = false;
+		if (!enabled || !currentRegion) return;
+		let cancelled = false;
+		subjectsLoading = true;
+		fetchRegionSubjects(province, district, currentRegion.year)
+			.then((result) => {
+				if (!cancelled) regionSubjects = result;
+			})
+			.catch((e) => {
+				if (!cancelled)
+					subjectsError = e instanceof Error ? e.message : 'Failed to load subject results.';
+			})
+			.finally(() => {
+				if (!cancelled) subjectsLoading = false;
+			});
+		return () => {
+			cancelled = true;
+		};
+	});
+
+	let regionSubjectsHref = $derived.by(() => {
+		const params = new URLSearchParams();
+		if (selectedProvince) params.set('province', selectedProvince);
+		if (selectedDistrict) params.set('district', selectedDistrict);
+		if (regionSubjects?.year) params.set('year', String(regionSubjects.year));
+		return `/subjects?${params.toString()}` as const;
 	});
 
 	let regionFailedCount = $derived(
@@ -157,7 +196,10 @@
 		</div>
 		{@render headerAction?.()}
 	</header>
-	<div class="min-h-0 flex-1 overflow-y-auto p-3 pt-5 @[320px]/details:p-4" aria-busy={loading}>
+	<div
+		class="min-h-0 flex-1 overflow-y-auto p-3 pt-5 @[320px]/details:p-4"
+		aria-busy={selectedSchoolId ? loading : regionLoading}
+	>
 		{#if !selectedSchoolId}
 			{#if regionLoading}
 				<div role="status" class="space-y-4">
@@ -279,6 +321,47 @@
 							</dl>
 						</Card.Content>
 					</Card.Root>
+					<section class="px-1 pt-1" aria-busy={subjectsLoading}>
+						<div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+							<h3 class="text-sm font-semibold">
+								Subject results{regionSubjects?.year ? ` · ${regionSubjects.year}` : ''}
+							</h3>
+							<a
+								href={resolve(regionSubjectsHref)}
+								class="shrink-0 text-xs font-medium text-primary underline-offset-4 hover:underline"
+								>View all subjects</a
+							>
+						</div>
+						{#if subjectsLoading}
+							<div role="status" class="space-y-2">
+								<span class="sr-only">Loading subject results…</span>
+								{#each [1, 2, 3] as row (row)}<Skeleton class="h-9 w-full rounded-md" />{/each}
+							</div>
+						{:else if subjectsError}
+							<div role="alert" class="space-y-2 text-xs">
+								<p class="text-muted-foreground">{subjectsError}</p>
+								<button
+									type="button"
+									onclick={() => subjectsRetry++}
+									class="rounded-md border px-3 py-2 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+									>Try again</button
+								>
+							</div>
+						{:else if regionSubjects && regionSubjects.subjects.length > 0}
+							<p class="mb-3 text-xs text-muted-foreground">
+								Across {regionSubjects.schoolCount.toLocaleString()} schools with subject data
+							</p>
+							<SubjectPerformanceBars
+								subjects={regionSubjects.subjects}
+								headlineYear={regionSubjects.year}
+								class="space-y-3"
+							/>
+						{:else}
+							<p class="text-sm text-muted-foreground">
+								No subject data for this region in {region.year}.
+							</p>
+						{/if}
+					</section>
 				</div>
 			{/if}
 		{:else if selectedSchoolId && loading}
@@ -461,30 +544,11 @@
 					{#if offered.length === 0}
 						<p class="text-sm text-muted-foreground">No subject data</p>
 					{:else}
-						<ul class="flex flex-wrap gap-1.5">
-							{#each offered as subject (subject.code)}
-								<li
-									class="inline-flex items-baseline gap-1.5 rounded-md bg-muted/50 px-2 py-1.5 text-xs"
-								>
-									<span class="font-medium">{subject.name}</span>
-									<span class="text-muted-foreground tabular-nums"
-										>{subject.totalWrote.toLocaleString()} wrote</span
-									>
-									{#if subject.percentAchieved === null}
-										<span class="text-muted-foreground">-</span>
-									{:else}
-										<span
-											class="font-semibold tabular-nums {passRateColor(subject.percentAchieved)}"
-										>
-											{formatRate(subject.percentAchieved)}
-										</span>
-									{/if}
-									{#if subject.year !== school.subjectsOfferedYear}
-										<span class="text-muted-foreground">· {subject.year}</span>
-									{/if}
-								</li>
-							{/each}
-						</ul>
+						<SubjectPerformanceBars
+							subjects={offered}
+							headlineYear={school.subjectsOfferedYear}
+							class="space-y-3"
+						/>
 					{/if}
 				</section>
 			</div>

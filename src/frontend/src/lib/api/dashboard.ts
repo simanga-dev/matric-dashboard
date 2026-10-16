@@ -3,6 +3,7 @@ import type {
 	DashboardStats,
 	PassRateTrend,
 	RegionStats,
+	RegionSubjects,
 	SchoolDetail,
 	SchoolList,
 	SchoolSubjects
@@ -75,5 +76,24 @@ export async function fetchRegionStats(
 		params: { query: { province: province ?? undefined, district: district ?? undefined } }
 	});
 	if (error || !data) throw new Error('Failed to fetch region stats');
+	return data;
+}
+
+export async function fetchRegionSubjects(
+	province?: string | null,
+	district?: string | null,
+	year?: number | null,
+	client: ApiClient = browserClient
+): Promise<RegionSubjects> {
+	const { data, error } = await client.GET('/api/v1/dashboard/regions/subjects', {
+		params: {
+			query: {
+				province: province ?? undefined,
+				district: district ?? undefined,
+				year: year ?? undefined
+			}
+		}
+	});
+	if (error || !data) throw new Error('Failed to fetch region subjects');
 	return data;
 }

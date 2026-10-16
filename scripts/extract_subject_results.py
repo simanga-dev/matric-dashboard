@@ -11,7 +11,7 @@ Layouts changed over the years:
     2014       2 metrics, two exam years, one file per province
     2015-2017  2 metrics, two exam years, stacked rows per school
     2018-2019  3 metrics (Total Wrote, Achieved, %achieved)
-    2020-2024  3 metrics, column order varies (Exam Date before/after Centre)
+    2020-2025  3 metrics, column order varies (Exam Date before/after Centre)
 
 Column positions come from `pdftotext -bbox`. Subject bands are located by
 matching the printed subject headers left to right; metric columns are then
@@ -67,7 +67,7 @@ SUBJECT_ALIASES = {
 # Metric columns per subject, by report year.
 METRICS_PER_SUBJECT = {
     2012: 2, 2013: 2, 2014: 2, 2015: 2, 2016: 2, 2017: 2,
-    2018: 3, 2019: 3, 2020: 3, 2021: 3, 2022: 3, 2023: 3, 2024: 3,
+    2018: 3, 2019: 3, 2020: 3, 2021: 3, 2022: 3, 2023: 3, 2024: 3, 2025: 3,
 }
 
 WORD = re.compile(
@@ -110,6 +110,12 @@ def read_pages(pdf_path: str) -> list[list[dict]]:
             text = "".join(c for c in unescape(text) if c >= " ")
             if not text.strip():
                 continue
+            # Some school names touch the centre number in the PDF text layer.
+            # Recover its identity instead of assigning the row to a nearby school.
+            attached_centre = re.search(r"[^0-9](\d{7})$", text.strip())
+            if attached_centre:
+                xmin = str(float(xmax) - (float(xmax) - float(xmin)) * 7 / len(text.strip()))
+                text = attached_centre.group(1)
             words.append(
                 {
                     "text": text.strip(),

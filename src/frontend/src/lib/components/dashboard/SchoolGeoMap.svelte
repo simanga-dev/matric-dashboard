@@ -319,10 +319,8 @@
 			}
 			if (disposed) return;
 
-			// The map host lives inside the success branch, so it only exists
-			// once `loading` is false. Flip state and wait for the DOM update
-			// before attaching OpenLayers to the target element.
-			loading = false;
+			// The host stays mounted beneath the loading overlay so OpenLayers
+			// measures the final panel dimensions before anything is revealed.
 			await tick();
 
 			if (disposed || !mapHost || !popupHost) {
@@ -389,6 +387,9 @@
 					new VectorLayerCtor({ source, style: styleFor })
 				],
 				view
+			});
+			olMap.once('rendercomplete', () => {
+				if (!disposed) loading = false;
 			});
 			vecLayer = olMap.getLayers().getArray()[3] as VectorLayer;
 
@@ -459,7 +460,6 @@
 							? e.message
 							: 'Failed to load school locations.';
 			}
-		} finally {
 			if (!disposed) loading = false;
 		}
 	}
@@ -473,27 +473,18 @@
 	aria-label="School locations"
 	class="flex h-full min-h-0 flex-col bg-card text-card-foreground"
 >
-	<div class="flex min-h-0 flex-1 flex-col" aria-busy={loading}>
+	<div class="relative flex min-h-0 flex-1 flex-col" aria-busy={loading}>
 		{#if loading}
-			<div role="status" class="relative min-h-0 flex-1 overflow-hidden bg-muted/40">
-				<span class="sr-only">Loading school locations…</span>
+			<div role="status" class="absolute inset-0 z-30 flex items-center justify-center bg-card">
 				<div
-					class="absolute inset-0 opacity-50"
-					style="background-image: linear-gradient(hsl(var(--border)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--border)) 1px, transparent 1px); background-size: 3rem 3rem;"
-				></div>
-				{#each [[22, 32], [58, 54], [40, 70], [70, 26], [33, 48]] as [left, top], i (i)}
-					<span
-						class="absolute size-3 animate-pulse rounded-full bg-primary/40"
-						style:left={`${left}%`}
-						style:top={`${top}%`}
-					></span>
-				{/each}
-				<span
-					class="absolute inset-0 flex items-center justify-center text-sm text-muted-foreground"
-					>Loading school locations…</span
+					class="flex items-center gap-2 rounded-lg border bg-muted/30 px-4 py-3 text-sm text-muted-foreground"
 				>
+					<MapPin class="size-4 motion-safe:animate-pulse" aria-hidden="true" />
+					<span>Loading school map…</span>
+				</div>
 			</div>
-		{:else if error}
+		{/if}
+		{#if error}
 			<div role="alert" class="m-auto max-w-sm space-y-3 p-6">
 				<AlertCircle class="size-6 text-destructive" />
 				<h3 class="text-sm font-semibold">Map unavailable</h3>
@@ -509,7 +500,7 @@
 				</p>
 			</div>
 		{:else}
-			<div class="flex min-h-0 flex-1 flex-col">
+			<div class="flex min-h-0 flex-1 flex-col" inert={loading}>
 				<div class="relative min-h-0 flex-1 overflow-hidden">
 					<!-- OpenLayers installs keyboard interaction on this focusable map target. -->
 					<!-- svelte-ignore a11y_no_noninteractive_tabindex -->

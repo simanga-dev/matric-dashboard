@@ -23,6 +23,14 @@ internal record RegionYearContract(int Year, int TotalWrote, int TotalPassed, do
 internal record RegionStatsContract(string Scope, string Name, string? Province, int Year,
     int SchoolCount, int TotalWrote, int TotalPassed, double PassRate, List<RegionYearContract> Years);
 
+/// <summary>Frozen aggregated subject row contract for a region.</summary>
+internal record RegionSubjectContract(string Code, string Name, int TotalWrote, int? Achieved,
+    double? PercentAchieved, int SchoolCount);
+
+/// <summary>Frozen aggregated region subjects contract.</summary>
+internal record RegionSubjectsContract(string Scope, string Name, string? Province, int? Year,
+    List<int> AvailableYears, int SchoolCount, List<RegionSubjectContract> Subjects);
+
 // Auth
 internal record AuthTokensResponse(string AccessToken, string RefreshToken, bool RequiresTwoFactor, string? ChallengeToken);
 internal record TwoFactorSetupContract(string SharedKey, string AuthenticatorUri);

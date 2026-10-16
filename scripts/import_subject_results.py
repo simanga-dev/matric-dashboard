@@ -4,9 +4,10 @@
 Reads data/nsc/matric.db (built by scripts/extract_subject_results.py) and
 upserts one SchoolSubjectPerformances row per (EmisNumber, Subject, Year).
 Schools are matched on EmisNumber through the centre -> EMIS mapping captured in
-the SQLite `schools` table; when that mapping is missing, the school's
-CentreNumber is used as a fallback. Centres that no longer exist in
-marks."Schools" (historic numbering) are skipped.
+the SQLite `schools` table; when that mapping is missing, or the mapped EMIS
+number is absent from the serving store, the school's CentreNumber is used as a
+fallback. Centres that no longer exist in marks."Schools" (historic numbering)
+are skipped.
 
 Upserts are idempotent: re-running refreshes counts and percentages.
 
@@ -95,7 +96,8 @@ def emit_batch(out, batch: list[tuple]) -> None:
         + ",\n".join(values)
         + "\n),\n"
         # Fallback centre -> school map, only for centre numbers that are unique
-        # so a duplicate CentreNumber cannot fan a batch row out twice.
+        # so a duplicate CentreNumber cannot fan a batch row out twice. Used when
+        # the centre's mapped EMIS number no longer exists in the serving store.
         "centre_map AS (\n"
         '    SELECT "CentreNumber" AS centre, MIN("Id"::text)::uuid AS school_id\n'
         '    FROM marks."Schools"\n'
@@ -110,7 +112,10 @@ def emit_batch(out, batch: list[tuple]) -> None:
         "FROM data d\n"
         'LEFT JOIN marks."Schools" s ON d.emis <> \'\' AND s."EmisNumber" = d.emis '
         'AND NOT s."IsDeleted"\n'
-        'LEFT JOIN centre_map cm ON d.emis = \'\' AND cm.centre = d.centre\n'
+        # Match on the mapped EMIS when it exists; otherwise fall back to the
+        # unique centre number, so centres whose masterlist EMIS was renamed or
+        # removed still land on the school that owns the centre today.
+        'LEFT JOIN centre_map cm ON cm.centre = d.centre\n'
         'JOIN marks."Subjects" sub ON sub."Code" = d.subject AND NOT sub."IsDeleted"\n'
         'WHERE COALESCE(s."Id", cm.school_id) IS NOT NULL\n'
         'ON CONFLICT ("SchoolId","SubjectId","Year") DO UPDATE SET '
