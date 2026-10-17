@@ -1,9 +1,53 @@
 import type { School, SchoolList } from '$lib/types/dashboard';
 import { toTitleCase } from '$lib/utils/text';
 
-const HIGH_COLOR = '#16a34a';
-const MEDIUM_COLOR = '#eab308';
-const LOW_COLOR = '#ef4444';
+const FALLBACK_COLORS = {
+	high: '#2563eb',
+	medium: '#d97706',
+	low: '#dc2626'
+} as const;
+
+export type PassRateBand = keyof typeof FALLBACK_COLORS;
+
+/** Which pass-rate band a percentage falls into. */
+export function passRateBand(rate: number): PassRateBand {
+	if (rate >= 80) return 'high';
+	if (rate >= 60) return 'medium';
+	return 'low';
+}
+
+/**
+ * Theme-aware colour for DOM styles. High performers follow the selected
+ * theme/chart colour; medium and low stay amber and red.
+ */
+export function passRateColor(rate: number): string {
+	return `hsl(var(--pass-rate-${passRateBand(rate)}))`;
+}
+
+/** Text class for icons and labels that use `currentColor`. */
+export function passRateTextClass(rate: number): string {
+	return `pass-rate-text-${passRateBand(rate)}`;
+}
+
+/** Background class for pass-rate bars. */
+export function passRateBarClass(rate: number): string {
+	return `pass-rate-bar-${passRateBand(rate)}`;
+}
+
+/**
+ * Concrete colour for canvas and image contexts, which cannot resolve CSS
+ * variables. Falls back to fixed colours during SSR and tests.
+ */
+export function resolvePassRateColor(rate: number): string {
+	const band = passRateBand(rate);
+	if (typeof document !== 'undefined') {
+		const value = getComputedStyle(document.documentElement)
+			.getPropertyValue(`--pass-rate-${band}`)
+			.trim();
+		if (value) return `hsl(${value})`;
+	}
+	return FALLBACK_COLORS[band];
+}
 
 export function countSchools(grouped: Map<string, Map<string, School[]>>): number {
 	let total = 0;
@@ -28,12 +72,6 @@ export function titleCase(value: string): string {
 	if (titleCache.size >= 20_000) titleCache.clear();
 	titleCache.set(value, result);
 	return result;
-}
-
-export function passRateColor(rate: number): string {
-	if (rate >= 80) return HIGH_COLOR;
-	if (rate >= 60) return MEDIUM_COLOR;
-	return LOW_COLOR;
 }
 
 export function circuitKey(province: string, circuit: string): string {

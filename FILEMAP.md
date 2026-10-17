@@ -114,13 +114,16 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 
 ### School Data (Postgres `marks` schema)
 
-School lists and lookups are read from PostgreSQL via EF (`DashboardService`). The CSV is loaded with the import script.
+School lists and lookups are read from PostgreSQL via EF (`DashboardService`). Free-text search uses Meilisearch with a PostgreSQL fallback. The CSV is loaded with the import script.
 
 | When you change... | Also update... |
 |---|---|
 | **`2024_nsc_school_performance_report.csv`** (columns) | `scripts/import_schools_to_db.py` (column names), `scripts/import_school_locations.py` (roster columns), `School`/`SchoolPerformance` entities, `DashboardService` projection |
 | **`School`/`SchoolPerformance` entity** (fields) | EF configuration, migration, `scripts/import_schools_to_db.py`, `DashboardService` mapping, `SchoolOutput` / `SchoolDetailOutput` DTOs |
 | **`DashboardService.GetSchoolsAsync`** | `IDashboardService`, `DashboardController`, `SchoolOutput` DTO, `DashboardMapper` |
+| **Frontend school tree search and virtualization** (index, row geometry, keyboard navigation) | `SchoolTree.svelte` / `SchoolTree.test.ts` (DOM focus, breadcrumbs, scroll restoration and animation), `school-tree-model.ts` / `.test.ts`, `school-hierarchy.ts`; local matches use the precomputed directory index, zero-match queries fall back to `school-tree-search.ts` / `.test.ts` and `api/dashboard.ts` (`fetchSchools`) / `.test.ts`; DOM tests use jsdom and the browser condition in `vite.config.ts` |
+| **Pass-rate colour tokens** (`--pass-rate-*` in `themes.css`) | `utilities.css` (`pass-rate-text-*` / `pass-rate-bar-*`), `school-hierarchy.ts` (`passRateColor` / `resolvePassRateColor`) / `.test.ts`, `SchoolTree.svelte`, `SchoolGeoMap.svelte`, `SchoolDetailPanel.svelte`, `routes/(app)/schools/[id]`, `routes/(app)/subjects` |
+| **School detail cache and prefetch** (TTL, capacity, request coalescing) | `school-detail-cache.ts` / `.test.ts`, `SchoolTree.svelte` hover/focus prefetch, `SchoolDetailPanel.svelte` cache lookup and loading skeletons |
 | **`DashboardService.GetSchoolByIdAsync`** | `IDashboardService`, `DashboardController`, `SchoolDetailOutput` DTO, `DashboardMapper`, `MatricDasbhoard.Api.Tests/Features/Dashboard/DashboardMapperTests.cs` |
 | **`DashboardService.GetSchoolSubjectsAsync`** (per-school subjects) | `IDashboardService`, `DashboardController` (`GET schools/{id}/subjects?year=`), `SchoolSubjectsOutput` / `SchoolSubjectOutput` / `OfferedSubjectOutput` DTOs, `DashboardMapper`, frontend `api/dashboard.ts` (`fetchSchoolSubjects`), `routes/(app)/subjects/+page.svelte`, `SchoolDetailPanel.svelte` |
 | **`Subject` / `SchoolSubjectPerformance` entities** (fields) | EF configurations (`SubjectConfiguration`, `SchoolSubjectPerformanceConfiguration`), migration `AddSchoolSubjects`, `scripts/import_subject_results.py` column list, `DashboardService` subject projections, `ResponseContracts.cs` |

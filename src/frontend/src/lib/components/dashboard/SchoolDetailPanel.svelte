@@ -7,10 +7,12 @@
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { Button } from '$lib/components/ui/button';
 	import * as Card from '$lib/components/ui/card';
-	import { fetchSchoolById, fetchRegionStats, fetchRegionSubjects } from '$lib/api/dashboard';
+	import { fetchRegionStats, fetchRegionSubjects } from '$lib/api/dashboard';
+	import { schoolDetailCache } from './school-detail-cache';
 	import type { RegionStats, RegionSubjects, SchoolDetail } from '$lib/types/dashboard';
 	import { schoolPath } from '$lib/config';
 	import { toTitleCase } from '$lib/utils';
+	import { passRateTextClass } from './school-hierarchy';
 	import SchoolPerformanceTimeline from './SchoolPerformanceTimeline.svelte';
 	import SubjectPerformanceBars from './SubjectPerformanceBars.svelte';
 	import {
@@ -38,6 +40,7 @@
 
 	let school = $state<SchoolDetail | null>(null);
 	let loading = $state(true);
+	let showSkeleton = $state(false);
 	let error = $state<string | null>(null);
 	let retry = $state(0);
 	let request = $derived({ id: selectedSchoolId, attempt: retry });
@@ -51,16 +54,35 @@
 			school = null;
 			error = null;
 			loading = false;
+			showSkeleton = false;
+			return;
+		}
+
+		const cached = schoolDetailCache.peek(id);
+		if (cached) {
+			school = cached;
+			loading = false;
+			showSkeleton = false;
+			error = null;
 			return;
 		}
 
 		let cancelled = false;
-		// Keep the last result in place until its replacement is ready. The busy
-		// content is inert so links cannot open the previous school by mistake.
+		// First load shows the skeleton at once. When replacing a visible school,
+		// keep its content dimmed until the new one is slow to arrive, so a fast
+		// switch does not flash old content, skeleton, then details.
+		const replacing = school !== null;
 		loading = true;
+		showSkeleton = !replacing;
 		error = null;
+		const skeletonTimer = replacing
+			? setTimeout(() => {
+					showSkeleton = true;
+				}, 250)
+			: undefined;
 
-		fetchSchoolById(id)
+		schoolDetailCache
+			.load(id)
 			.then((result) => {
 				if (!cancelled) school = result;
 			})
@@ -68,11 +90,16 @@
 				if (!cancelled) error = e instanceof Error ? e.message : 'Failed to load school.';
 			})
 			.finally(() => {
-				if (!cancelled) loading = false;
+				clearTimeout(skeletonTimer);
+				if (!cancelled) {
+					loading = false;
+					showSkeleton = false;
+				}
 			});
 
 		return () => {
 			cancelled = true;
+			clearTimeout(skeletonTimer);
 		};
 	});
 
@@ -176,12 +203,6 @@
 		return value > 0 ? 'text-green-700 dark:text-green-400' : 'text-red-700 dark:text-red-400';
 	}
 
-	function passRateColor(rate: number): string {
-		if (rate >= 80) return 'text-green-700 dark:text-green-400';
-		if (rate >= 60) return 'text-amber-700 dark:text-amber-400';
-		return 'text-red-700 dark:text-red-400';
-	}
-
 	function formatRate(rate: number): string {
 		return `${rate.toFixed(1)}%`;
 	}
@@ -222,7 +243,7 @@
 					<p class="text-xs text-muted-foreground">{regionError}</p>
 				</div>
 			{:else if region}
-				<div class="space-y-4">
+				<div class="detail-content space-y-4">
 					<div class="min-w-0 px-1">
 						<h3 class="text-base leading-snug font-semibold tracking-tight">
 							{region.scope === 'country' ? 'South Africa' : toTitleCase(region.name)}
@@ -252,7 +273,7 @@
 										/>
 									</p>
 									<p
-										class="mt-1 text-4xl font-semibold tracking-tight tabular-nums {passRateColor(
+										class="mt-1 text-4xl font-semibold tracking-tight tabular-nums {passRateTextClass(
 											region.passRate
 										)}"
 									>
@@ -379,7 +400,7 @@
 					</section>
 				</div>
 			{/if}
-		{:else if selectedSchoolId && loading && !school}
+		{:else if selectedSchoolId && loading && (!school || showSkeleton)}
 			<div role="status" class="space-y-5">
 				<span class="sr-only">Loading selected school…</span>
 				<div class="flex items-center gap-3">
@@ -453,7 +474,7 @@
 										/>
 									</p>
 									<p
-										class="mt-1 text-4xl font-semibold tracking-tight tabular-nums {passRateColor(
+										class="mt-1 text-4xl font-semibold tracking-tight tabular-nums {passRateTextClass(
 											school.passRate
 										)}"
 									>
@@ -596,27 +617,56 @@
 
 	@media (prefers-reduced-motion: no-preference) {
 		.detail-content > :global(*) {
-			animation: detail-enter 450ms ease-in-out both;
+			--detail-delay: 0ms;
+			animation: detail-enter 450ms ease-in-out var(--detail-delay) both;
 		}
 
 		.detail-content > :global(:nth-child(2)) {
-			animation-delay: 70ms;
+			--detail-delay: 70ms;
 		}
 
 		.detail-content > :global(:nth-child(3)) {
-			animation-delay: 140ms;
+			--detail-delay: 140ms;
 		}
 
 		.detail-content > :global(:nth-child(4)) {
-			animation-delay: 210ms;
+			--detail-delay: 210ms;
 		}
 
 		.detail-content > :global(:nth-child(5)) {
-			animation-delay: 280ms;
+			--detail-delay: 280ms;
 		}
 
 		.detail-content > :global(:nth-child(n + 6)) {
-			animation-delay: 350ms;
+			--detail-delay: 350ms;
+		}
+
+		.detail-content :global(:is(h3, p, dt, dd)) {
+			animation: detail-text-enter 450ms ease-in-out both;
+			animation-delay: calc(var(--detail-delay, 0ms) + var(--text-delay, 0ms) + 70ms);
+		}
+
+		.detail-content :global(dl > div:nth-child(2)) {
+			--text-delay: 35ms;
+		}
+
+		.detail-content :global(dl > div:nth-child(3)) {
+			--text-delay: 70ms;
+		}
+
+		.detail-content :global(dl > div:nth-child(n + 4)) {
+			--text-delay: 105ms;
+		}
+	}
+
+	@keyframes detail-text-enter {
+		from {
+			opacity: 0;
+			translate: 0 4px;
+		}
+		to {
+			opacity: 1;
+			translate: 0 0;
 		}
 	}
 

@@ -41,6 +41,12 @@
 	--input: 30 12% 88%;
 	--ring: 220 25% 20%;
 
+	/* Pass-rate bands. High follows the selected theme and chart colour so
+	   strong results do not stay green against a green or blue palette. */
+	--pass-rate-high: var(--chart-1);
+	--pass-rate-medium: 32 90% 36%;
+	--pass-rate-low: 0 65% 47%;
+
 	/* Layout */
 	--radius: 0.5rem;
 
@@ -88,6 +94,10 @@
 	--border: 24 5% 18%;
 	--input: 24 5% 18%;
 	--ring: 30 5% 70%;
+
+	/* Pass-rate bands stay legible on the dark basemap and surfaces. */
+	--pass-rate-medium: 38 92% 62%;
+	--pass-rate-low: 0 72% 66%;
 
 	/* Sidebar - slightly darker than content for depth */
 	--sidebar-background: 24 8% 9%;

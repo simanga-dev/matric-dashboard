@@ -5,7 +5,11 @@ import {
 	countSchools,
 	groupSchools,
 	loadSchoolHierarchy,
+	passRateBand,
+	passRateBarClass,
 	passRateColor,
+	passRateTextClass,
+	resolvePassRateColor,
 	titleCase
 } from './school-hierarchy';
 
@@ -111,13 +115,32 @@ describe('school hierarchy', () => {
 });
 
 describe('pass rate legend', () => {
-	it('maps a pass rate to its band colour at the boundaries', () => {
-		expect(passRateColor(100)).toBe('#16a34a');
-		expect(passRateColor(80)).toBe('#16a34a');
-		expect(passRateColor(79.9)).toBe('#eab308');
-		expect(passRateColor(60)).toBe('#eab308');
-		expect(passRateColor(59.9)).toBe('#ef4444');
-		expect(passRateColor(0)).toBe('#ef4444');
+	it('maps a pass rate to its band at the boundaries', () => {
+		expect(passRateBand(100)).toBe('high');
+		expect(passRateBand(80)).toBe('high');
+		expect(passRateBand(79.9)).toBe('medium');
+		expect(passRateBand(60)).toBe('medium');
+		expect(passRateBand(59.9)).toBe('low');
+		expect(passRateBand(0)).toBe('low');
+	});
+
+	it('uses theme variables for DOM colours instead of fixed hex values', () => {
+		expect(passRateColor(90)).toBe('hsl(var(--pass-rate-high))');
+		expect(passRateColor(70)).toBe('hsl(var(--pass-rate-medium))');
+		expect(passRateColor(40)).toBe('hsl(var(--pass-rate-low))');
+	});
+
+	it('returns matching text and bar classes for each band', () => {
+		expect(passRateTextClass(90)).toBe('pass-rate-text-high');
+		expect(passRateBarClass(70)).toBe('pass-rate-bar-medium');
+		expect(passRateTextClass(40)).toBe('pass-rate-text-low');
+	});
+
+	it('resolves concrete colours for canvas and image contexts', () => {
+		// Node has no document, so this is the SSR fallback used before the map mounts.
+		expect(resolvePassRateColor(90)).toBe('#2563eb');
+		expect(resolvePassRateColor(70)).toBe('#d97706');
+		expect(resolvePassRateColor(40)).toBe('#dc2626');
 	});
 });
 

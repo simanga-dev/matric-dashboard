@@ -34,10 +34,12 @@ export async function fetchSchools(
 	pageNumber = 1,
 	pageSize = 10,
 	search?: string,
-	client: ApiClient = browserClient
+	client: ApiClient = browserClient,
+	signal?: AbortSignal
 ): Promise<SchoolList> {
 	const { data, error } = await client.GET('/api/v1/dashboard/schools', {
-		params: { query: { pageNumber, pageSize, search } }
+		params: { query: { pageNumber, pageSize, search } },
+		signal
 	});
 	if (error || !data) throw new Error('Failed to fetch schools');
 	return data;

@@ -14,7 +14,13 @@
 	import type VectorLayer from 'ol/layer/Vector';
 	import { Maximize, Home, AlertCircle, MapPin, ExternalLink } from '@lucide/svelte';
 	import { toTitleCase } from '$lib/utils';
-	import { passRateColor } from './school-hierarchy';
+	import {
+		passRateBand,
+		passRateBarClass,
+		passRateTextClass,
+		resolvePassRateColor,
+		type PassRateBand
+	} from './school-hierarchy';
 	import { loadGeoJson, GeoLayerUnavailableError } from '$lib/state';
 	/**
 	 * School points served by GeoServer over WFS, proxied through the API.
@@ -77,6 +83,7 @@
 	let highlightDistrict: string | null = null;
 	let highlightCountry = false;
 	let resizeObserver: ResizeObserver | null = null;
+	let themeObserver: MutationObserver | null = null;
 	let selectedEmis: string | null = null;
 	let disposed = false;
 	let resetView: (() => void) | null = null;
@@ -150,18 +157,6 @@
 		}
 	}
 
-	function rateTextClass(rate: number): string {
-		if (rate >= 80) return 'text-green-700 dark:text-green-400';
-		if (rate >= 60) return 'text-amber-700 dark:text-amber-400';
-		return 'text-red-700 dark:text-red-400';
-	}
-
-	function rateBarClass(rate: number): string {
-		if (rate >= 80) return 'bg-green-500';
-		if (rate >= 60) return 'bg-amber-500';
-		return 'bg-red-500';
-	}
-
 	const SCHOOL_ICON_NODE = [
 		'<path d="M14 21v-3a2 2 0 0 0-4 0v3"/>',
 		'<path d="M18 5v16"/>',
@@ -172,6 +167,18 @@
 	].join('');
 
 	const markerIconCache: Record<string, string> = {};
+	// Resolving theme variables costs a style read, so cache one colour per band
+	// and clear it when the palette changes.
+	let markerColorCache: Partial<Record<PassRateBand, string>> = {};
+
+	function markerColor(rate: number): string {
+		const band = passRateBand(rate);
+		const cached = markerColorCache[band];
+		if (cached) return cached;
+		const color = resolvePassRateColor(rate);
+		markerColorCache[band] = color;
+		return color;
+	}
 
 	/** Lucide school glyph as an OpenLayers icon, haloed so it reads on the basemap. */
 	function schoolMarkerIcon(color: string, selected: boolean): string {
@@ -235,11 +242,14 @@
 	onDestroy(() => {
 		disposed = true;
 		resizeObserver?.disconnect();
+		themeObserver?.disconnect();
 		olMap?.setTarget(undefined);
 	});
 
 	async function loadMap() {
 		resizeObserver?.disconnect();
+		themeObserver?.disconnect();
+		themeObserver = null;
 		olMap?.setTarget(undefined);
 		olMap = null;
 		vecLayer = null;
@@ -341,7 +351,7 @@
 				return new Style({
 					zIndex: isSelected ? 2 : 1,
 					image: new IconStyle({
-						src: schoolMarkerIcon(passRateColor(rate), isSelected),
+						src: schoolMarkerIcon(markerColor(rate), isSelected),
 						anchor: [0.5, 0.5],
 						scale: isSelected ? 1.15 : 0.85
 					})
@@ -398,6 +408,17 @@
 				if (!disposed) loading = false;
 			});
 			vecLayer = olMap.getLayers().getArray()[3] as VectorLayer;
+
+			// Marker colours are resolved from theme variables for the SVG data
+			// URL, so restyle when the palette, scheme or chart colour changes.
+			themeObserver = new MutationObserver(() => {
+				markerColorCache = {};
+				vecLayer?.changed();
+			});
+			themeObserver.observe(document.documentElement, {
+				attributes: true,
+				attributeFilter: ['class', 'data-theme-preset', 'data-theme-chart']
+			});
 
 			const extent = source.getExtent();
 			fitSchools = () => {
@@ -568,7 +589,7 @@
 							<div class="mt-3 flex items-end justify-between gap-3">
 								<span class="text-xs text-muted-foreground">Pass rate</span>
 								<span
-									class="text-2xl leading-none font-semibold tabular-nums {rateTextClass(
+									class="text-2xl leading-none font-semibold tabular-nums {passRateTextClass(
 										popup.passRate
 									)}"
 								>
@@ -578,7 +599,7 @@
 
 							<div class="mt-2 h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden="true">
 								<div
-									class="h-full rounded-full {rateBarClass(popup.passRate)}"
+									class="h-full rounded-full {passRateBarClass(popup.passRate)}"
 									style:width={`${Math.min(100, Math.max(0, popup.passRate))}%`}
 								></div>
 							</div>

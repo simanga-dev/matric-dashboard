@@ -61,6 +61,16 @@ describe('dashboard API requests', () => {
 		});
 	});
 
+	it('forwards cancellation to the school search request', async () => {
+		const controller = new AbortController();
+		transport.mockResolvedValue(Response.json({ items: [] }));
+		await fetchSchools(1, 100, 'School', undefined, controller.signal);
+		const request = transport.mock.calls[0]?.[0] as Request;
+		expect(request.signal.aborted).toBe(false);
+		controller.abort();
+		expect(request.signal.aborted).toBe(true);
+	});
+
 	it('encodes region scope filters and returns the yearly trend', async () => {
 		const body = {
 			scope: 'district',
