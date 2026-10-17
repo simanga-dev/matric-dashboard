@@ -1,10 +1,19 @@
 #!/usr/bin/env python3
 """Extract per-school NSC results from the DBE School Performance Report PDFs.
 
-The reports are laid out as one wide table per province. Each school row carries,
-for three consecutive years, Progressed / Total Wrote / Total Achieved / % Achieved
-(2020-2025 reports). Column positions are read from `pdftotext -bbox` so blank
-cells do not shift the remaining values.
+Two report generations share the same wide-table layout (one table per province)
+but differ in columns:
+
+* 2020-2025 reports print, for each of three consecutive years,
+  Progressed / Total Wrote / Total Achieved / % Achieved.
+* 2012-2019 reports cover 2010-2019 and print only Total Wrote / Total Achieved /
+  % Achieved for the older years, gaining a Progressed column from 2015 onward.
+  The metric order varies between report years.
+
+Column positions are read from `pdftotext -bbox` so blank cells do not shift the
+remaining values. Earlier reports are extracted first and newer ones last; the
+upsert keeps the newest non-null value per (emis_number, year), so existing
+2018-2025 data is never clobbered by an older report.
 
 Output: the shared SQLite database (default data/nsc/matric.db) with a `results`
 table keyed by (emis_number, year), plus a `schools` table of the latest identity
@@ -22,48 +31,82 @@ import re
 import sqlite3
 import subprocess
 import sys
-import xml.etree.ElementTree as ElementTree
+from html import unescape
 
 # Reports 2020-2025 print Progressed / Wrote / Achieved / % per year, three years.
 ACHIEVED_METRICS = ("progressed", "total_wrote", "total_achieved", "percent_achieved")
 ACHIEVED_REPORTS = range(2020, 2026)
 
+# Legacy (2012-2019) metric orders.
+_LEGACY_A = ("wrote", "achieved", "percent")
+_LEGACY_B = ("progressed", "wrote", "achieved", "percent")
+_LEGACY_C = ("wrote", "progressed", "achieved", "percent")  # 2015's own column order
+
+
+def _sequence(specs: list[tuple[int, tuple[str, ...]]]) -> tuple[tuple[int, str], ...]:
+    """Flatten [(year, metrics), ...] into printed left-to-right (year, metric)."""
+    return tuple((year, metric) for year, metrics in specs for metric in metrics)
+
+
+# Per report year: the (calendar year, metric) sequence, in printed order.
+LEGACY_LAYOUTS = {
+    2012: _sequence([(2010, _LEGACY_A), (2011, _LEGACY_A), (2012, _LEGACY_A)]),
+    2013: _sequence([(2011, _LEGACY_A), (2012, _LEGACY_A), (2013, _LEGACY_A)]),
+    2014: _sequence([(2012, _LEGACY_A), (2013, _LEGACY_A), (2014, _LEGACY_A)]),
+    2015: _sequence([(2013, _LEGACY_A), (2014, _LEGACY_A), (2015, _LEGACY_C)]),
+    2016: _sequence([(2014, _LEGACY_A), (2015, _LEGACY_B), (2016, _LEGACY_B)]),
+    2017: _sequence([(2015, _LEGACY_B), (2016, _LEGACY_B), (2017, _LEGACY_B)]),
+    2018: _sequence([(2016, _LEGACY_B), (2017, _LEGACY_B), (2018, _LEGACY_B)]),
+    2019: _sequence([(2017, _LEGACY_B), (2018, _LEGACY_B), (2019, _LEGACY_B)]),
+}
+LEGACY_REPORTS = sorted(LEGACY_LAYOUTS)
+# Where legacy reports live; the first match wins, so prefer the primary pdf dir.
+LEGACY_REPORT_DIRS = (
+    "data/reports/National Senior Certificate Examination Reports",
+)
+
 NUMBER = re.compile(r"^\d+(?:[.,]\d+)?$")
 EMIS = re.compile(r"^\d{9}$")
 CENTRE = re.compile(r"^\d{7}$")
+YEAR = re.compile(r"^(?:19|20)\d\d$")
 
 # Column right-edges within this distance are treated as the same column.
 COLUMN_TOLERANCE = 4.0
+# Legacy rows/columns are matched by proximity with looser tolerances.
+ROW_TOLERANCE = 2.0
+GROUP_TOLERANCE = 6.0
+CELL_TOLERANCE = 12.0
 
-
-def local(tag: str) -> str:
-    return tag.rsplit("}", 1)[-1]
+# pdftotext -bbox emits simple elements; a regex tolerates the malformed markup
+# (entities, stray control characters) some legacy reports produce.
+WORD = re.compile(
+    r'<word xMin="([\d.]+)" yMin="([\d.]+)" xMax="([\d.]+)" yMax="([\d.]+)">(.*?)</word>',
+    re.DOTALL,
+)
 
 
 def read_pages(pdf_path: str) -> list[list[dict]]:
-    """Return per-page word boxes (text, x, y) via pdftotext -bbox."""
+    """Return per-page word boxes (text, x/y bounds) via pdftotext -bbox."""
     result = subprocess.run(
         ["pdftotext", "-bbox", pdf_path, "-"],
         capture_output=True,
         text=True,
         check=True,
     )
-    root = ElementTree.fromstring(result.stdout)
     pages: list[list[dict]] = []
-    for page in root.iter():
-        if local(page.tag) != "page":
-            continue
+    for chunk in re.split(r"<page[^>]*>", result.stdout)[1:]:
         words = []
-        for word in page:
-            if local(word.tag) != "word":
+        for xmin, ymin, xmax, ymax, text in WORD.findall(chunk):
+            text = "".join(character for character in unescape(text) if character >= " ").strip()
+            if not text:
                 continue
             words.append(
                 {
-                    "text": (word.text or "").strip(),
-                    "xmin": float(word.get("xMin", 0)),
-                    "xmax": float(word.get("xMax", 0)),
-                    "ymin": float(word.get("yMin", 0)),
-                    "ymax": float(word.get("yMax", 0)),
+                    "text": text,
+                    "xmin": float(xmin),
+                    "xmax": float(xmax),
+                    "ymin": float(ymin),
+                    "ymax": float(ymax),
                 }
             )
         pages.append(words)
@@ -199,13 +242,242 @@ def extract_achieved(pages: list[list[dict]], report_year: int) -> list[dict]:
     return records
 
 
+def legacy_group_rows(words: list[dict]) -> list[dict]:
+    """Group words into visual rows retaining each row's y for name lookup."""
+    rows: list[dict] = []
+    for word in sorted(words, key=lambda w: (w["ymin"], w["xmin"])):
+        if rows and abs(word["ymin"] - rows[-1]["y"]) <= ROW_TOLERANCE:
+            rows[-1]["words"].append(word)
+        else:
+            rows.append({"y": word["ymin"], "words": [word]})
+    return rows
+
+
+def legacy_metric(text: str, percent_xs: list[float], x0: float) -> str | None:
+    lowered = text.lower().strip()
+    if lowered.startswith("%"):
+        return "percent"
+    if lowered == "wrote":
+        return "wrote"
+    if "progressed" in lowered:
+        return "progressed"
+    if lowered == "achieved":
+        return (
+            "percent"
+            if any(abs(x0 - px) <= GROUP_TOLERANCE for px in percent_xs)
+            else "achieved"
+        )
+    return None
+
+
+def legacy_columns(rows: list[dict]) -> list[tuple[float, str]] | None:
+    """Return sorted [(centre_x, metric)] header anchors for the page, or None."""
+    year_rows = [(row, sum(1 for w in row["words"] if YEAR.match(w["text"]))) for row in rows]
+    year_rows = [(row, count) for row, count in year_rows if count >= 3]
+    if not year_rows:
+        return None
+    year_row, _ = min(year_rows, key=lambda rc: rc[0]["y"])
+    data_y = min(
+        (row["y"] for row in rows if any(EMIS.match(w["text"]) for w in row["words"])),
+        default=None,
+    )
+    if data_y is None:
+        return None
+    band = [
+        w
+        for row in rows
+        if year_row["y"] - GROUP_TOLERANCE <= row["y"] <= data_y
+        for w in row["words"]
+    ]
+    # The individual-results tables carry a Quintile column; appendices for
+    # special/part-time candidates share the metric layout but drop it, and their
+    # same-EMIS rows would otherwise overwrite the mainstream results.
+    if not any(w["text"].lower() == "quintile" for w in band):
+        return None
+    percent_xs = [w["xmin"] for w in band if w["text"] == "%"]
+    groups: list[dict] = []
+    for word in band:
+        metric = legacy_metric(word["text"], percent_xs, word["xmin"])
+        if metric is None:
+            continue
+        for group in groups:
+            if abs(group["x0"] - word["xmin"]) <= GROUP_TOLERANCE:
+                group["x1"] = max(group["x1"], word["xmax"])
+                group["kinds"].add(metric)
+                break
+        else:
+            groups.append({"x0": word["xmin"], "x1": word["xmax"], "kinds": {metric}})
+    groups.sort(key=lambda g: g["x0"])
+    result = []
+    for group in groups:
+        for preferred in ("percent", "progressed", "wrote", "achieved"):
+            if preferred in group["kinds"]:
+                result.append(((group["x0"] + group["x1"]) / 2, preferred))
+                break
+    return result
+
+
+def to_int(raw: str | None) -> int | None:
+    if raw is None:
+        return None
+    cleaned = raw.replace(" ", "").replace(",", "").replace(".", "")
+    return int(cleaned) if cleaned.isdigit() else None
+
+
+def to_float(raw: str | None) -> float | None:
+    if raw is None:
+        return None
+    try:
+        return float(raw.replace(" ", "").replace(",", "."))
+    except ValueError:
+        return None
+
+
+def in_dinaledi(word: dict, ranges: list[tuple[float, float]]) -> bool:
+    return any(
+        word["xmin"] >= x0 - 3 and word["xmax"] <= x1 + 3 for x0, x1 in ranges
+    )
+
+
+def extract_legacy(pdf_path: str, report_year: int, sequence: tuple[tuple[int, str], ...]) -> list[dict]:
+    """Pull school rows from a 2012-2019 report laid out per LEGACY_LAYOUTS."""
+    records: dict[tuple[str, int], dict] = {}
+    pages = read_pages(pdf_path)
+    for words in pages:
+        rows = legacy_group_rows(words)
+        columns = legacy_columns(rows)
+        if columns is None or len(columns) != len(sequence):
+            continue
+        centres = [column[0] for column in columns]
+        first_x = centres[0]
+        first_edge = centres[0] - 12
+        dinaledi = [(w["xmin"], w["xmax"]) for w in words if w["text"].lower() == "dinaledi"]
+        for row in rows:
+            emis_w = next((w for w in row["words"] if EMIS.match(w["text"])), None)
+            centre_w = next((w for w in row["words"] if CENTRE.match(w["text"])), None)
+            if emis_w is None or centre_w is None:
+                continue
+            numbers = [
+                w
+                for w in row["words"]
+                if NUMBER.match(w["text"])
+                and w["xmin"] >= first_edge
+                and w is not emis_w
+                and w is not centre_w
+                and not in_dinaledi(w, dinaledi)
+            ]
+            mapped: dict[int, str] = {}
+            for word in numbers:
+                center = (word["xmin"] + word["xmax"]) / 2
+                best = min(range(len(centres)), key=lambda i: abs(centres[i] - center))
+                if abs(centres[best] - center) <= CELL_TOLERANCE:
+                    mapped[best] = word["text"]
+            if not mapped:
+                continue
+            # The name often sits on the line above the numbers, so collect name
+            # words from a small y-window around the row's numbers.
+            name_words = []
+            for other in rows:
+                if abs(other["y"] - row["y"]) > 14:
+                    continue
+                for word in other["words"]:
+                    if (
+                        word["xmin"] >= centre_w["xmax"] - 1
+                        and word["xmax"] <= first_x - 18
+                        and not NUMBER.match(word["text"])
+                        and not in_dinaledi(word, dinaledi)
+                    ):
+                        name_words.append((other["y"], word["xmin"], word["text"]))
+            name_words.sort()
+            name = " ".join(text for _, _, text in name_words).strip()
+            for index, (year, metric) in enumerate(sequence):
+                raw = mapped.get(index)
+                key = (emis_w["text"], year)
+                record = records.get(key)
+                if record is None:
+                    record = {
+                        "emis_number": emis_w["text"],
+                        "centre_number": centre_w["text"],
+                        "centre_name": name,
+                        "report_year": report_year,
+                        "year": year,
+                        "progressed": None,
+                        "total_wrote": None,
+                        "total_achieved": None,
+                        "percent_achieved": None,
+                    }
+                    records[key] = record
+                elif name and not record["centre_name"]:
+                    record["centre_name"] = name
+                if raw is None:
+                    continue
+                if metric == "progressed":
+                    record["progressed"] = to_int(raw)
+                elif metric == "wrote":
+                    record["total_wrote"] = to_int(raw)
+                elif metric == "achieved":
+                    record["total_achieved"] = to_int(raw)
+                elif metric == "percent":
+                    record["percent_achieved"] = to_float(raw)
+    out = []
+    for record in records.values():
+        if record["percent_achieved"] is None and record["total_wrote"] and record["total_achieved"] is not None:
+            record["percent_achieved"] = round(
+                record["total_achieved"] / record["total_wrote"] * 100, 1
+            )
+        if all(
+            record[k] is None
+            for k in ("progressed", "total_wrote", "total_achieved", "percent_achieved")
+        ):
+            continue
+        out.append(record)
+    return out
+
+
+def find_legacy_report(report_year: int, pdf_dir: str) -> str | None:
+    """Locate a legacy report, preferring pdf_dir over the bundled reports dir.
+
+    Matching is by filename: it must mention the report year and be a school
+    performance report, so sibling diagnostic/technical reports for the same year
+    are not mistaken for it. The `{year}_...` naming used in pdf_dir wins.
+    """
+    year_pattern = re.compile(rf"(?<!\d){report_year}(?!\d)")
+    for directory in (pdf_dir, *LEGACY_REPORT_DIRS):
+        if not os.path.isdir(directory):
+            continue
+        candidates = [
+            path
+            for path in sorted(glob.glob(os.path.join(directory, "*.pdf")))
+            if year_pattern.search(os.path.basename(path))
+            and "performance report" in os.path.basename(path).lower().replace("_", " ")
+        ]
+        if not candidates:
+            continue
+        for path in candidates:
+            if os.path.basename(path).startswith(f"{report_year}_"):
+                return path
+        return candidates[0]
+    return None
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--pdf-dir", default="data/nsc/pdfs")
     parser.add_argument("--db", default="data/nsc/matric.db")
     args = parser.parse_args()
 
+    # Legacy reports first, then modern: the upsert below keeps the last writer's
+    # non-null value, so newer reports win for any (emis_number, year) overlap.
     all_records: list[dict] = []
+    for report_year in LEGACY_REPORTS:
+        path = find_legacy_report(report_year, args.pdf_dir)
+        if not path:
+            print(f"skip legacy {report_year}: no PDF", file=sys.stderr)
+            continue
+        records = extract_legacy(path, report_year, LEGACY_LAYOUTS[report_year])
+        print(f"{report_year}: {len(records)} school-year rows (legacy)", file=sys.stderr)
+        all_records.extend(records)
+
     for report_year in ACHIEVED_REPORTS:
         matches = glob.glob(os.path.join(args.pdf_dir, f"{report_year}_*.pdf"))
         if not matches:
@@ -245,8 +517,10 @@ def main() -> None:
             INSERT INTO results (emis_number, year, progressed, total_wrote, total_achieved, percent_achieved, report_year)
             VALUES (:emis_number, :year, :progressed, :total_wrote, :total_achieved, :percent_achieved, :report_year)
             ON CONFLICT (emis_number, year) DO UPDATE SET
-                progressed=excluded.progressed, total_wrote=excluded.total_wrote,
-                total_achieved=excluded.total_achieved, percent_achieved=excluded.percent_achieved,
+                progressed=COALESCE(excluded.progressed, results.progressed),
+                total_wrote=COALESCE(excluded.total_wrote, results.total_wrote),
+                total_achieved=COALESCE(excluded.total_achieved, results.total_achieved),
+                percent_achieved=COALESCE(excluded.percent_achieved, results.percent_achieved),
                 report_year=excluded.report_year
             """,
             record,
@@ -256,7 +530,8 @@ def main() -> None:
             INSERT INTO schools (emis_number, centre_number, centre_name)
             VALUES (:emis_number, :centre_number, :centre_name)
             ON CONFLICT (emis_number) DO UPDATE SET
-                centre_number=excluded.centre_number, centre_name=excluded.centre_name
+                centre_number=COALESCE(NULLIF(excluded.centre_number, ''), schools.centre_number),
+                centre_name=COALESCE(NULLIF(excluded.centre_name, ''), schools.centre_name)
             """,
             record,
         )

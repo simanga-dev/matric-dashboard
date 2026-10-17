@@ -55,7 +55,8 @@
 		}
 
 		let cancelled = false;
-		school = null;
+		// Keep the last result in place until its replacement is ready. The busy
+		// content is inert so links cannot open the previous school by mistake.
 		loading = true;
 		error = null;
 
@@ -378,7 +379,7 @@
 					</section>
 				</div>
 			{/if}
-		{:else if selectedSchoolId && loading}
+		{:else if selectedSchoolId && loading && !school}
 			<div role="status" class="space-y-5">
 				<span class="sr-only">Loading selected school…</span>
 				<div class="flex items-center gap-3">
@@ -423,160 +424,216 @@
 			</div>
 		{:else if school}
 			{@const offered = school.subjectsOffered ?? []}
-			<div class="space-y-4">
-				<div class="flex items-start justify-between gap-3 px-1">
-					<div class="min-w-0">
-						<h3 class="text-base leading-snug font-semibold tracking-tight">
-							{toTitleCase(school.name)}
-						</h3>
-						<p class="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-							<MapPin class="size-3" />
-							{toTitleCase(school.province)}
-						</p>
+			{#key school.id}
+				<div class="detail-content space-y-4" class:updating={loading} inert={loading}>
+					<div class="flex items-start justify-between gap-3 px-1">
+						<div class="min-w-0">
+							<h3 class="text-base leading-snug font-semibold tracking-tight">
+								{toTitleCase(school.name)}
+							</h3>
+							<p class="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+								<MapPin class="size-3" />
+								{toTitleCase(school.province)}
+							</p>
+						</div>
 					</div>
-				</div>
 
-				<Card.Root
-					class="border-0 bg-overview-metric shadow-sm"
-					style="--muted-foreground: var(--overview-muted-foreground)"
-					data-overview-metric
-				>
-					<Card.Content class="p-3 @[320px]/details:p-4">
-						<div class="flex items-end justify-between gap-3">
-							<div>
-								<p class="text-xs text-muted-foreground">
-									NSC pass rate{latestYear ? ` · ${latestYear}` : ''}<InfoTooltip
-										label="NSC pass rate"
-										text={metricHelp.passRate}
-									/>
-								</p>
-								<p
-									class="mt-1 text-4xl font-semibold tracking-tight tabular-nums {passRateColor(
-										school.passRate
-									)}"
-								>
-									{formatRate(school.passRate)}
-								</p>
+					<Card.Root
+						class="border-0 bg-overview-metric shadow-sm"
+						style="--muted-foreground: var(--overview-muted-foreground)"
+						data-overview-metric
+					>
+						<Card.Content class="p-3 @[320px]/details:p-4">
+							<div class="flex items-end justify-between gap-3">
+								<div>
+									<p class="text-xs text-muted-foreground">
+										NSC pass rate{latestYear ? ` · ${latestYear}` : ''}<InfoTooltip
+											label="NSC pass rate"
+											text={metricHelp.passRate}
+										/>
+									</p>
+									<p
+										class="mt-1 text-4xl font-semibold tracking-tight tabular-nums {passRateColor(
+											school.passRate
+										)}"
+									>
+										{formatRate(school.passRate)}
+									</p>
+								</div>
+								{#if delta !== null}
+									<span
+										class="pb-1 text-xs font-medium whitespace-nowrap tabular-nums {deltaColor(
+											delta
+										)}"
+									>
+										{delta >= 0 ? '+' : ''}{delta.toFixed(1)} pts<InfoTooltip
+											label="pass rate change"
+											text={`${metricHelp.points} Compares ${timeline[0]?.year} with ${latestYear}.`}
+										/>
+									</span>
+								{/if}
 							</div>
-							{#if delta !== null}
-								<span
-									class="pb-1 text-xs font-medium whitespace-nowrap tabular-nums {deltaColor(
-										delta
-									)}"
-								>
-									{delta >= 0 ? '+' : ''}{delta.toFixed(1)} pts<InfoTooltip
-										label="pass rate change"
-										text={`${metricHelp.points} Compares ${timeline[0]?.year} with ${latestYear}.`}
-									/>
-								</span>
-							{/if}
-						</div>
-						<div class="mt-3">
-							<SchoolPerformanceTimeline years={school.years} />
-						</div>
-						<p class="mt-2 text-xs text-muted-foreground">
-							{school.totalPassed.toLocaleString()} of {school.totalWrote.toLocaleString()} learners passed
-						</p>
-					</Card.Content>
-				</Card.Root>
+							<div class="mt-3">
+								<SchoolPerformanceTimeline years={school.years} />
+							</div>
+							<p class="mt-2 text-xs text-muted-foreground">
+								{school.totalPassed.toLocaleString()} of {school.totalWrote.toLocaleString()} learners
+								passed
+							</p>
+						</Card.Content>
+					</Card.Root>
 
-				<Button
-					variant="outline"
-					class="w-full gap-1.5 shadow-none"
-					href={resolve(schoolPath(school.id))}
-					aria-label={`View full page for ${toTitleCase(school.name)}`}
-				>
-					<ExternalLink class="size-4" />
-					View full school page
-				</Button>
+					<Button
+						variant="outline"
+						class="w-full gap-1.5 shadow-none"
+						href={resolve(schoolPath(school.id))}
+						aria-label={`View full page for ${toTitleCase(school.name)}`}
+					>
+						<ExternalLink class="size-4" />
+						View full school page
+					</Button>
 
-				<section class="rounded-xl bg-muted/30 p-3">
-					<h3 class="mb-3 text-sm font-semibold">Identification</h3>
-					<dl class="space-y-3 text-sm">
-						<div class="flex items-baseline justify-between gap-4">
-							<dt class="text-xs text-muted-foreground">
-								EMIS number<InfoTooltip label="EMIS number" text={metricHelp.emis} />
-							</dt>
-							<dd class="tabular-nums">{school.id}</dd>
-						</div>
-						<div class="flex items-baseline justify-between gap-4">
-							<dt class="text-xs text-muted-foreground">Province</dt>
-							<dd class="min-w-0 text-end break-words">{toTitleCase(school.province)}</dd>
-						</div>
-						<div class="flex items-baseline justify-between gap-4">
-							<dt class="text-xs text-muted-foreground">Circuit</dt>
-							<dd class="min-w-0 text-end break-words">{toTitleCase(school.circuit)}</dd>
-						</div>
-					</dl>
-				</section>
-
-				<Card.Root
-					class="border-0 bg-overview-summary shadow-sm"
-					style="--muted-foreground: var(--overview-muted-foreground)"
-					data-overview-summary
-				>
-					<Card.Header class="p-3 pb-2 @[320px]/details:px-4">
-						<Card.Title class="text-sm font-semibold" role="heading" aria-level={3}>
-							NSC Results{latestYear ? ` · ${latestYear}` : ''}
-						</Card.Title>
-					</Card.Header>
-					<Card.Content class="px-3 pb-3 @[320px]/details:px-4">
+					<section class="rounded-xl bg-muted/30 p-3">
+						<h3 class="mb-3 text-sm font-semibold">Identification</h3>
 						<dl class="space-y-3 text-sm">
 							<div class="flex items-baseline justify-between gap-4">
-								<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
-									<Users class="size-3.5" />
-									Learners wrote<InfoTooltip label="learners who wrote" text={metricHelp.wrote} />
+								<dt class="text-xs text-muted-foreground">
+									EMIS number<InfoTooltip label="EMIS number" text={metricHelp.emis} />
 								</dt>
-								<dd class="tabular-nums">{school.totalWrote.toLocaleString()}</dd>
+								<dd class="tabular-nums">{school.id}</dd>
 							</div>
 							<div class="flex items-baseline justify-between gap-4">
-								<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
-									<GraduationCap class="size-3.5" />
-									Passed
-								</dt>
-								<dd class="text-green-700 tabular-nums dark:text-green-400">
-									{school.totalPassed.toLocaleString()}
-								</dd>
+								<dt class="text-xs text-muted-foreground">Province</dt>
+								<dd class="min-w-0 text-end break-words">{toTitleCase(school.province)}</dd>
 							</div>
 							<div class="flex items-baseline justify-between gap-4">
-								<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
-									<XCircle class="size-3.5" />
-									Did not pass
-								</dt>
-								<dd class="text-red-700 tabular-nums dark:text-red-400">
-									{failedCount.toLocaleString()}
-								</dd>
+								<dt class="text-xs text-muted-foreground">Circuit</dt>
+								<dd class="min-w-0 text-end break-words">{toTitleCase(school.circuit)}</dd>
 							</div>
 						</dl>
-					</Card.Content>
-				</Card.Root>
+					</section>
 
-				<section class="px-1 pt-1">
-					<div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-						<h3 class="text-sm font-semibold">
-							Subjects offered<InfoTooltip
-								label="subjects offered"
-								text={metricHelp.gateway}
-							/>{school.subjectsOfferedYear ? ` · ${school.subjectsOfferedYear}` : ''}
-						</h3>
-						<a
-							href={resolve(`/subjects?school=${encodeURIComponent(school.id)}`)}
-							class="shrink-0 text-xs font-medium text-primary underline-offset-4 hover:underline"
-						>
-							View all subjects
-						</a>
-					</div>
-					{#if offered.length === 0}
-						<p class="text-sm text-muted-foreground">No subject data</p>
-					{:else}
-						<SubjectPerformanceBars
-							subjects={offered}
-							headlineYear={school.subjectsOfferedYear}
-							class="space-y-3"
-						/>
-					{/if}
-				</section>
-			</div>
+					<Card.Root
+						class="border-0 bg-overview-summary shadow-sm"
+						style="--muted-foreground: var(--overview-muted-foreground)"
+						data-overview-summary
+					>
+						<Card.Header class="p-3 pb-2 @[320px]/details:px-4">
+							<Card.Title class="text-sm font-semibold" role="heading" aria-level={3}>
+								NSC Results{latestYear ? ` · ${latestYear}` : ''}
+							</Card.Title>
+						</Card.Header>
+						<Card.Content class="px-3 pb-3 @[320px]/details:px-4">
+							<dl class="space-y-3 text-sm">
+								<div class="flex items-baseline justify-between gap-4">
+									<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
+										<Users class="size-3.5" />
+										Learners wrote<InfoTooltip label="learners who wrote" text={metricHelp.wrote} />
+									</dt>
+									<dd class="tabular-nums">{school.totalWrote.toLocaleString()}</dd>
+								</div>
+								<div class="flex items-baseline justify-between gap-4">
+									<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
+										<GraduationCap class="size-3.5" />
+										Passed
+									</dt>
+									<dd class="text-green-700 tabular-nums dark:text-green-400">
+										{school.totalPassed.toLocaleString()}
+									</dd>
+								</div>
+								<div class="flex items-baseline justify-between gap-4">
+									<dt class="flex items-center gap-1.5 text-xs text-muted-foreground">
+										<XCircle class="size-3.5" />
+										Did not pass
+									</dt>
+									<dd class="text-red-700 tabular-nums dark:text-red-400">
+										{failedCount.toLocaleString()}
+									</dd>
+								</div>
+							</dl>
+						</Card.Content>
+					</Card.Root>
+
+					<section class="px-1 pt-1">
+						<div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+							<h3 class="text-sm font-semibold">
+								Subjects offered<InfoTooltip
+									label="subjects offered"
+									text={metricHelp.gateway}
+								/>{school.subjectsOfferedYear ? ` · ${school.subjectsOfferedYear}` : ''}
+							</h3>
+							<a
+								href={resolve(`/subjects?school=${encodeURIComponent(school.id)}`)}
+								class="shrink-0 text-xs font-medium text-primary underline-offset-4 hover:underline"
+							>
+								View all subjects
+							</a>
+						</div>
+						{#if offered.length === 0}
+							<p class="text-sm text-muted-foreground">No subject data</p>
+						{:else}
+							<SubjectPerformanceBars
+								subjects={offered}
+								headlineYear={school.subjectsOfferedYear}
+								class="space-y-3"
+							/>
+						{/if}
+					</section>
+				</div>
+			{/key}
 		{/if}
 	</div>
 </section>
+
+<style>
+	.detail-content {
+		transition: opacity 160ms ease-out;
+	}
+
+	.detail-content.updating {
+		opacity: 0.55;
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.detail-content > :global(*) {
+			animation: detail-enter 450ms ease-in-out both;
+		}
+
+		.detail-content > :global(:nth-child(2)) {
+			animation-delay: 70ms;
+		}
+
+		.detail-content > :global(:nth-child(3)) {
+			animation-delay: 140ms;
+		}
+
+		.detail-content > :global(:nth-child(4)) {
+			animation-delay: 210ms;
+		}
+
+		.detail-content > :global(:nth-child(5)) {
+			animation-delay: 280ms;
+		}
+
+		.detail-content > :global(:nth-child(n + 6)) {
+			animation-delay: 350ms;
+		}
+	}
+
+	@keyframes detail-enter {
+		from {
+			opacity: 0;
+			transform: translateY(10px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.detail-content {
+			transition: none;
+		}
+	}
+</style>

@@ -4,7 +4,7 @@
 #
 # Reads data/nsc/matric.db (from scripts/extract_nsc_results.py) and upserts
 # one SchoolPerformances row per (EmisNumber, Year), extending history to
-# 2018-2025. Idempotent: re-running upserts by (SchoolId, Year).
+# 2010-2025. Idempotent: re-running upserts by (SchoolId, Year).
 #
 # Usage:
 #   ./scripts/import_nsc_history.sh

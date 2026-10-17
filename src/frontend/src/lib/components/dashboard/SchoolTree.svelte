@@ -14,13 +14,14 @@
 	} from '@lucide/svelte';
 	import { tick, untrack, type Snippet } from 'svelte';
 	import type { School } from '$lib/types/dashboard';
-	import { toTitleCase } from '$lib/utils';
 	import {
 		circuitKey,
+		countSchools,
 		groupSchools,
 		groupSortedSchools,
 		passRateColor,
-		sortSchoolsByName
+		sortSchoolsByName,
+		titleCase
 	} from './school-hierarchy';
 
 	let {
@@ -46,20 +47,15 @@
 	} = $props();
 
 	// The directory is provided by the server load, so the tree renders on the
-	// first paint without a client fetch or skeleton.
+	// first paint without a client fetch or skeleton. Sort once; filtering and
+	// disclosure changes only regroup the already-sorted array.
 	let schools = $derived(initialSchools);
 	let search = $state('');
 	let scrollArea: HTMLDivElement | null = $state(null);
 	let rowHeight = $state(34);
 	let sortedSchools = $derived(sortSchoolsByName(schools));
 	let grouped = $derived(groupSortedSchools(sortedSchools, search));
-	let matchCount = $derived(
-		[...grouped.values()].reduce(
-			(total, circuits) =>
-				total + [...circuits.values()].reduce((sum, items) => sum + items.length, 0),
-			0
-		)
-	);
+	let matchCount = $derived(countSchools(grouped));
 
 	// While filtering, every matching branch is revealed. This is transient and
 	// never overwrites the user's shareable expansion state.
@@ -263,7 +259,7 @@
 										<button
 											type="button"
 											class="disclosure"
-											aria-label={`${openProvinces.has(province) ? 'Collapse' : 'Expand'} ${toTitleCase(province)}`}
+											aria-label={`${openProvinces.has(province) ? 'Collapse' : 'Expand'} ${titleCase(province)}`}
 											aria-expanded={openProvinces.has(province)}
 											onclick={() => (expandedProvinces = toggle(expandedProvinces, province))}
 											><ChevronRight
@@ -275,10 +271,10 @@
 											class="node font-medium"
 											aria-pressed={selectedProvince === province}
 											onclick={() => selectProvince(province)}
-											title={toTitleCase(province)}
+											title={titleCase(province)}
 											><MapPin class="size-3.5 shrink-0 text-muted-foreground" /><span
 												class="truncate"
-												>{province ? toTitleCase(province) : 'Unknown province'}</span
+												>{province ? titleCase(province) : 'Unknown province'}</span
 											><span class="ml-auto text-[11px] text-muted-foreground tabular-nums"
 												>{[...circuits.values()].reduce(
 													(sum, items) => sum + items.length,
@@ -300,7 +296,7 @@
 														<button
 															type="button"
 															class="disclosure"
-															aria-label={`${openCircuits.has(key) ? 'Collapse' : 'Expand'} ${circuit ? toTitleCase(circuit) : 'Unknown circuit'} in ${toTitleCase(province)}`}
+															aria-label={`${openCircuits.has(key) ? 'Collapse' : 'Expand'} ${circuit ? titleCase(circuit) : 'Unknown circuit'} in ${titleCase(province)}`}
 															aria-expanded={openCircuits.has(key)}
 															onclick={() => (expandedCircuits = toggle(expandedCircuits, key))}
 															><ChevronRight
@@ -313,9 +309,9 @@
 															aria-pressed={selectedProvince === province &&
 																selectedDistrict === circuit}
 															onclick={() => selectDistrict(province, circuit)}
-															title={toTitleCase(circuit)}
+															title={titleCase(circuit)}
 															><span class="truncate"
-																>{circuit ? toTitleCase(circuit) : 'Unknown circuit'}</span
+																>{circuit ? titleCase(circuit) : 'Unknown circuit'}</span
 															><span class="ml-auto text-[11px] tabular-nums"
 																>{schoolList.length}</span
 															></button
@@ -333,17 +329,17 @@
 																			class="node"
 																			aria-pressed={selectedSchoolId === String(school.id)}
 																			onclick={() => selectSchool(school)}
-																			title={`${toTitleCase(school.name)} · EMIS ${school.id} · ${school.passRate.toFixed(1)}% pass rate`}
+																			title={`${titleCase(school.name)} · EMIS ${school.id} · ${school.passRate.toFixed(1)}% pass rate`}
 																			><SchoolIcon
 																				class="size-3.5 shrink-0"
 																				color={passRateColor(school.passRate)}
-																			/><span class="truncate">{toTitleCase(school.name)}</span
+																			/><span class="truncate">{titleCase(school.name)}</span
 																			></button
 																		>
 																		<button
 																			type="button"
 																			class="row-action"
-																			aria-label={`View ${toTitleCase(school.name)}`}
+																			aria-label={`View ${titleCase(school.name)}`}
 																			title="View school"
 																			onclick={() => goto(resolve(schoolPath(school.id)))}
 																		>
@@ -372,6 +368,13 @@
 		display: flex;
 		align-items: center;
 		border-radius: var(--radius);
+	}
+	/* Off-screen school rows skip layout and paint. The rows stay in the DOM so
+	   the sticky branch headers keep working, but a fully expanded directory no
+	   longer pays to lay out thousands of rows on first paint. */
+	li {
+		content-visibility: auto;
+		contain-intrinsic-size: auto var(--tree-row, 2.25rem);
 	}
 	/* Ancestor rows pin to the top of the scroll area so the current
 	   province and district stay visible while schools scroll past. The

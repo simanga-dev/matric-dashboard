@@ -215,10 +215,12 @@
 		}
 
 		const view = olMap.getView();
+		// A new click replaces the current pan rather than competing with it.
+		view.cancelAnimations();
 		view.animate({
 			center: coord as number[],
 			zoom: Math.max(view.getZoom() ?? 6, 10),
-			duration: 500
+			duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 450
 		});
 	}
 

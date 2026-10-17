@@ -135,7 +135,7 @@ Single SQLite file: per-school overall results (`schools`, `results`) and per-sc
 
 | When you change... | Also update... |
 |---|---|
-| **`scripts/extract_nsc_results.py`** (overall-report layout/columns) | `schools`/`results` schema, `scripts/import_nsc_history.py` (`DEFAULT_DB`, `NSC_DB_PATH`), `scripts/import_nsc_history.sh` |
+| **`scripts/extract_nsc_results.py`** (overall-report layout/columns) | `schools`/`results` schema, `LEGACY_LAYOUTS` metric order per report year (2012-2019) vs `ACHIEVED_REPORTS` (2020-2025), `scripts/import_nsc_history.py` (`DEFAULT_DB`, `NSC_DB_PATH`), `scripts/import_nsc_history.sh` |
 | **`scripts/extract_subject_results.py`** (layout detection/anchors) | `METRICS_PER_SUBJECT` per report year (2 vs 3 metrics), `SUBJECT_ALIASES`, `data/nsc/matric.db` tables (`subjects`, `subject_aliases`, `report_sources`, `subject_results`) |
 | **`subject_results` schema** (`subject_id` primary key) | `scripts/extract_subject_results.py` upsert statement; downstream joins to `schools.centre_number` (centres, not EMIS numbers) |
 | **Report PDFs in `data/school_subject_reports/`** | `scripts/extract_subject_results.py` file discovery (report year from filename, one file per province for 2014) and `--pdf-dir` defaults (`data/school_subject_reports`, `data/nsc/subject_pdfs`) |

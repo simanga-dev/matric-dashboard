@@ -1,6 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { School, SchoolList } from '$lib/types/dashboard';
-import { circuitKey, groupSchools, loadSchoolHierarchy, passRateColor } from './school-hierarchy';
+import {
+	circuitKey,
+	countSchools,
+	groupSchools,
+	loadSchoolHierarchy,
+	passRateColor,
+	titleCase
+} from './school-hierarchy';
 
 function school(id: string, name: string, province = 'Gauteng', circuit = 'Central'): School {
 	return {
@@ -111,5 +118,30 @@ describe('pass rate legend', () => {
 		expect(passRateColor(60)).toBe('#eab308');
 		expect(passRateColor(59.9)).toBe('#ef4444');
 		expect(passRateColor(0)).toBe('#ef4444');
+	});
+});
+
+describe('titleCase cache', () => {
+	it('title-cases and caches without changing the result', () => {
+		expect(titleCase('AZALEA COMBINED SCHOOL')).toBe('Azalea Combined School');
+		expect(titleCase('AZALEA COMBINED SCHOOL')).toBe('Azalea Combined School');
+		expect(titleCase('')).toBe('');
+	});
+});
+
+describe('countSchools', () => {
+	it('totals schools across provinces and circuits', () => {
+		const grouped = new Map([
+			[
+				'Gauteng',
+				new Map([
+					['Central', [school('1', 'Alpha'), school('2', 'Beta')]],
+					['North', [school('3', 'Gamma')]]
+				])
+			],
+			['Limpopo', new Map([['South', [school('4', 'Delta')]]])]
+		]);
+		expect(countSchools(grouped)).toBe(4);
+		expect(countSchools(new Map())).toBe(0);
 	});
 });
