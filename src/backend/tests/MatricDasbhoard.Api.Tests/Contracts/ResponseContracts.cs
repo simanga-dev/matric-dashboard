@@ -2,7 +2,34 @@ namespace MatricDasbhoard.Api.Tests.Contracts;
 
 /// <summary>Frozen v1 school detail fields retained for existing API consumers.</summary>
 internal record SchoolDetailV1Contract(string Id, string Name, string Province, string Circuit,
-    int TotalWrote, int TotalPassed, double PassRate, int? TotalAchieved);
+    int TotalWrote, int TotalPassed, double PassRate, int? TotalAchieved,
+    int? SubjectsOfferedYear = null, List<OfferedSubjectContract>? SubjectsOffered = null);
+
+/// <summary>Frozen subject offered by a school, published with school detail.</summary>
+internal record OfferedSubjectContract(string Code, string Name, int Year, int TotalWrote, double? PercentAchieved);
+
+/// <summary>Frozen per-subject school result contract.</summary>
+internal record SchoolSubjectContract(string SubjectId, string Code, string Name, int TotalWrote,
+    int? Achieved, double? PercentAchieved);
+
+/// <summary>Frozen per-subject school results contract.</summary>
+internal record SchoolSubjectsContract(string SchoolId, int? Year, List<int> AvailableYears,
+    List<SchoolSubjectContract> Subjects);
+
+/// <summary>Frozen v1 per-year region pass rate trend contract.</summary>
+internal record RegionYearContract(int Year, int TotalWrote, int TotalPassed, double PassRate);
+
+/// <summary>Frozen v1 region (country/province/district) stats contract.</summary>
+internal record RegionStatsContract(string Scope, string Name, string? Province, int Year,
+    int SchoolCount, int TotalWrote, int TotalPassed, double PassRate, List<RegionYearContract> Years);
+
+/// <summary>Frozen aggregated subject row contract for a region.</summary>
+internal record RegionSubjectContract(string Code, string Name, int TotalWrote, int? Achieved,
+    double? PercentAchieved, int SchoolCount);
+
+/// <summary>Frozen aggregated region subjects contract.</summary>
+internal record RegionSubjectsContract(string Scope, string Name, string? Province, int? Year,
+    List<int> AvailableYears, int SchoolCount, List<RegionSubjectContract> Subjects);
 
 // Auth
 internal record AuthTokensResponse(string AccessToken, string RefreshToken, bool RequiresTwoFactor, string? ChallengeToken);

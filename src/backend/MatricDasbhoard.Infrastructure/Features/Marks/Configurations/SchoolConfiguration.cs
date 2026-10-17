@@ -55,5 +55,11 @@ internal sealed class SchoolConfiguration : BaseEntityConfiguration<School>
             .WithOne(e => e.School)
             .HasForeignKey(e => e.SchoolId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        // Navigation: a school has many per-subject performance records
+        builder.HasMany(e => e.SubjectPerformances)
+            .WithOne(e => e.School)
+            .HasForeignKey(e => e.SchoolId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

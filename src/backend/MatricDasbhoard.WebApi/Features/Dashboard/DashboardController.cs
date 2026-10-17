@@ -38,6 +38,44 @@ public class DashboardController(IDashboardService dashboardService) : ApiContro
     }
 
     /// <summary>
+    /// Returns aggregated NSC performance for the country, or narrowed to a
+    /// province and/or education district.
+    /// </summary>
+    /// <param name="province">Optional province filter (exact name, e.g. "GAUTENG").</param>
+    /// <param name="district">Optional district filter (exact name), typically with a province.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpGet("regions/stats")]
+    [ProducesResponseType(typeof(Dtos.RegionStatsResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<Dtos.RegionStatsResponse>> GetRegionStats(
+        [FromQuery] string? province = null,
+        [FromQuery] string? district = null,
+        CancellationToken cancellationToken = default)
+    {
+        var stats = await dashboardService.GetRegionStatsAsync(province, district, cancellationToken);
+        return Ok(stats.ToResponse());
+    }
+
+    /// <summary>
+    /// Returns per-subject NSC performance aggregated across the country, or
+    /// narrowed to a province and/or education district.
+    /// </summary>
+    /// <param name="province">Optional province filter (exact name, e.g. "GAUTENG").</param>
+    /// <param name="district">Optional district filter (exact name), typically with a province.</param>
+    /// <param name="year">Optional academic year; defaults to the latest year with subject data.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    [HttpGet("regions/subjects")]
+    [ProducesResponseType(typeof(Dtos.RegionSubjectsResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<Dtos.RegionSubjectsResponse>> GetRegionSubjects(
+        [FromQuery] string? province = null,
+        [FromQuery] string? district = null,
+        [FromQuery] int? year = null,
+        CancellationToken cancellationToken = default)
+    {
+        var subjects = await dashboardService.GetRegionSubjectsAsync(province, district, year, cancellationToken);
+        return Ok(subjects.ToResponse());
+    }
+
+    /// <summary>
     /// Returns a paginated list of schools with optional search.
     /// </summary>
     [HttpGet("schools")]
@@ -63,6 +101,31 @@ public class DashboardController(IDashboardService dashboardService) : ApiContro
     public async Task<ActionResult<Dtos.SchoolDetailResponse>> GetSchoolById(string id, CancellationToken cancellationToken)
     {
         var result = await dashboardService.GetSchoolByIdAsync(id, cancellationToken);
+        if (!result.IsSuccess)
+        {
+            return ProblemFactory.Create(result.Error, result.ErrorType);
+        }
+
+        return Ok(result.Value.ToResponse());
+    }
+
+    /// <summary>
+    /// Returns per-subject NSC performance for a single school.
+    /// </summary>
+    /// <param name="id">The school's stable identifier from the search index.</param>
+    /// <param name="year">Optional academic year; defaults to the latest year with subject data.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <response code="200">Returns the school's subject results.</response>
+    /// <response code="404">If no school matches the identifier.</response>
+    [HttpGet("schools/{id}/subjects")]
+    [ProducesResponseType(typeof(Dtos.SchoolSubjectsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<Dtos.SchoolSubjectsResponse>> GetSchoolSubjects(
+        string id,
+        [FromQuery] int? year = null,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await dashboardService.GetSchoolSubjectsAsync(id, year, cancellationToken);
         if (!result.IsSuccess)
         {
             return ProblemFactory.Create(result.Error, result.ErrorType);

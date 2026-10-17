@@ -12,16 +12,60 @@
 			// Prevent FOUC (Flash of Unstyled Content)
 			(function () {
 				let theme;
+				let preset;
 				try {
 					theme = localStorage.getItem('theme');
+					preset = localStorage.getItem('theme-preset');
 				} catch (e) {
 					// Ignore
 				}
 				const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-				if (theme === 'dark' || ((!theme || theme === 'system') && systemDark)) {
+				const validTheme = ['light', 'dark', 'system'].includes(theme) ? theme : 'system';
+				const isDark = validTheme === 'dark' || (validTheme === 'system' && systemDark);
+				if (isDark) {
 					document.documentElement.classList.add('dark');
 				} else {
 					document.documentElement.classList.remove('dark');
+				}
+				document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+				document.documentElement.dataset.themePreset = [
+					'ocean',
+					'iris',
+					'forest',
+					'rose',
+					'sunset',
+					'stone',
+					'zinc',
+					'slate',
+					'gray',
+					'neutral',
+					'red',
+					'yellow',
+					'amber',
+					'purple',
+					'teal'
+				].includes(preset)
+					? preset
+					: 'ocean';
+				let appearance;
+				try {
+					appearance = JSON.parse(localStorage.getItem('appearance') || 'null');
+				} catch {
+					// Use defaults when storage is blocked or malformed.
+				}
+				const options = {
+					radius: ['none', 'small', 'medium', 'large'],
+					shadow: ['none', 'small', 'medium', 'large'],
+					font: ['small', 'default'],
+					chart: ['default', 'palette', 'sapphire', 'ruby', 'emerald', 'daylight', 'midnight']
+				};
+				const defaults = { radius: 'medium', shadow: 'small', font: 'default', chart: 'default' };
+				for (const key of Object.keys(options)) {
+					const value = appearance?.[key];
+					const datasetKey = 'theme' + key[0].toUpperCase() + key.slice(1);
+					document.documentElement.dataset[datasetKey] = options[key].includes(value)
+						? value
+						: defaults[key];
 				}
 			})();
 		</script>

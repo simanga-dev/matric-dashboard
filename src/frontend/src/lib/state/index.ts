@@ -1,5 +1,6 @@
 export * from './breadcrumb.svelte';
 export * from './cooldown.svelte';
+export * from './geo-data';
 export { healthState, initHealthCheck } from './health.svelte';
 export * from './shake.svelte';
 export * from './shortcuts.svelte';

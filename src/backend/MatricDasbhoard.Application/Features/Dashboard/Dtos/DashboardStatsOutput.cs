@@ -3,7 +3,13 @@ namespace MatricDasbhoard.Application.Features.Dashboard.Dtos;
 /// <summary>
 /// Aggregated dashboard statistics for the overview page.
 /// </summary>
+/// <param name="Year">Latest academic year with performance data.</param>
+/// <param name="TopSchools">Schools with a 100% pass rate in <paramref name="Year"/>.</param>
+/// <param name="ExamCenters">Schools with performance data in <paramref name="Year"/>.</param>
+/// <param name="TotalLearners">Learners who wrote in <paramref name="Year"/>.</param>
+/// <param name="PassRate">Learner-weighted pass rate for <paramref name="Year"/>, times ten.</param>
 public record DashboardStatsOutput(
+    int Year,
     StatItemOutput TopSchools,
     StatItemOutput ExamCenters,
     StatItemOutput TotalLearners,

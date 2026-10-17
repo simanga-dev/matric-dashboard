@@ -5,6 +5,9 @@ namespace MatricDasbhoard.WebApi.Features.Dashboard.Dtos;
 /// </summary>
 public class DashboardStatsResponse
 {
+    /// <summary>Latest academic year with performance data.</summary>
+    public int Year { get; init; }
+
     /// <summary>Top-performing schools count with trend.</summary>
     public StatItemResponse TopSchools { get; init; } = null!;
 

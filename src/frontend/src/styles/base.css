@@ -15,4 +15,11 @@
 	:focus-visible {
 		@apply outline-2 outline-ring/50;
 	}
+
+	/* Tailwind's preflight leaves buttons with the default arrow cursor. Make
+	   clickable controls read as clickable, while disabled ones stay neutral. */
+	button:not(:disabled),
+	[role='button']:not([aria-disabled='true']):not([data-disabled]) {
+		cursor: pointer;
+	}
 }

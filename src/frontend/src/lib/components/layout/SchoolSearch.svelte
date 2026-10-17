@@ -13,6 +13,7 @@
 		serializeOverviewState
 	} from '$lib/components/dashboard/overview-url';
 
+	let { borderless = false }: { borderless?: boolean } = $props();
 	let query = $state('');
 	let results = $state<School[]>([]);
 	let loading = $state(false);
@@ -92,7 +93,8 @@
 
 <div class="relative">
 	<div
-		class="flex items-center gap-1.5 rounded-lg border bg-muted/50 px-3 py-1.5 transition-colors focus-within:bg-accent focus-within:text-accent-foreground focus-within:ring-2 focus-within:ring-ring"
+		class="flex items-center gap-1.5 rounded-lg bg-muted/50 px-3 py-1.5 transition-colors focus-within:bg-accent focus-within:text-accent-foreground focus-within:ring-2 focus-within:ring-ring"
+		class:border={!borderless}
 	>
 		{#if loading}
 			<Loader2 class="size-4 shrink-0 animate-spin text-muted-foreground" />

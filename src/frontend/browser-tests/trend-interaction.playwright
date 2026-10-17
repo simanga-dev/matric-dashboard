@@ -1,0 +1,57 @@
+async (page) => {
+	const origin = new URL(page.url()).origin;
+	const context = await page.context().browser().newContext({
+		viewport: { width: 1200, height: 900 }, hasTouch: true, locale: 'en'
+	});
+	const browser = await context.newPage();
+	const check = (condition, message) => {
+		if (!condition) throw new Error(message);
+	};
+	try {
+		await browser.route('**/api/v1/dashboard/regions/stats**', (route) => route.fulfill({ json: {
+			scope: 'country', name: 'South Africa', province: null, year: 2025,
+			schoolCount: 1, totalWrote: 100, totalPassed: 88, passRate: 88,
+			years: [75, 78, 76, 84, 88].map((passRate, index) => ({
+				year: 2021 + index, totalWrote: 100, totalPassed: passRate, passRate
+			}))
+		} }));
+		await browser.route('**/api/v1/dashboard/schools**', (route) => route.fulfill({ json: {
+			items: [], totalCount: 0, pageNumber: 1, pageSize: 500, totalPages: 0,
+			hasPreviousPage: false, hasNextPage: false
+		} }));
+		await browser.route('**/api/geo/**', (route) => route.fulfill({ status: 503 }));
+		await browser.goto(`${origin}/overview`);
+		const chart = browser.locator('[data-trend-chart]').first();
+		await chart.waitFor();
+		check((await chart.locator('[data-trend-line]').getAttribute('d')).includes(' C '), 'Use a smooth cubic line');
+		check((await chart.locator('svg text').allTextContents()).every((label) => !label.includes('%')), 'No permanent percentage labels');
+		check(await chart.getByRole('tooltip').count() === 0, 'Hide tooltip until interaction');
+		const point = chart.locator('[data-trend-point="2023"]');
+		await point.scrollIntoViewIfNeeded();
+		let bounds = await point.boundingBox();
+		await browser.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+		await chart.getByRole('tooltip').waitFor();
+		check((await chart.getByRole('tooltip').textContent()).includes('76.0%'), 'Show the hovered observation');
+		const animation = await chart.getByRole('tooltip').evaluate((element) => getComputedStyle(element).animationName);
+		check(animation.includes('tooltip-enter'), 'Animate percentage appearance');
+		await browser.mouse.move(0, 0);
+		await chart.getByRole('tooltip').waitFor({ state: 'hidden' });
+		await point.focus();
+		await chart.getByRole('tooltip').waitFor();
+		check((await chart.getByRole('tooltip').textContent()).includes('76.0%'), 'Support keyboard focus');
+		await browser.keyboard.press('Escape');
+		await chart.getByRole('tooltip').waitFor({ state: 'hidden' });
+		await browser.emulateMedia({ reducedMotion: 'reduce' });
+		await browser.setViewportSize({ width: 375, height: 812 });
+		await point.scrollIntoViewIfNeeded();
+		bounds = await point.boundingBox();
+		await browser.touchscreen.tap(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+		await chart.getByRole('tooltip').waitFor();
+		check((await chart.getByRole('tooltip').textContent()).includes('76.0%'), 'Select the nearest observation on touch');
+		const reducedAnimation = await chart.getByRole('tooltip').evaluate((element) => getComputedStyle(element).animationName);
+		check(reducedAnimation === 'none', 'Respect reduced motion');
+		return { hover: '76.0%', animation, reducedAnimation, keyboard: true, touch: true, passed: true };
+	} finally {
+		await context.close();
+	}
+}

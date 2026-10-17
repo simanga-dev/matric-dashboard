@@ -84,6 +84,30 @@ attempt to reconstruct records that the earlier import overwrote.
 For multiple running database stacks, explicitly set `PG_CONTAINER`, `PG_DB`,
 and `PG_USER` when running import/bootstrap rather than relying on autodetection.
 
+## Real school coordinates
+
+`scripts/import_school_locations.py` matches the NSC performance report to the DBE
+EMIS masterlists by EMIS number and upserts measured coordinates into
+`geo.school_locations` with `is_sample=false`. Sources default to
+`~/Documents/dbe-emis-downloads`; override with `DBE_DIR`, `DBE_PRIMARY`, and
+`DBE_FALLBACK`. `scripts/geoserver/bootstrap.sh` runs it automatically when the
+primary masterlist exists (set `IMPORT_LOCATIONS=0` to skip), and `just
+geo-locations` runs the standalone wrapper:
+
+```bash
+./scripts/import_school_locations.sh
+```
+
+It normalizes two masterlist quirks before emitting SQL: provinces that store the
+latitude in the longitude column, and provinces that store coordinates with the
+decimal point dropped (`-2907075` means `-29.07075`). Coordinates outside the
+South African envelope are dropped rather than written. Schools without usable
+coordinates keep their sample point; set `UNRESOLVED_PATH` to a new CSV file to
+review them. Real rows carry `is_sample=false`, so later sample seeds leave their
+geometry untouched. Against the 2025 masterlists the bundled report resolves 6814
+of 6871 valid schools, with the 2018 masterlist fallback filling 20 of the
+remainder.
+
 ## Sample coordinates and GeoServer maintenance
 
 Both the static init SQL and API sample seed update only conflicting rows whose
@@ -107,7 +131,7 @@ refresh bounds through GeoServer REST after applying its SQL, or run bootstrap.
 ## Non-destructive regression checks
 
 ```bash
-bash -n scripts/import_schools_to_db.sh scripts/geoserver/bootstrap.sh
+bash -n scripts/import_schools_to_db.sh scripts/import_school_locations.sh scripts/geoserver/bootstrap.sh
 python3 -B -m unittest discover -s scripts/tests -v
 docker compose config --quiet
 ```

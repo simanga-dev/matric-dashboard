@@ -60,6 +60,16 @@ internal class MatricDasbhoardDbContext(DbContextOptions<MatricDasbhoardDbContex
     public DbSet<SchoolPerformance> SchoolPerformances { get; set; }
 
     /// <summary>
+    /// Gets or sets the NSC examination subjects table.
+    /// </summary>
+    public DbSet<Subject> Subjects { get; set; }
+
+    /// <summary>
+    /// Gets or sets the per-school, per-subject performance records table for yearly NSC results.
+    /// </summary>
+    public DbSet<SchoolSubjectPerformance> SchoolSubjectPerformances { get; set; }
+
+    /// <summary>
     /// Configures the model by applying all entity configurations from this assembly
     /// and fuzzy search extensions.
     /// </summary>

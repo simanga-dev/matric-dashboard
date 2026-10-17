@@ -14,6 +14,8 @@ export default defineConfig({
 		host: true,
 		port: Number(process.env.PORT) || 5173
 	},
+	// DOM tests need Svelte's client runtime. Production resolution is unchanged.
+	resolve: process.env.VITEST ? { conditions: ['browser'] } : undefined,
 	test: {
 		include: ['src/**/*.test.ts'],
 		environment: 'node',

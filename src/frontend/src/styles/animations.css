@@ -103,8 +103,100 @@
 /* -----------------------------------------------------------------------------
    Reduced Motion
    Respect user's motion preferences for accessibility.
-   ----------------------------------------------------------------------------- */
+    ----------------------------------------------------------------------------- */
+/* Transform-only drawer motion keeps the panel crisp throughout the slide. */
+@keyframes customize-enter {
+	from {
+		transform: translate3d(var(--customize-offset, 100%), 0, 0);
+	}
+	to {
+		transform: translate3d(0, 0, 0);
+	}
+}
+@keyframes customize-exit {
+	from {
+		transform: translate3d(0, 0, 0);
+	}
+	to {
+		transform: translate3d(var(--customize-offset, 100%), 0, 0);
+	}
+}
+@keyframes customize-fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+@keyframes customize-fade-out {
+	from {
+		opacity: 1;
+	}
+	to {
+		opacity: 0;
+	}
+}
+
+[dir='rtl'] .customize-drawer {
+	--customize-offset: -100%;
+}
+.customize-drawer {
+	box-shadow: -12px 0 40px hsl(0 0% 0% / 0.15);
+}
+.customize-drawer[data-state='open'] {
+	animation: customize-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.customize-drawer[data-state='closed'] {
+	animation: customize-exit 280ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+.customize-overlay {
+	background: hsl(0 0% 0% / 0.35);
+	backdrop-filter: none;
+}
+.customize-overlay[data-state='open'] {
+	animation: customize-fade-in 320ms ease-out both;
+}
+.customize-overlay[data-state='closed'] {
+	animation: customize-fade-out 280ms ease-in both;
+}
+
+.customize-choice {
+	display: flex;
+	min-width: 0;
+	min-height: 32px;
+	align-items: center;
+	gap: 0.5rem;
+	border: 1px solid hsl(var(--border));
+	border-radius: 0.375rem;
+	padding: 0.375rem 0.625rem;
+	font-size: max(0.75rem, 12px);
+	text-align: start;
+	transition:
+		background-color 150ms ease,
+		border-color 150ms ease;
+}
+.customize-choice:hover {
+	background: hsl(var(--muted));
+}
+.customize-choice[aria-pressed='true'] {
+	border-color: hsl(var(--foreground) / 0.8);
+	box-shadow: 0 0 0 1px hsl(var(--foreground) / 0.8);
+}
+.customize-choice:focus-visible {
+	outline: 2px solid hsl(var(--ring));
+	outline-offset: 3px;
+}
+
+@media (pointer: coarse) {
+	.customize-choice {
+		min-height: 44px;
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
+	.customize-drawer[data-state],
+	.customize-overlay[data-state],
 	.animate-shake,
 	.animate-auth-enter,
 	.animate-auth-exit,
@@ -112,5 +204,8 @@
 	.status-indicator-ping,
 	.status-icon-ping {
 		animation: none;
+	}
+	.customize-choice {
+		transition: none;
 	}
 }

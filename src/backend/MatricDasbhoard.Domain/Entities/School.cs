@@ -17,7 +17,7 @@ public sealed class School : BaseEntity
     public string DistrictName { get; private set; } = string.Empty;
 
     /// <summary>
-    /// Gets the EMIS (Education Management Information System) number — a unique school identifier.
+    /// Gets the EMIS (Education Management Information System) number, a unique school identifier.
     /// </summary>
     public string EmisNumber { get; private set; } = string.Empty;
 
@@ -41,6 +41,11 @@ public sealed class School : BaseEntity
     /// Gets the yearly performance records for this school.
     /// </summary>
     public ICollection<SchoolPerformance> Performances { get; private set; } = new List<SchoolPerformance>();
+
+    /// <summary>
+    /// Gets the per-subject performance records for this school.
+    /// </summary>
+    public ICollection<SchoolSubjectPerformance> SubjectPerformances { get; private set; } = new List<SchoolSubjectPerformance>();
 
     /// <summary>
     /// Required by EF Core.
@@ -74,5 +79,14 @@ public sealed class School : BaseEntity
     public void AddPerformance(SchoolPerformance performance)
     {
         Performances.Add(performance);
+    }
+
+    /// <summary>
+    /// Adds a per-subject performance record to this school.
+    /// </summary>
+    public void AddSubjectPerformance(SchoolSubjectPerformance performance)
+    {
+        SubjectPerformances.Add(performance);
+        performance.SetSchool(this);
     }
 }

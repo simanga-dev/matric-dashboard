@@ -1,42 +1,50 @@
 <script lang="ts">
-	import { Sun, Moon } from '@lucide/svelte';
+	import { Palette, ArrowRight } from '@lucide/svelte';
+	import { Dialog } from 'bits-ui';
+	import * as Sheet from '$lib/components/ui/sheet';
 	import { Button } from '$lib/components/ui/button';
-	import { toggleTheme, getTheme } from '$lib/state/theme.svelte';
+	import ThemePicker from './ThemePicker.svelte';
 	import * as m from '$lib/paraglide/messages';
-	import * as Tooltip from '$lib/components/ui/tooltip';
-
-	interface Props {
-		collapsed?: boolean;
-	}
-
-	let { collapsed = false }: Props = $props();
-
-	const themeLabels = {
-		light: m.theme_light,
-		dark: m.theme_dark,
-		system: m.theme_system
-	};
 </script>
 
-<Tooltip.Root>
-	<Tooltip.Trigger>
+<Sheet.Root>
+	<Sheet.Trigger>
 		{#snippet child({ props })}
 			<Button
 				variant="ghost"
 				size="icon"
 				class="min-h-11 min-w-11"
-				aria-label={`${m.common_theme()} (${themeLabels[getTheme()]()})`}
 				{...props}
-				onclick={toggleTheme}
+				aria-label={m.theme_customize()}
+				title={m.theme_customize()}
 			>
-				<Sun class="h-5 w-5 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
-				<Moon
-					class="absolute h-5 w-5 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0"
-				/>
+				<Palette class="size-5" />
 			</Button>
 		{/snippet}
-	</Tooltip.Trigger>
-	<Tooltip.Content side={collapsed ? 'right' : 'top'}>
-		{m.common_theme()} ({themeLabels[getTheme()]()})
-	</Tooltip.Content>
-</Tooltip.Root>
+	</Sheet.Trigger>
+	<Sheet.Portal>
+		<Sheet.Overlay class="customize-overlay" />
+		<Dialog.Content
+			class="customize-drawer fixed inset-y-0 end-0 z-50 flex w-[22rem] max-w-full flex-col border-s bg-background text-foreground"
+			data-slot="customize-drawer"
+		>
+			<div class="flex shrink-0 justify-center pt-4">
+				<Sheet.Close
+					class="flex min-h-[44px] items-center gap-4 rounded-[0.375rem] bg-muted px-4 text-xs font-medium hover:bg-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+				>
+					{m.common_close()}
+					<ArrowRight class="size-4 rtl:rotate-180" aria-hidden="true" />
+				</Sheet.Close>
+			</div>
+			<div
+				class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+			>
+				<Sheet.Header class="gap-1 p-0 pb-7">
+					<Sheet.Title class="text-2xl tracking-tight">{m.theme_customize()}</Sheet.Title>
+					<Sheet.Description>{m.theme_description()}</Sheet.Description>
+				</Sheet.Header>
+				<ThemePicker />
+			</div>
+		</Dialog.Content>
+	</Sheet.Portal>
+</Sheet.Root>

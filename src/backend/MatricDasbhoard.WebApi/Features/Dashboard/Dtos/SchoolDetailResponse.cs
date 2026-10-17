@@ -40,6 +40,12 @@ public class SchoolDetailResponse
 
     /// <summary>How the school compares to its province and the country.</summary>
     public SchoolComparisonResponse Comparison { get; init; } = new();
+
+    /// <summary>Latest year with subject data for the school, null when none.</summary>
+    public int? SubjectsOfferedYear { get; init; }
+
+    /// <summary>Subjects written in <see cref="SubjectsOfferedYear"/>, ordered by name.</summary>
+    public IReadOnlyList<OfferedSubjectResponse> SubjectsOffered { get; init; } = [];
 }
 
 /// <summary>

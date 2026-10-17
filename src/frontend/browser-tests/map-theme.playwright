@@ -1,0 +1,99 @@
+async (page) => {
+	const origin = new URL(page.url()).origin;
+	const context = await page.context().browser().newContext({
+		viewport: { width: 1440, height: 900 },
+		locale: 'en'
+	});
+	const browser = await context.newPage();
+	const tileZooms = [];
+	const check = (condition, message) => {
+		if (!condition) throw new Error(message);
+	};
+	const readMapTheme = () => browser.evaluate(() => {
+		const base = document.querySelector('.school-basemap');
+		const canvas = base?.querySelector('canvas');
+		return {
+			filter: canvas ? getComputedStyle(canvas).filter : null,
+			tint: base ? getComputedStyle(base, '::after').backgroundColor : null,
+			vectorFilters: [...document.querySelectorAll('.school-map .ol-layer:not(.school-basemap) canvas')]
+				.map((element) => getComputedStyle(element).filter),
+			credits: document.querySelector('.school-map .ol-attribution')?.textContent ?? ''
+		};
+	});
+	try {
+		await context.addInitScript(() => {
+			localStorage.setItem('theme', 'light');
+			localStorage.setItem('theme-preset', 'ocean');
+		});
+		await browser.route('**/api/geo/**', (route) => {
+			const schools = new URL(route.request().url()).searchParams.get('typeName') === 'matric:school_locations';
+			return route.fulfill({ json: {
+				type: 'FeatureCollection',
+				features: schools ? [{
+					type: 'Feature',
+					geometry: { type: 'Point', coordinates: [28.05, -26.2] },
+					properties: { emis_number: '1001', name: 'THEME TEST SCHOOL', province: 'GAUTENG', passed: 90, wrote: 100 }
+				}] : []
+			} });
+		});
+		await browser.route(/https:\/\/[^/]*tile\.openstreetmap\.org\//, (route) => {
+			tileZooms.push(Number(new URL(route.request().url()).pathname.split('/')[1]));
+			return route.fulfill({
+			contentType: 'image/svg+xml',
+			body: '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#e5edf0"/></svg>'
+			});
+		});
+		await browser.goto(`${origin}/overview`);
+		await browser.locator('.school-map .school-basemap canvas').waitFor();
+		await browser.locator('.school-map .ol-layer:not(.school-basemap) canvas').first().waitFor();
+		const light = await readMapTheme();
+		check(light.filter?.includes('grayscale(1)') && !light.filter.includes('invert'), 'Light tiles should be muted, not inverted');
+		check(light.vectorFilters.every((filter) => filter === 'none'), 'School vectors must not inherit tile filters');
+		check(light.credits.includes('OpenStreetMap'), 'Keep map attribution visible');
+
+		// Keep focus outside the map. Hovering must be enough to receive wheel zoom.
+		await browser.locator('input').first().focus();
+		await browser.waitForLoadState('networkidle');
+		const focusBefore = await browser.evaluate(() => document.activeElement?.outerHTML);
+		const scrollBefore = await browser.evaluate(() => window.scrollY);
+		const initialZoom = Math.max(...tileZooms);
+		const zoomedTile = browser.waitForResponse((response) => {
+			const url = new URL(response.url());
+			return url.hostname.endsWith('tile.openstreetmap.org') && Number(url.pathname.split('/')[1]) > initialZoom;
+		});
+		await browser.locator('.school-map').hover();
+		check(await browser.evaluate(() => !document.activeElement?.closest('.school-map')), 'Hovering should not steal keyboard focus');
+		await browser.mouse.wheel(0, -500);
+		await zoomedTile;
+		check(await browser.evaluate(() => window.scrollY) === scrollBefore, 'Wheel input over the map should not scroll the page');
+		check(await browser.evaluate(() => document.activeElement?.outerHTML) === focusBefore, 'Wheel zoom should preserve keyboard focus');
+		const zoomControls = browser.locator('.school-map .ol-zoom');
+		check(await zoomControls.evaluate((element) => getComputedStyle(element).borderTopWidth === '0px'), 'Zoom controls should not add a decorative outline');
+		check(await browser.getByRole('button', { name: 'Fit all school locations', exact: true }).evaluate((element) =>
+			getComputedStyle(element.parentElement).borderTopWidth === '0px'
+		), 'The floating map toolbar should be borderless');
+		await zoomControls.locator('button').first().focus();
+		await browser.keyboard.press('Tab');
+		check(await browser.evaluate(() => document.activeElement?.matches('.ol-zoom button') &&
+			getComputedStyle(document.activeElement).outlineWidth === '2px'
+		), 'Borderless map controls still need a visible keyboard focus outline');
+
+		await browser.getByRole('button', { name: 'Customize', exact: true }).first().click();
+		await browser.getByRole('group', { name: 'Mode', exact: true }).getByRole('button', { name: 'Dark', exact: true }).click();
+		await browser.waitForFunction(() => getComputedStyle(document.querySelector('.school-basemap canvas')).filter.includes('invert(1)'));
+		const dark = await readMapTheme();
+		check(dark.vectorFilters.every((filter) => filter === 'none'), 'Dark mode must not recolour school markers');
+		const mapBefore = await browser.locator('.school-map .ol-viewport').elementHandle();
+		await browser.getByRole('group', { name: 'Theme', exact: true }).getByRole('button', { name: 'Rose', exact: true }).click();
+		const rose = await readMapTheme();
+		check(rose.tint !== dark.tint, 'Tile tint should follow the chosen palette');
+		check(await mapBefore.evaluate((element) => element.isConnected), 'Theme changes should not rebuild the map or reset its view');
+		await browser.keyboard.press('Escape');
+
+		await browser.emulateMedia({ reducedMotion: 'reduce' });
+		check(await browser.locator('.school-basemap canvas').evaluate((element) => getComputedStyle(element).transitionDuration === '0s'), 'Respect reduced motion');
+		return { light, dark, rose, hoverZoom: { initialZoom, requestedZoom: Math.max(...tileZooms) }, passed: true };
+	} finally {
+		await context.close();
+	}
+}

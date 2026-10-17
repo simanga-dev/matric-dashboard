@@ -1,18 +1,17 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import { page } from '$app/state';
+	import InfoTooltip from '$lib/components/common/InfoTooltip.svelte';
+	import { metricHelp } from '$lib/components/common/metric-help';
 	import { resolve } from '$app/paths';
 	import { goto } from '$app/navigation';
-	import { LoadingSpinner, EmptyState } from '$lib/components/common';
+	import { EmptyState } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card';
 	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import { toast } from '$lib/components/ui/sonner';
-	import { fetchSchoolById } from '$lib/api/dashboard';
 	import { passRateColor } from '$lib/components/dashboard/school-hierarchy';
 	import { routes } from '$lib/config';
-	import type { SchoolDetail } from '$lib/types/dashboard';
 	import { cn, toTitleCase } from '$lib/utils';
+	import type { PageData } from './$types';
 	import {
 		School as SchoolIcon,
 		Users,
@@ -32,26 +31,11 @@
 		Award
 	} from '@lucide/svelte';
 
-	let school = $state<SchoolDetail | null>(null);
-	let loading = $state(true);
-	let error = $state<string | null>(null);
+	let { data }: { data: PageData } = $props();
 
-	let schoolId = $derived(page.params.id ?? '');
-
-	onMount(async () => {
-		if (!schoolId) {
-			error = 'Invalid school.';
-			loading = false;
-			return;
-		}
-		try {
-			school = await fetchSchoolById(schoolId);
-		} catch (e) {
-			error = e instanceof Error ? e.message : 'Failed to load school.';
-		} finally {
-			loading = false;
-		}
-	});
+	// The server load resolves the school for the current route param, so the
+	// page renders on first paint and stays correct across param changes.
+	let school = $derived(data.school);
 
 	function formatPassRate(rate: number): string {
 		return `${rate.toFixed(1)}%`;
@@ -131,12 +115,8 @@
 		</Button>
 	</div>
 
-	{#if loading}
-		<div class="flex justify-center py-24">
-			<LoadingSpinner />
-		</div>
-	{:else if error || !school}
-		<EmptyState icon={SchoolIcon} message={error ?? 'School not found.'} />
+	{#if !school}
+		<EmptyState icon={SchoolIcon} message="School not found." />
 	{:else}
 		<Card.Root class="overflow-hidden bg-gradient-to-br from-primary/10 via-card to-card">
 			<Card.Content class="flex flex-col gap-6 p-6 sm:flex-row sm:items-center sm:justify-between">
@@ -161,11 +141,23 @@
 							</span>
 						</div>
 						<div class="flex flex-wrap gap-1.5 pt-1">
-							<Badge variant="outline" class="tabular-nums">EMIS {school.id}</Badge>
+							<Badge variant="outline" class="tabular-nums"
+								>EMIS {school.id}<InfoTooltip label="EMIS number" text={metricHelp.emis} /></Badge
+							>
 							{#if school.centreNumber}
-								<Badge variant="outline" class="tabular-nums">Centre {school.centreNumber}</Badge>
+								<Badge variant="outline" class="tabular-nums"
+									>Centre {school.centreNumber}<InfoTooltip
+										label="examination centre"
+										text={metricHelp.centre}
+									/></Badge
+								>
 							{/if}
-							<Badge variant="secondary">Quintile {school.quintile}</Badge>
+							<Badge variant="secondary"
+								>Quintile {school.quintile}<InfoTooltip
+									label="quintile"
+									text={metricHelp.quintile}
+								/></Badge
+							>
 							{#if latest}
 								<Badge variant="outline" class="gap-1">
 									<Calendar class="size-3" />
@@ -177,7 +169,9 @@
 				</div>
 				<div class="flex items-end gap-6">
 					<div class="text-right">
-						<p class="text-xs text-muted-foreground">Pass rate</p>
+						<p class="text-xs text-muted-foreground">
+							Pass rate<InfoTooltip label="NSC pass rate" text={metricHelp.passRate} />
+						</p>
 						<p
 							class="text-3xl font-semibold tracking-tight tabular-nums"
 							style:color={passRateColor(school.passRate)}
@@ -194,7 +188,10 @@
 								{#if yoy >= 0}<TrendingUp class="size-3.5" />{:else}<TrendingDown
 										class="size-3.5"
 									/>{/if}
-								{Math.abs(yoy).toFixed(1)} pts YoY
+								{Math.abs(yoy).toFixed(1)} pts YoY<InfoTooltip
+									label="year-on-year change"
+									text={metricHelp.points}
+								/>
 							</p>
 						{/if}
 					</div>
@@ -224,7 +221,9 @@
 						<p class="text-2xl font-semibold tabular-nums">
 							{school.totalWrote.toLocaleString()}
 						</p>
-						<p class="truncate text-xs text-muted-foreground">Learners wrote</p>
+						<p class="truncate text-xs text-muted-foreground">
+							Learners wrote<InfoTooltip label="learners who wrote" text={metricHelp.wrote} />
+						</p>
 					</div>
 				</Card.Content>
 			</Card.Root>
@@ -270,7 +269,9 @@
 						>
 							{formatPassRate(school.passRate)}
 						</p>
-						<p class="truncate text-xs text-muted-foreground">Pass rate</p>
+						<p class="truncate text-xs text-muted-foreground">
+							Pass rate<InfoTooltip label="NSC pass rate" text={metricHelp.passRate} />
+						</p>
 					</div>
 				</Card.Content>
 			</Card.Root>
@@ -338,7 +339,10 @@
 							<span class="font-semibold"
 								>{school.comparison.provinceSchoolCount.toLocaleString()}</span
 							>
-							schools in {toTitleCase(school.province)}.
+							schools in {toTitleCase(school.province)}.<InfoTooltip
+								label="school ranking"
+								text={metricHelp.ranking}
+							/>
 						</p>
 					{/if}
 					<ul class="space-y-3">

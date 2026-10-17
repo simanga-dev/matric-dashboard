@@ -70,6 +70,7 @@ describe('overview URL state', () => {
 		const query = serializeOverviewState({
 			school: '1001',
 			province: null,
+			district: null,
 			expandedProvinces: ['Gauteng'],
 			expandedCircuits: [key('Gauteng', 'Johannesburg East')]
 		});
@@ -77,6 +78,7 @@ describe('overview URL state', () => {
 		expect(parseOverviewState(query)).toEqual({
 			school: '1001',
 			province: null,
+			district: null,
 			expandedProvinces: ['Gauteng'],
 			expandedCircuits: [key('Gauteng', 'Johannesburg East')]
 		});
@@ -89,6 +91,7 @@ describe('overview URL state', () => {
 		const query = serializeOverviewState({
 			school: null,
 			province: null,
+			district: null,
 			expandedProvinces: ['EASTERN CAPE'],
 			expandedCircuits: [key('EASTERN CAPE', 'BUFFALO CITY')]
 		});
@@ -103,6 +106,7 @@ describe('overview URL state', () => {
 		const query = serializeOverviewState({
 			school: '200201049',
 			province: 'Western Cape',
+			district: null,
 			expandedProvinces: [],
 			expandedCircuits: []
 		});
@@ -114,6 +118,7 @@ describe('overview URL state', () => {
 			serializeOverviewState({
 				school: null,
 				province: null,
+				district: null,
 				expandedProvinces: [],
 				expandedCircuits: []
 			})
@@ -121,6 +126,7 @@ describe('overview URL state', () => {
 		expect(parseOverviewState('')).toEqual({
 			school: null,
 			province: null,
+			district: null,
 			expandedProvinces: [],
 			expandedCircuits: []
 		});
@@ -133,6 +139,7 @@ describe('overview URL state', () => {
 		expect(parseOverviewState(`?open=${legacy}`)).toEqual({
 			school: null,
 			province: null,
+			district: null,
 			expandedProvinces: ['Gauteng'],
 			expandedCircuits: [key('Gauteng', 'Central')]
 		});
@@ -142,6 +149,7 @@ describe('overview URL state', () => {
 		expect(parseOverviewState('?open=Gauteng,Western%20Cape:Metro%20North')).toEqual({
 			school: null,
 			province: null,
+			district: null,
 			expandedProvinces: ['Gauteng'],
 			expandedCircuits: [key('Western Cape', 'Metro North')]
 		});
@@ -158,6 +166,7 @@ describe('overview URL state', () => {
 			hasOverviewState({
 				school: null,
 				province: null,
+				district: null,
 				expandedProvinces: [],
 				expandedCircuits: []
 			})
@@ -166,6 +175,7 @@ describe('overview URL state', () => {
 			hasOverviewState({
 				school: '1001',
 				province: null,
+				district: null,
 				expandedProvinces: [],
 				expandedCircuits: []
 			})
@@ -174,6 +184,7 @@ describe('overview URL state', () => {
 			hasOverviewState({
 				school: null,
 				province: null,
+				district: null,
 				expandedProvinces: ['Gauteng'],
 				expandedCircuits: []
 			})
@@ -182,6 +193,7 @@ describe('overview URL state', () => {
 			hasOverviewState({
 				school: null,
 				province: null,
+				district: null,
 				expandedProvinces: [],
 				expandedCircuits: [key('Gauteng', 'Central')]
 			})

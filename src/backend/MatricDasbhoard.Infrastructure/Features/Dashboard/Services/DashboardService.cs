@@ -16,9 +16,6 @@ namespace MatricDasbhoard.Infrastructure.Features.Dashboard.Services;
 /// </summary>
 internal sealed class DashboardService : IDashboardService
 {
-    /// <summary>The performance year surfaced by the dashboard.</summary>
-    private const int LatestYear = 2024;
-
     /// <summary>Name of the Meilisearch index populated by scripts/upload_to_meilisearch.py.</summary>
     private const string SchoolsIndex = "schools";
 
@@ -54,16 +51,58 @@ internal sealed class DashboardService : IDashboardService
     }
 
     /// <inheritdoc />
-    public Task<DashboardStatsOutput> GetStatsAsync()
+    public async Task<DashboardStatsOutput> GetStatsAsync()
     {
-        var stats = new DashboardStatsOutput(
-            TopSchools: new StatItemOutput(187, 8.5),
-            ExamCenters: new StatItemOutput(6820, 2.1),
-            TotalLearners: new StatItemOutput(737472, 5.4),
-            PassRate: new StatItemOutput(829, 3.6)
-        );
-        return Task.FromResult(stats);
+        var latestYear = await GetLatestYearAsync(CancellationToken.None);
+        var (schools, learners, top, rate) = await AggregateYearAsync(latestYear, CancellationToken.None);
+        var (prevSchools, prevLearners, prevTop, prevRate) = latestYear > 0
+            ? await AggregateYearAsync(latestYear - 1, CancellationToken.None)
+            : (0, 0, 0, 0.0);
+
+        return new DashboardStatsOutput(
+            latestYear,
+            new StatItemOutput(top, PercentChange(top, prevTop)),
+            new StatItemOutput(schools, PercentChange(schools, prevSchools)),
+            new StatItemOutput(learners, PercentChange(learners, prevLearners)),
+            new StatItemOutput((int)Math.Round(rate * 10), PercentChange(rate, prevRate)));
     }
+
+    /// <summary>
+    /// Latest academic year with any performance data, or zero when the
+    /// database has no results yet.
+    /// </summary>
+    private async Task<int> GetLatestYearAsync(CancellationToken cancellationToken)
+    {
+        var latest = await _dbContext.SchoolPerformances
+            .Where(p => !p.IsDeleted)
+            .MaxAsync(p => (int?)p.Year, cancellationToken);
+        return latest ?? 0;
+    }
+
+    /// <summary>
+    /// Aggregate a year into school count, learners, 100% schools, and weighted
+    /// pass rate. Used to derive both the current values and their year-on-year trends.
+    /// </summary>
+    private async Task<(int Schools, int Learners, int Top, double Rate)> AggregateYearAsync(
+        int year,
+        CancellationToken cancellationToken)
+    {
+        var rows = await _dbContext.SchoolPerformances
+            .Where(p => !p.IsDeleted && p.Year == year && !p.School.IsDeleted)
+            .Select(p => new { p.SchoolId, p.TotalWrote, p.TotalAchieved })
+            .ToListAsync(cancellationToken);
+
+        var schools = rows.Select(r => r.SchoolId).Distinct().Count();
+        var learners = rows.Sum(r => r.TotalWrote);
+        var passed = rows.Sum(r => r.TotalAchieved);
+        var top = rows.Count(r => r.TotalWrote > 0 && r.TotalAchieved == r.TotalWrote);
+        var rate = learners > 0 ? (double)passed / learners * 100 : 0;
+        return (schools, learners, top, rate);
+    }
+
+    /// <summary>Percentage change from previous to current, or null when there is no base.</summary>
+    private static double? PercentChange(double current, double previous) =>
+        previous > 0 ? Math.Round((current - previous) / previous * 100, 1) : null;
 
     /// <inheritdoc />
     public Task<IReadOnlyList<PassRateTrendOutput>> GetPassRateTrendsAsync(string? years = null)
@@ -75,6 +114,161 @@ internal sealed class DashboardService : IDashboardService
             _ => PassRateTrends.ToList()
         };
         return Task.FromResult<IReadOnlyList<PassRateTrendOutput>>(data);
+    }
+
+    /// <inheritdoc />
+    public async Task<RegionStatsOutput> GetRegionStatsAsync(
+        string? province,
+        string? district,
+        CancellationToken cancellationToken = default)
+    {
+        var latestYear = await GetLatestYearAsync(cancellationToken);
+        var scoped = _dbContext.SchoolPerformances
+            .Where(p => !p.IsDeleted && !p.School.IsDeleted);
+
+        var scope = "country";
+        var name = "South Africa";
+        if (!string.IsNullOrWhiteSpace(province))
+        {
+            scoped = scoped.Where(p => p.School.Province == province);
+            scope = "province";
+            name = province;
+        }
+
+        if (!string.IsNullOrWhiteSpace(district))
+        {
+            scoped = scoped.Where(p => p.School.DistrictName == district);
+            scope = "district";
+            name = district;
+        }
+
+        var performances = scoped.Where(p => p.Year == latestYear);
+        var schoolCount = await performances.Select(p => p.SchoolId).Distinct().CountAsync(cancellationToken);
+        var totalWrote = await performances.SumAsync(p => (long)p.TotalWrote, cancellationToken);
+        var totalPassed = await performances.SumAsync(p => (long)p.TotalAchieved, cancellationToken);
+        var passRate = totalWrote > 0 ? Math.Round((double)totalPassed / totalWrote * 100, 1) : 0;
+
+        // Learner-weighted pass rate per year across the scope, oldest first.
+        var trendRows = await scoped
+            .GroupBy(p => p.Year)
+            .Select(g => new
+            {
+                Year = g.Key,
+                TotalWrote = g.Sum(p => (long)p.TotalWrote),
+                TotalPassed = g.Sum(p => (long)p.TotalAchieved)
+            })
+            .OrderBy(r => r.Year)
+            .ToListAsync(cancellationToken);
+
+        var years = trendRows
+            .Select(r => new RegionYearOutput(
+                r.Year,
+                (int)r.TotalWrote,
+                (int)r.TotalPassed,
+                r.TotalWrote > 0 ? Math.Round((double)r.TotalPassed / r.TotalWrote * 100, 1) : 0))
+            .ToList();
+
+        return new RegionStatsOutput(
+            scope,
+            name,
+            string.IsNullOrWhiteSpace(province) ? null : province,
+            latestYear,
+            schoolCount,
+            (int)totalWrote,
+            (int)totalPassed,
+            passRate,
+            years);
+    }
+
+    /// <inheritdoc />
+    public async Task<RegionSubjectsOutput> GetRegionSubjectsAsync(
+        string? province,
+        string? district,
+        int? year = null,
+        CancellationToken cancellationToken = default)
+    {
+        // Only subjects with learners who wrote count as offered.
+        var scoped = _dbContext.SchoolSubjectPerformances
+            .Where(p => !p.IsDeleted && p.TotalWrote > 0 && p.School != null && !p.School.IsDeleted);
+
+        var scope = "country";
+        var name = "South Africa";
+        if (!string.IsNullOrWhiteSpace(province))
+        {
+            scoped = scoped.Where(p => p.School != null && p.School.Province == province);
+            scope = "province";
+            name = province;
+        }
+
+        if (!string.IsNullOrWhiteSpace(district))
+        {
+            scoped = scoped.Where(p => p.School != null && p.School.DistrictName == district);
+            scope = "district";
+            name = district;
+        }
+
+        var availableYears = await scoped
+            .Select(p => p.Year)
+            .Distinct()
+            .OrderBy(y => y)
+            .ToListAsync(cancellationToken);
+
+        var selectedYear = year ?? (availableYears.Count > 0 ? (int?)availableYears[^1] : null);
+        if (selectedYear is null)
+        {
+            return new RegionSubjectsOutput(scope, name, province, null, availableYears, 0, []);
+        }
+
+        var rows = await scoped
+            .Where(p => p.Year == selectedYear)
+            .Select(p => new
+            {
+                p.SchoolId,
+                Code = p.Subject == null ? string.Empty : p.Subject.Code,
+                SubjectName = p.Subject == null ? string.Empty : p.Subject.Name,
+                p.TotalWrote,
+                p.Achieved,
+                p.PercentAchieved
+            })
+            .ToListAsync(cancellationToken);
+
+        var schoolCount = rows.Select(r => r.SchoolId).Distinct().Count();
+
+        // Historical reports can provide rates without exact achievement counts.
+        // Weight those rates by cohort size; never interpret unknown results as failures.
+        var subjects = rows
+            .GroupBy(r => new { r.Code, r.SubjectName })
+            .Select(g =>
+            {
+                var wrote = g.Sum(r => r.TotalWrote);
+                var achieved = g.All(r => r.Achieved.HasValue)
+                    ? g.Sum(r => r.Achieved!.Value)
+                    : (int?)null;
+                var hasCompleteResults = g.All(r => r.Achieved.HasValue || r.PercentAchieved.HasValue);
+                var percent = hasCompleteResults && wrote > 0
+                    ? (double?)Math.Round(g.Sum(r => r.Achieved.HasValue
+                        ? (decimal)r.Achieved.Value
+                        : r.PercentAchieved!.Value * r.TotalWrote / 100m) / wrote * 100m, 1)
+                    : null;
+                return new RegionSubjectOutput(
+                    g.Key.Code,
+                    g.Key.SubjectName,
+                    wrote,
+                    achieved,
+                    percent,
+                    g.Select(r => r.SchoolId).Distinct().Count());
+            })
+            .OrderBy(s => s.Name)
+            .ToList();
+
+        return new RegionSubjectsOutput(
+            scope,
+            name,
+            string.IsNullOrWhiteSpace(province) ? null : province,
+            selectedYear,
+            availableYears,
+            schoolCount,
+            subjects);
     }
 
     /// <inheritdoc />
@@ -108,24 +302,29 @@ internal sealed class DashboardService : IDashboardService
         }
 
         var totalCount = await query.CountAsync();
+        var latestYear = await GetLatestYearAsync(CancellationToken.None);
 
-        var items = await query
-            .OrderBy(s => s.CentreName)
-            .ThenBy(s => s.EmisNumber)
+        // Left join onto the single latest-year performance row instead of three
+        // correlated subqueries per school. The school directory pages through
+        // every row, so per-row subqueries multiply badly.
+        var performances = _dbContext.SchoolPerformances
+            .Where(p => p.Year == latestYear && !p.IsDeleted);
+
+        var items = await (from s in query
+                           join p in performances on s.Id equals p.SchoolId into schoolPerformances
+                           from performance in schoolPerformances.DefaultIfEmpty()
+                           orderby s.CentreName, s.EmisNumber
+                           select new SchoolOutput(
+                               s.EmisNumber,
+                               s.CentreName,
+                               s.Province,
+                               s.DistrictName,
+                               performance == null ? 0 : performance.TotalWrote,
+                               performance == null ? 0 : performance.TotalAchieved,
+                               performance == null ? 0 : (double)performance.PercentAchieved,
+                               null))
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
-            .Select(s => new SchoolOutput(
-                s.EmisNumber,
-                s.CentreName,
-                s.Province,
-                s.DistrictName,
-                s.Performances.Where(p => p.Year == LatestYear && !p.IsDeleted)
-                    .Select(p => p.TotalWrote).FirstOrDefault(),
-                s.Performances.Where(p => p.Year == LatestYear && !p.IsDeleted)
-                    .Select(p => p.TotalAchieved).FirstOrDefault(),
-                (double)s.Performances.Where(p => p.Year == LatestYear && !p.IsDeleted)
-                    .Select(p => p.PercentAchieved).FirstOrDefault(),
-                null))
             .ToListAsync();
 
         return new SchoolListOutput(items, totalCount, pageNumber, pageSize);
@@ -182,6 +381,7 @@ internal sealed class DashboardService : IDashboardService
                 ErrorMessages.Dashboard.SchoolNotFound, ErrorType.NotFound);
         }
 
+        var latestYear = await GetLatestYearAsync(cancellationToken);
         var school = await _dbContext.Schools
             .AsNoTracking()
             .Where(s => s.EmisNumber == id && !s.IsDeleted)
@@ -204,6 +404,17 @@ internal sealed class DashboardService : IDashboardService
                         p.TotalAchieved,
                         p.PercentAchieved
                     })
+                    .ToList(),
+                SubjectPerformances = s.SubjectPerformances
+                    .Where(p => !p.IsDeleted)
+                    .Select(p => new
+                    {
+                        Code = p.Subject == null ? string.Empty : p.Subject.Code,
+                        Name = p.Subject == null ? string.Empty : p.Subject.Name,
+                        p.Year,
+                        p.TotalWrote,
+                        p.PercentAchieved
+                    })
                     .ToList()
             })
             .FirstOrDefaultAsync(cancellationToken);
@@ -223,10 +434,37 @@ internal sealed class DashboardService : IDashboardService
                 (double)p.PercentAchieved))
             .ToList();
 
-        var latest = years.LastOrDefault(y => y.Year == LatestYear) ?? years.LastOrDefault();
+        // Performances are ordered oldest first, so the last record is the
+        // school's most recent year with data.
+        var latest = years.LastOrDefault();
 
         var comparison = await GetComparisonAsync(
-            school.Province, latest?.Year ?? LatestYear, latest?.PassRate, cancellationToken);
+            school.Province, latest?.Year ?? latestYear, latest?.PassRate, cancellationToken);
+
+        // Only subjects with learners who wrote count as offered. Aggregate over
+        // every year so subjects last offered in an earlier year stay visible,
+        // each carrying its own most recent offered year.
+        var offeredRows = school.SubjectPerformances
+            .Where(p => p.TotalWrote > 0)
+            .ToList();
+
+        var subjectsOfferedYear = offeredRows.Count == 0
+            ? (int?)null
+            : offeredRows.Max(p => p.Year);
+
+        var subjectsOffered = offeredRows.Count == 0
+            ? null
+            : offeredRows
+                .GroupBy(p => new { p.Code, p.Name })
+                .Select(g => g.OrderByDescending(p => p.Year).First())
+                .OrderBy(p => p.Name)
+                .Select(p => new OfferedSubjectOutput(
+                    p.Code,
+                    p.Name,
+                    p.Year,
+                    p.TotalWrote,
+                    p.PercentAchieved is null ? null : (double?)p.PercentAchieved))
+                .ToList();
 
         var detail = new SchoolDetailOutput(
             school.EmisNumber,
@@ -239,9 +477,81 @@ internal sealed class DashboardService : IDashboardService
             latest?.TotalPassed ?? 0,
             latest?.PassRate ?? 0,
             years,
-            comparison);
+            comparison,
+            SubjectsOfferedYear: subjectsOfferedYear,
+            SubjectsOffered: subjectsOffered);
 
         return MatricDasbhoard.Shared.Result<SchoolDetailOutput>.Success(detail);
+    }
+
+    /// <inheritdoc />
+    public async Task<MatricDasbhoard.Shared.Result<SchoolSubjectsOutput>> GetSchoolSubjectsAsync(
+        string id,
+        int? year = null,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(id))
+        {
+            return MatricDasbhoard.Shared.Result<SchoolSubjectsOutput>.Failure(
+                ErrorMessages.Dashboard.SchoolNotFound, ErrorType.NotFound);
+        }
+
+        var school = await _dbContext.Schools
+            .AsNoTracking()
+            .Where(s => s.EmisNumber == id && !s.IsDeleted)
+            .Select(s => new
+            {
+                s.EmisNumber,
+                SubjectPerformances = s.SubjectPerformances
+                    .Where(p => !p.IsDeleted)
+                    .Select(p => new
+                    {
+                        p.SubjectId,
+                        Code = p.Subject == null ? string.Empty : p.Subject.Code,
+                        Name = p.Subject == null ? string.Empty : p.Subject.Name,
+                        p.Year,
+                        p.TotalWrote,
+                        p.Achieved,
+                        p.PercentAchieved
+                    })
+                    .ToList()
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (school is null)
+        {
+            return MatricDasbhoard.Shared.Result<SchoolSubjectsOutput>.Failure(
+                ErrorMessages.Dashboard.SchoolNotFound, ErrorType.NotFound);
+        }
+
+        var availableYears = school.SubjectPerformances
+            .Select(p => p.Year)
+            .Distinct()
+            .OrderBy(y => y)
+            .ToList();
+
+        var selectedYear = year ?? (availableYears.Count > 0 ? (int?)availableYears[^1] : null);
+
+        var subjects = selectedYear is null
+            ? new List<SchoolSubjectOutput>()
+            : school.SubjectPerformances
+                .Where(p => p.Year == selectedYear)
+                .OrderBy(p => p.Name)
+                .Select(p => new SchoolSubjectOutput(
+                    p.SubjectId.ToString(),
+                    p.Code,
+                    p.Name,
+                    p.TotalWrote,
+                    p.Achieved,
+                    p.PercentAchieved is null ? null : (double?)p.PercentAchieved))
+                .ToList();
+
+        return MatricDasbhoard.Shared.Result<SchoolSubjectsOutput>.Success(
+            new SchoolSubjectsOutput(
+                school.EmisNumber,
+                selectedYear,
+                availableYears,
+                subjects));
     }
 
     /// <summary>
