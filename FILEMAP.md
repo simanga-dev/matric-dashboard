@@ -123,7 +123,8 @@ School lists and lookups are read from PostgreSQL via EF (`DashboardService`). F
 
 | When you change... | Also update... |
 |---|---|
-| **`2024_nsc_school_performance_report.csv`** (columns) | `scripts/import_schools_to_db.py` (column names), `scripts/import_school_locations.py` (roster columns), `School`/`SchoolPerformance` entities, `DashboardService` projection |
+| **`2024_nsc_school_performance_report.csv`** (columns) | `scripts/import_schools_to_db.py` (column names), `scripts/import_school_locations.py` (roster columns), `scripts/clean_school_names.py` (name columns), `School`/`SchoolPerformance` entities, `DashboardService` projection |
+| **`scripts/clean_school_names.py`** (name source/normalization) | `justfile` `clean-school-names`, `docs/school-name-cleaning.md`, `scripts/tests/test_school_names.py`; masterlist header `Official_Institution_Name` and `Phase_PED` |
 | **`School`/`SchoolPerformance` entity** (fields) | EF configuration, migration, `scripts/import_schools_to_db.py`, `DashboardService` mapping, `SchoolOutput` / `SchoolDetailOutput` DTOs |
 | **`DashboardService.GetSchoolsAsync`** | `IDashboardService`, `DashboardController`, `SchoolOutput` DTO, `DashboardMapper` |
 | **Frontend school tree search and virtualization** (index, row geometry, keyboard navigation) | `SchoolTree.svelte` / `SchoolTree.test.ts` (DOM focus, breadcrumbs, scroll restoration and animation), `school-tree-model.ts` / `.test.ts`, `school-hierarchy.ts`; local matches use the precomputed directory index, zero-match queries fall back to `school-tree-search.ts` / `.test.ts` and `api/dashboard.ts` (`fetchSchools`) / `.test.ts`; DOM tests use jsdom and the browser condition in `vite.config.ts` |
