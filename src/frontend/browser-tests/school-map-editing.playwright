@@ -8,7 +8,8 @@ async (page) => {
 	const browser = await context.newPage();
 	const origin = new URL(page.url()).origin;
 	const school = { id: '00123', name: 'SPATIAL TEST SCHOOL', province: 'GAUTENG', circuit: 'TEST CIRCUIT', totalWrote: 10, totalPassed: 9, passRate: 90, totalAchieved: null };
-	let canonical = { emisNumber: school.id, revision: 0, boundary: null, location: null, hasLocationOverride: false, locationSource: 'missing', areaSquareMetres: null, warnings: [] };
+	const footprintAt = (longitude, latitude, radius = 0.0003) => ({ type: 'MultiPolygon', coordinates: [[[[longitude - radius, latitude - radius], [longitude + radius, latitude - radius], [longitude + radius, latitude + radius], [longitude - radius, latitude + radius], [longitude - radius, latitude - radius]]]] });
+	let canonical = { emisNumber: school.id, revision: 0, boundary: null, footprint: null, footprintSource: 'missing', location: null, hasLocationOverride: false, locationSource: 'missing', areaSquareMetres: null, warnings: [] };
 	let conflict = true;
 	const writes = [];
 	const check = (value, message) => { if (!value) throw new Error(message); };
@@ -20,7 +21,7 @@ async (page) => {
 		}));
 		await browser.route('**/api/geo/**', (route) => {
 			const layer = new URL(route.request().url()).searchParams.get('typeName');
-			const geometry = layer === 'matric:school_locations_effective' ? canonical.location : layer === 'matric:school_boundaries' ? canonical.boundary : null;
+			const geometry = layer === 'matric:school_footprints' ? canonical.footprint : layer === 'matric:school_boundaries' ? canonical.boundary : null;
 			return route.fulfill({ json: { type: 'FeatureCollection', features: geometry ? [{ type: 'Feature', geometry, properties: { emis_number: school.id } }] : [] } });
 		});
 		await browser.route(/https:\/\/[^/]*tile\.openstreetmap\.org\//, (route) => route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"/>' }));
@@ -28,7 +29,9 @@ async (page) => {
 			if (route.request().method() !== 'PUT') return route.fulfill({ json: route.request().url().endsWith('/history') ? [] : canonical });
 			const body = route.request().postDataJSON(); writes.push({ url: route.request().url(), body });
 			if (conflict) return route.fulfill({ status: 409, json: { detail: 'Stale revision' } });
-			canonical = { ...canonical, revision: 1, boundary: body.boundary?.type === 'Polygon' ? { type: 'MultiPolygon', coordinates: [body.boundary.coordinates] } : body.boundary, location: body.location, hasLocationOverride: true, locationSource: 'editor' };
+			const point = body.location;
+			const footprint = body.footprint ?? (point ? footprintAt(point.coordinates[0], point.coordinates[1]) : null);
+			canonical = { ...canonical, revision: 1, boundary: body.boundary?.type === 'Polygon' ? { type: 'MultiPolygon', coordinates: [body.boundary.coordinates] } : body.boundary, footprint, footprintSource: body.footprint ? 'editor' : 'default', location: point, hasLocationOverride: true, locationSource: 'editor' };
 			return route.fulfill({ json: canonical });
 		});
 		await browser.goto(`${origin}/overview?school=${school.id}`);
@@ -70,6 +73,10 @@ async (page) => {
 		await editor.waitFor({ state: 'detached' });
 		await edit.click();
 		await toolbar.getByRole('button', { name: 'Move marker', exact: true }).waitFor();
+		const editFootprint = toolbar.getByRole('button', { name: 'Edit footprint', exact: true });
+		await editFootprint.waitFor();
+		await editFootprint.click();
+		check(await editFootprint.getAttribute('aria-pressed') === 'true', 'Footprint polygon tool was not activated');
 		check(writes.length === 2, 'Expected one explicit retry after a conflict');
 		await editor.getByLabel('Reason for correction').fill('Unpublished change');
 		browser.once('dialog', (dialog) => dialog.dismiss());
@@ -78,7 +85,7 @@ async (page) => {
 		browser.once('dialog', (dialog) => dialog.accept());
 		await toolbar.getByRole('button', { name: 'Cancel', exact: true }).click();
 		await editor.waitFor({ state: 'detached' });
-		const newer = (revision, longitude, latitude) => ({ ...canonical, revision, location: { type: 'Point', coordinates: [longitude, latitude] }, boundary: { type: 'MultiPolygon', coordinates: [[[[longitude - 0.05, latitude - 0.05], [longitude + 0.05, latitude - 0.05], [longitude + 0.05, latitude + 0.05], [longitude - 0.05, latitude + 0.05], [longitude - 0.05, latitude - 0.05]]]] } });
+		const newer = (revision, longitude, latitude) => ({ ...canonical, revision, footprint: footprintAt(longitude, latitude), footprintSource: 'default', location: { type: 'Point', coordinates: [longitude, latitude] }, boundary: { type: 'MultiPolygon', coordinates: [[[[longitude - 0.05, latitude - 0.05], [longitude + 0.05, latitude - 0.05], [longitude + 0.05, latitude + 0.05], [longitude - 0.05, latitude + 0.05], [longitude - 0.05, latitude - 0.05]]]] } });
 		const assertPublishedGeometry = async () => {
 			await browser.waitForTimeout(500);
 			check(await browser.locator('.school-map .ol-layer:not(.school-basemap):not(.school-imagery) canvas').last().evaluate((canvas) => {

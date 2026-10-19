@@ -4,7 +4,7 @@ import type Geometry from 'ol/geom/Geometry';
 import type OlMap from 'ol/Map';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
-import { Draw, Modify, Snap } from 'ol/interaction';
+import { Draw, Modify, Snap, Translate } from 'ol/interaction';
 import Collection from 'ol/Collection';
 import { spatialMapStyle } from './school-map-style';
 import { getArea, getDistance } from 'ol/sphere';
@@ -17,13 +17,14 @@ import type {
 
 const format = new GeoJSON();
 const projections = { dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857' };
-export type EditTool = 'draw' | 'grounds' | 'marker';
+export type EditTool = 'draw' | 'grounds' | 'footprint' | 'marker';
 
 /** State the map toolbar needs to render and disable editing actions. */
 export interface SpatialEditorStatus {
 	activeTool: EditTool | null;
 	hasDraft: boolean;
 	hasBoundary: boolean;
+	hasFootprint: boolean;
 	hasMarker: boolean;
 	dirty: boolean;
 	saving: boolean;
@@ -48,6 +49,7 @@ export function spatialDraft(state: SpatialState): SpatialSave {
 	return {
 		expectedRevision: state.revision,
 		boundary: structuredClone(state.boundary),
+		footprint: state.footprintSource === 'editor' ? structuredClone(state.footprint) : null,
 		locationMode: state.hasLocationOverride ? 'override' : 'imported',
 		location: state.hasLocationOverride ? structuredClone(state.location) : null,
 		reason: '',
@@ -119,16 +121,15 @@ export function validateSpatialDraft(draft: SpatialSave): string[] {
 		(!draft.location || !validPosition(draft.location.coordinates))
 	)
 		errors.push('Place a valid school marker.');
-	if (draft.boundary) {
-		const polygons =
-			draft.boundary.type === 'Polygon' ? [draft.boundary.coordinates] : draft.boundary.coordinates;
+	const validateShape = (shape: SpatialBoundary, label: string) => {
+		const polygons = shape.type === 'Polygon' ? [shape.coordinates] : shape.coordinates;
 		if (!polygons.length || polygons.length > 100)
-			errors.push('Grounds must contain between 1 and 100 polygons.');
+			errors.push(`${label} must contain between 1 and 100 polygons.`);
 		for (const polygon of polygons) {
 			if (!polygon.length) errors.push('A polygon needs an outer ring.');
 			for (const ring of polygon) {
 				rings++;
-				if (!ring.every(validPosition)) errors.push('Grounds contain invalid coordinates.');
+				if (!ring.every(validPosition)) errors.push(`${label} contains invalid coordinates.`);
 				if (
 					ring.length < 4 ||
 					new Set(ring.map((point) => point.join(','))).size < 3 ||
@@ -141,13 +142,15 @@ export function validateSpatialDraft(draft: SpatialSave): string[] {
 						b = ring[i];
 					if (a && b) area += (a[0] ?? 0) * (b[1] ?? 0) - (b[0] ?? 0) * (a[1] ?? 0);
 				}
-				if (Math.abs(area) < 1e-12) errors.push('Grounds must have a nonzero area.');
-				if (ringSelfIntersects(ring)) errors.push('Grounds must not cross themselves.');
+				if (Math.abs(area) < 1e-12) errors.push(`${label} must have a nonzero area.`);
+				if (ringSelfIntersects(ring)) errors.push(`${label} must not cross itself.`);
 			}
 		}
-	}
+	};
+	if (draft.boundary) validateShape(draft.boundary, 'Grounds');
+	if (draft.footprint) validateShape(draft.footprint, 'Location footprint');
 	if (coordinates > 10000 || rings > 100)
-		errors.push('Grounds exceed the limit of 10,000 coordinates or 100 rings.');
+		errors.push('Geometry exceeds the limit of 10,000 coordinates or 100 rings.');
 	if (new TextEncoder().encode(JSON.stringify(draft)).length > 1_000_000)
 		errors.push('The draft exceeds the 1 MB limit.');
 	return [...new Set(errors)];
@@ -160,14 +163,21 @@ export function createSpatialInteractions(
 	changed: (
 		boundary: SpatialBoundary | null,
 		point: SpatialPoint | null,
-		markerEdited: boolean
+		markerEdited: boolean,
+		footprint: SpatialBoundary | null,
+		footprintEdited: boolean
 	) => void,
 	toolChanged: (tool: EditTool | null) => void = () => {}
 ) {
 	const source = new VectorSource<Feature<Geometry>>();
 	let boundary = state.boundary ? new Feature(readSpatialGeometry(state.boundary)) : null;
+	const footprint = state.footprint ? new Feature(readSpatialGeometry(state.footprint)) : null;
 	let marker = state.location ? new Feature(readSpatialGeometry(state.location)) : null;
+	boundary?.set('kind', 'grounds');
+	footprint?.set('kind', 'footprint');
+	marker?.set('kind', 'marker');
 	if (boundary) source.addFeature(boundary);
+	if (footprint) source.addFeature(footprint);
 	if (marker) source.addFeature(marker);
 	const layer = new VectorLayer({
 		source,
@@ -183,10 +193,11 @@ export function createSpatialInteractions(
 		attributes: true,
 		attributeFilter: ['class', 'data-theme-preset', 'data-theme-chart']
 	});
-	let active: Draw | Modify | null = null;
+	let active: Array<Draw | Modify | Translate> = [];
 	let snap: Snap | null = null;
 	let markerEdited = false;
 	let boundaryEdited = false;
+	let footprintEdited = false;
 	const notify = () =>
 		changed(
 			boundaryEdited
@@ -195,17 +206,27 @@ export function createSpatialInteractions(
 					: null
 				: structuredClone(state.boundary),
 			marker?.getGeometry() ? (writeSpatialGeometry(marker.getGeometry()!) as SpatialPoint) : null,
-			markerEdited
+			markerEdited,
+			footprint?.getGeometry()
+				? (writeSpatialGeometry(footprint.getGeometry()!) as SpatialBoundary)
+				: null,
+			footprintEdited
 		);
 	function stop() {
-		if (active) map.removeInteraction(active);
+		for (const interaction of active) map.removeInteraction(interaction);
 		if (snap) map.removeInteraction(snap);
-		active = null;
+		active = [];
 		snap = null;
 		toolChanged(null);
 	}
 	function tool(tool: EditTool) {
 		stop();
+		if (tool === 'footprint' && footprint?.getGeometry())
+			map.getView().fit(footprint.getGeometry()!.getExtent(), {
+				maxZoom: 19,
+				padding: [70, 70, 70, 70],
+				duration: 200
+			});
 		if (tool === 'draw' || (tool === 'marker' && !marker)) {
 			const draw = new Draw({ type: tool === 'draw' ? 'Polygon' : 'Point' });
 			draw.on('drawend', (event) => {
@@ -213,8 +234,10 @@ export function createSpatialInteractions(
 					boundaryEdited = true;
 					if (boundary) source.removeFeature(boundary);
 					boundary = event.feature;
+					boundary.set('kind', 'grounds');
 				} else {
 					marker = event.feature;
+					marker.set('kind', 'marker');
 					markerEdited = true;
 				}
 				source.addFeature(event.feature);
@@ -222,24 +245,33 @@ export function createSpatialInteractions(
 				// Remove Draw after its event dispatch has completed.
 				queueMicrotask(stop);
 			});
-			active = draw;
+			active = [draw];
 		} else {
-			const feature = tool === 'marker' ? marker : boundary;
+			const feature = tool === 'marker' ? marker : tool === 'footprint' ? footprint : boundary;
 			if (!feature) return;
 			const modify = new Modify({ features: new Collection([feature]) });
 			modify.on('modifyend', () => {
 				if (tool === 'marker') markerEdited = true;
+				else if (tool === 'footprint') footprintEdited = true;
 				else boundaryEdited = true;
 				notify();
 			});
-			active = modify;
+			active = [modify];
+			if (tool === 'footprint') {
+				const translate = new Translate({ features: new Collection([feature]) });
+				translate.on('translateend', () => {
+					footprintEdited = true;
+					notify();
+				});
+				active.push(translate);
+			}
 		}
-		map.addInteraction(active);
+		for (const interaction of active) map.addInteraction(interaction);
 		snap = new Snap({ source });
 		map.addInteraction(snap);
 		toolChanged(tool);
 	}
-	const geometry = boundary?.getGeometry() ?? marker?.getGeometry();
+	const geometry = boundary?.getGeometry() ?? footprint?.getGeometry() ?? marker?.getGeometry();
 	if (geometry)
 		map
 			.getView()

@@ -18,7 +18,6 @@
 	import type Feature from 'ol/Feature';
 	import type { FeatureLike } from 'ol/Feature';
 	import type { StyleFunction } from 'ol/style/Style';
-	import type { Point } from 'ol/geom';
 	import type OlMap from 'ol/Map';
 	import type VectorLayer from 'ol/layer/Vector';
 	import {
@@ -30,6 +29,7 @@
 		Pencil,
 		PenLine,
 		Spline,
+		Circle,
 		Save,
 		X
 	} from '@lucide/svelte';
@@ -54,7 +54,7 @@
 	const WFS_BASE =
 		'/api/geo/wfs?service=WFS&version=1.0.0&request=GetFeature&outputFormat=application/json';
 	const wfsUrl = (typeName: string) => `${WFS_BASE}&typeName=${typeName}`;
-	const WFS_URL = wfsUrl('matric:school_locations_effective');
+	const WFS_URL = wfsUrl('matric:school_footprints');
 	const LEGACY_WFS_URL = wfsUrl('matric:school_locations');
 	const GROUNDS_URL = wfsUrl('matric:school_boundaries');
 	let canEdit = $derived(hasPermission(page.data.user, Permissions.Schools.SpatialEdit));
@@ -219,8 +219,9 @@
 
 		if (!emis || !olMap) return;
 		const feature = findFeature(emis);
-		const coord = (feature?.getGeometry() as Point | undefined)?.getCoordinates();
-		if (!coord || coord.length < 2 || !coord.every(Number.isFinite)) {
+		const extent = feature?.getGeometry()?.getExtent();
+		const coord = extent ? [(extent[0]! + extent[2]!) / 2, (extent[1]! + extent[3]!) / 2] : null;
+		if (!coord || !coord.every(Number.isFinite)) {
 			selectedLocationMissing = true;
 			return;
 		}
@@ -229,8 +230,8 @@
 		// A new click replaces the current pan rather than competing with it.
 		view.cancelAnimations();
 		view.animate({
-			center: coord as number[],
-			zoom: Math.max(view.getZoom() ?? 6, 10),
+			center: coord,
+			zoom: Math.max(view.getZoom() ?? 6, 16),
 			duration: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 450
 		});
 	}
@@ -312,7 +313,7 @@
 
 			const { fromLonLat } = proj;
 			if (disposed) return;
-			const { Style, Circle: CircleStyle, Fill, Stroke } = style;
+			const { Style, Fill, Stroke } = style;
 
 			const reader = new GeoJSON();
 			const source = new VectorSource();
@@ -408,13 +409,10 @@
 
 				return new Style({
 					zIndex: isSelected ? 2 : 1,
-					image: new CircleStyle({
-						radius: isSelected ? 8 : 6,
-						fill: new Fill({ color: markerColor(rate) }),
-						stroke: new Stroke({
-							color: isSelected ? '#111827' : '#ffffff',
-							width: isSelected ? 3 : 2
-						})
+					fill: new Fill({ color: markerColor(rate) }),
+					stroke: new Stroke({
+						color: isSelected ? '#111827' : '#ffffff',
+						width: isSelected ? 3 : 2
 					})
 				});
 			};
@@ -603,7 +601,7 @@
 	}
 	function saved(state: SpatialState) {
 		updateCanonical?.(state);
-		invalidateGeoLayer('matric:school_locations_effective');
+		invalidateGeoLayer('matric:school_footprints');
 		invalidateGeoLayer('matric:school_boundaries');
 		void refreshSpatialLayers?.();
 	}
@@ -615,7 +613,7 @@
 >
 	{#if imageryMessage}<p role="status" class="p-2 text-xs">{imageryMessage}</p>{/if}
 	{#if usingImportedLocations}<p role="status" class="p-2 text-xs text-muted-foreground">
-			Showing imported school points until corrected school layers are published.
+			Showing imported school footprints until corrected school layers are published.
 		</p>{/if}
 	{#if selectionMessage && editing}<p role="status" class="p-2 text-xs">{selectionMessage}</p>{/if}
 	<div class="relative flex min-h-0 flex-1 flex-col" aria-busy={loading}>
@@ -714,6 +712,18 @@
 									onclick={() => chooseTool('grounds')}
 									class={toolbarButtonClass(editorStatus?.activeTool === 'grounds')}
 									><Spline class="size-4" /></button
+								>
+								<button
+									type="button"
+									aria-label="Edit footprint"
+									title="Edit footprint"
+									aria-pressed={editorStatus?.activeTool === 'footprint'}
+									disabled={!editorStatus?.hasDraft ||
+										!editorStatus.hasFootprint ||
+										editorStatus.saving}
+									onclick={() => chooseTool('footprint')}
+									class={toolbarButtonClass(editorStatus?.activeTool === 'footprint')}
+									><Circle class="size-4" /></button
 								>
 								<button
 									type="button"

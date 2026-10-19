@@ -7,25 +7,34 @@ export type SpatialBoundary =
 /** Generated transport contracts, with JsonElement geometry narrowed at runtime. */
 export type SpatialState = Omit<
 	components['schemas']['SpatialStateOutput'],
-	'boundary' | 'location'
+	'boundary' | 'footprint' | 'location'
 > & {
 	boundary: SpatialBoundary | null;
+	footprint: SpatialBoundary | null;
 	location: SpatialPoint | null;
 };
 export type SpatialSave = Omit<
 	components['schemas']['SaveSpatialRequest'],
-	'boundary' | 'location' | 'locationMode'
+	'boundary' | 'footprint' | 'location' | 'locationMode'
 > & {
 	boundary: SpatialBoundary | null;
+	footprint: SpatialBoundary | null;
 	locationMode: 'imported' | 'override';
 	location: SpatialPoint | null;
 };
 export type SpatialHistory = Omit<
 	components['schemas']['SpatialHistoryOutput'],
-	'beforeBoundary' | 'afterBoundary' | 'beforeLocationOverride' | 'afterLocationOverride'
+	| 'beforeBoundary'
+	| 'afterBoundary'
+	| 'beforeFootprint'
+	| 'afterFootprint'
+	| 'beforeLocationOverride'
+	| 'afterLocationOverride'
 > & {
 	beforeBoundary: SpatialBoundary | null;
 	afterBoundary: SpatialBoundary | null;
+	beforeFootprint: SpatialBoundary | null;
+	afterFootprint: SpatialBoundary | null;
 	beforeLocationOverride: SpatialPoint | null;
 	afterLocationOverride: SpatialPoint | null;
 };
@@ -70,23 +79,40 @@ export function isSpatialBoundary(value: unknown): value is SpatialBoundary | nu
 export function spatialStateResponse(
 	data: components['schemas']['SpatialStateOutput']
 ): SpatialState {
-	const { boundary, location } = data;
-	if (!isSpatialBoundary(boundary) || !isSpatialPoint(location))
+	const { boundary, footprint, location } = data;
+	if (!isSpatialBoundary(boundary) || !isSpatialBoundary(footprint) || !isSpatialPoint(location))
 		throw new Error(
 			'The school map service returned unsupported geometry. Your draft is retained.'
 		);
-	return { ...data, boundary, location };
+	return { ...data, boundary, footprint, location };
 }
 export function spatialHistoryResponse(
 	data: components['schemas']['SpatialHistoryOutput']
 ): SpatialHistory {
-	const { beforeBoundary, afterBoundary, beforeLocationOverride, afterLocationOverride } = data;
+	const {
+		beforeBoundary,
+		afterBoundary,
+		beforeFootprint,
+		afterFootprint,
+		beforeLocationOverride,
+		afterLocationOverride
+	} = data;
 	if (
 		!isSpatialBoundary(beforeBoundary) ||
 		!isSpatialBoundary(afterBoundary) ||
+		!isSpatialBoundary(beforeFootprint) ||
+		!isSpatialBoundary(afterFootprint) ||
 		!isSpatialPoint(beforeLocationOverride) ||
 		!isSpatialPoint(afterLocationOverride)
 	)
 		throw new Error('Revision history contains unsupported geometry.');
-	return { ...data, beforeBoundary, afterBoundary, beforeLocationOverride, afterLocationOverride };
+	return {
+		...data,
+		beforeBoundary,
+		afterBoundary,
+		beforeFootprint,
+		afterFootprint,
+		beforeLocationOverride,
+		afterLocationOverride
+	};
 }

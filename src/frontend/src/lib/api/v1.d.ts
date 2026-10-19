@@ -4808,6 +4808,7 @@ export interface components {
 			reason: string;
 			/** @description Required evidence description, at most 1000 characters. Never published. */
 			sourceDescription: string;
+			footprint?: null | components['schemas']['JsonElement'];
 		};
 		/** @description How a school compares to its province and the country for the selected year. */
 		SchoolComparisonResponse: {
@@ -5033,6 +5034,8 @@ export interface components {
 			afterBoundary: null | components['schemas']['JsonElement'];
 			beforeLocationOverride: null | components['schemas']['JsonElement'];
 			afterLocationOverride: null | components['schemas']['JsonElement'];
+			beforeFootprint?: unknown;
+			afterFootprint?: unknown;
 		};
 		SpatialStateOutput: {
 			emisNumber: string;
@@ -5045,6 +5048,9 @@ export interface components {
 			/** Format: double */
 			areaSquareMetres: null | number;
 			warnings: string[];
+			footprint?: unknown;
+			/** @default missing */
+			footprintSource: string;
 		};
 		/** @description A single stat item with a total and optional trend. */
 		StatItemResponse: {

@@ -17,7 +17,9 @@ const mocks = vi.hoisted(() => ({
 		| ((
 				boundary: SpatialBoundary | null,
 				point: SpatialPoint | null,
-				markerEdited: boolean
+				markerEdited: boolean,
+				footprint: SpatialBoundary | null,
+				footprintEdited: boolean
 		  ) => void)
 }));
 vi.mock('$app/navigation', () => ({ beforeNavigate: mocks.navigate }));
@@ -38,13 +40,15 @@ const state: SpatialState = {
 	revision: 0,
 	location: null,
 	boundary: null,
+	footprint: null,
+	footprintSource: 'missing',
 	hasLocationOverride: false,
 	locationSource: 'missing',
 	areaSquareMetres: null,
 	warnings: []
 };
 interface EditorCommands {
-	selectTool: (tool: 'draw' | 'grounds' | 'marker') => void;
+	selectTool: (tool: 'draw' | 'grounds' | 'footprint' | 'marker') => void;
 	saveDraft: () => void;
 	cancelEdit: () => void;
 }
@@ -114,6 +118,8 @@ describe('explicit editor save and cancel', () => {
 				]
 			},
 			null,
+			false,
+			null,
 			false
 		);
 		await evidence();
@@ -132,7 +138,7 @@ describe('explicit editor save and cancel', () => {
 	});
 	it('retains draft and evidence after conflict and permits retry', async () => {
 		mocks.save.mockRejectedValue(new Error('Revision conflict. Your draft is retained.'));
-		mocks.change?.(null, { type: 'Point', coordinates: [28, -26] }, true);
+		mocks.change?.(null, { type: 'Point', coordinates: [28, -26] }, true, null, false);
 		await evidence();
 		component.saveDraft();
 		await vi.waitFor(() =>
@@ -193,6 +199,8 @@ describe('explicit editor save and cancel', () => {
 					]
 				]
 			},
+			null,
+			false,
 			null,
 			false
 		);

@@ -14,6 +14,8 @@ const state: SpatialState = {
 	emisNumber: '00123',
 	revision: 2,
 	boundary: null,
+	footprint: null,
+	footprintSource: 'missing',
 	location: null,
 	hasLocationOverride: false,
 	locationSource: 'missing',
@@ -23,6 +25,7 @@ const state: SpatialState = {
 const body = {
 	expectedRevision: 1,
 	boundary: null,
+	footprint: null,
 	location: null,
 	locationMode: 'imported' as const,
 	reason: 'Grounds',

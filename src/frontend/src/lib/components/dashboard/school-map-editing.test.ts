@@ -4,7 +4,7 @@ import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
 import MultiPolygon from 'ol/geom/MultiPolygon';
 import VectorLayer from 'ol/layer/Vector';
-import { Draw, Modify, Snap } from 'ol/interaction';
+import { Draw, Modify, Snap, Translate } from 'ol/interaction';
 import { DrawEvent } from 'ol/interaction/Draw';
 import {
 	readSpatialGeometry,
@@ -33,6 +33,21 @@ export const state: SpatialState = {
 			]
 		]
 	},
+	footprint: {
+		type: 'MultiPolygon',
+		coordinates: [
+			[
+				[
+					[27.9998, -26.0002],
+					[28.0002, -26.0002],
+					[28.0002, -25.9998],
+					[27.9998, -25.9998],
+					[27.9998, -26.0002]
+				]
+			]
+		]
+	},
+	footprintSource: 'default',
 	location: { type: 'Point', coordinates: [28, -26] },
 	hasLocationOverride: false,
 	locationSource: 'imported',
@@ -75,13 +90,14 @@ describe('school map drafts', () => {
 			}
 		};
 		const snapshot = structuredClone(complex);
-		const interactions: (Draw | Modify | Snap)[] = [];
+		const interactions: (Draw | Modify | Snap | Translate)[] = [];
 		const layers: VectorLayer[] = [];
 		const map = {
 			addLayer: (layer: VectorLayer) => layers.push(layer),
 			removeLayer: vi.fn(),
-			addInteraction: (interaction: Draw | Modify | Snap) => interactions.push(interaction),
-			removeInteraction: (interaction: Draw | Modify | Snap) =>
+			addInteraction: (interaction: Draw | Modify | Snap | Translate) =>
+				interactions.push(interaction),
+			removeInteraction: (interaction: Draw | Modify | Snap | Translate) =>
 				interactions.splice(interactions.indexOf(interaction), 1),
 			getView: () => ({ fit: vi.fn() })
 		} as unknown as OlMap;
@@ -129,15 +145,16 @@ describe('school map drafts', () => {
 		expect(spatialDraftWarnings(draft, state)).toHaveLength(2);
 	});
 	it('keeps Draw Modify and Snap on detached features and cleans them up', async () => {
-		const interactions: (Draw | Modify | Snap)[] = [];
+		const interactions: (Draw | Modify | Snap | Translate)[] = [];
 		let layer: VectorLayer | null = null;
 		const map = {
 			addLayer: (value: VectorLayer) => {
 				layer = value;
 			},
 			removeLayer: vi.fn(),
-			addInteraction: (interaction: Draw | Modify | Snap) => interactions.push(interaction),
-			removeInteraction: (interaction: Draw | Modify | Snap) =>
+			addInteraction: (interaction: Draw | Modify | Snap | Translate) =>
+				interactions.push(interaction),
+			removeInteraction: (interaction: Draw | Modify | Snap | Translate) =>
 				interactions.splice(interactions.indexOf(interaction), 1),
 			getView: () => ({ fit: vi.fn() })
 		} as unknown as OlMap;
@@ -151,7 +168,9 @@ describe('school map drafts', () => {
 		expect(changed).toHaveBeenLastCalledWith(
 			original.boundary,
 			expect.objectContaining({ type: 'Point' }),
-			true
+			true,
+			expect.objectContaining({ type: 'MultiPolygon' }),
+			false
 		);
 		expect(original).toEqual(state);
 		editing.destroy();
@@ -170,8 +189,41 @@ describe('school map drafts', () => {
 		draw.dispatchEvent(new DrawEvent('drawend', new Feature(new Point([0, 0]))));
 		await Promise.resolve();
 		expect(toolChanged).toHaveBeenLastCalledWith(null);
-		expect(changed).toHaveBeenLastCalledWith(null, { type: 'Point', coordinates: [0, 0] }, true);
+		expect(changed).toHaveBeenLastCalledWith(
+			null,
+			{ type: 'Point', coordinates: [0, 0] },
+			true,
+			expect.objectContaining({ type: 'MultiPolygon' }),
+			false
+		);
 		missing.destroy();
+	});
+	it('exposes the location footprint as a movable and reshapeable polygon', () => {
+		const interactions: (Draw | Modify | Snap | Translate)[] = [];
+		const map = {
+			addLayer: vi.fn(),
+			removeLayer: vi.fn(),
+			addInteraction: (interaction: Draw | Modify | Snap | Translate) =>
+				interactions.push(interaction),
+			removeInteraction: (interaction: Draw | Modify | Snap | Translate) =>
+				interactions.splice(interactions.indexOf(interaction), 1),
+			getView: () => ({ fit: vi.fn() })
+		} as unknown as OlMap;
+		const draft = spatialDraft(state);
+		const editing = createSpatialInteractions(
+			map,
+			state,
+			(_boundary, _point, _marker, footprint, edited) => {
+				if (edited && footprint) draft.footprint = footprint;
+			}
+		);
+		editing.tool('footprint');
+		expect(interactions[0]).toBeInstanceOf(Modify);
+		expect(interactions[1]).toBeInstanceOf(Translate);
+		interactions[1]!.dispatchEvent('translateend');
+		expect(draft.footprint?.type).toBe('MultiPolygon');
+		expect(draft.boundary).toEqual(state.boundary);
+		editing.destroy();
 	});
 	it('round trips EPSG:4326 longitude first through EPSG:3857', () => {
 		const projected = readSpatialGeometry(state.location!);
@@ -188,6 +240,7 @@ describe('school map drafts', () => {
 		const draft = spatialDraft(original);
 		expect(draft.locationMode).toBe('imported');
 		expect(draft.location).toBeNull();
+		expect(draft.footprint).toBeNull();
 		if (draft.boundary?.type !== 'MultiPolygon') throw new Error('Expected MultiPolygon');
 		draft.boundary.coordinates[0]![0]![0]![0] = 30;
 		expect(original.boundary).toEqual(state.boundary);

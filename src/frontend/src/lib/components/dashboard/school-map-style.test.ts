@@ -29,6 +29,8 @@ describe('semantic spatial canvas styles', () => {
 				emisNumber: '1',
 				revision: 0,
 				boundary: null,
+				footprint: null,
+				footprintSource: 'missing',
 				location: null,
 				locationSource: 'missing',
 				hasLocationOverride: false,

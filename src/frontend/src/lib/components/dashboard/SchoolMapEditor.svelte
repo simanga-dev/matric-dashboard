@@ -62,6 +62,7 @@
 			activeTool,
 			hasDraft: Boolean(draft),
 			hasBoundary: Boolean(draft?.boundary),
+			hasFootprint: Boolean(original?.footprint || draft?.footprint),
 			hasMarker: Boolean(original?.location || draft?.location),
 			dirty,
 			saving,
@@ -93,9 +94,10 @@
 			interactions = createSpatialInteractions(
 				map,
 				state,
-				(boundary, point, markerEdited) => {
+				(boundary, point, markerEdited, footprint, footprintEdited) => {
 					if (!draft) return;
 					draft.boundary = boundary;
+					if (footprintEdited && footprint) draft.footprint = footprint;
 					if (markerEdited) {
 						draft.locationMode = 'override';
 						draft.location = point;
@@ -203,7 +205,9 @@
 						? 'Click vertices, then double-click to finish the grounds. A new drawing replaces the draft grounds only.'
 						: activeTool === 'grounds'
 							? 'Drag grounds vertices. Alt-click a vertex to remove it.'
-							: 'Click to add a missing marker, or drag the marker. Grounds stay unchanged.'}
+							: activeTool === 'footprint'
+								? 'Drag the footprint circle to move it, or drag a vertex to reshape it. Grounds and marker stay unchanged.'
+								: 'Click to add a missing marker, or drag the marker. Grounds stay unchanged.'}
 				</p>{/if}
 			<p class="text-xs">
 				Revision {original?.revision} · Point source: {original?.locationSource} · Approximate grounds

@@ -2,26 +2,18 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { invalidateGeoLayer, loadGeoJson } from './geo-data';
 const url = (typeName: string) => `/api/geo/wfs?typeName=${typeName}`;
 beforeEach(() => {
-	for (const layer of [
-		'matric:provinces',
-		'matric:school_locations_effective',
-		'matric:school_boundaries'
-	])
+	for (const layer of ['matric:provinces', 'matric:school_footprints', 'matric:school_boundaries'])
 		invalidateGeoLayer(layer);
 });
 describe('targeted published layer invalidation', () => {
-	it('reloads effective points and grounds without evicting province cache', async () => {
+	it('reloads effective footprints and grounds without evicting province cache', async () => {
 		const transport = vi
 			.fn()
 			.mockImplementation(() =>
 				Promise.resolve(Response.json({ type: 'FeatureCollection', features: [] }))
 			);
 		vi.stubGlobal('fetch', transport);
-		const layers = [
-			'matric:provinces',
-			'matric:school_locations_effective',
-			'matric:school_boundaries'
-		];
+		const layers = ['matric:provinces', 'matric:school_footprints', 'matric:school_boundaries'];
 		await Promise.all(layers.map((layer) => loadGeoJson(url(layer))));
 		expect(transport).toHaveBeenCalledTimes(3);
 		invalidateGeoLayer(layers[1]!);
