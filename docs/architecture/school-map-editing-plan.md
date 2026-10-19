@@ -1,7 +1,9 @@
 # School grounds and location editing plan
 
-Status: implementation in progress. Deployment and configuration instructions are
-in [Spatial data operations](../spatial-operations.md#school-grounds-and-editor-location-corrections).
+Status: implemented. Deployment and configuration instructions are in
+[Spatial data operations](../spatial-operations.md#school-grounds-and-editor-location-corrections).
+Verification results are recorded in the
+[implementation session](../sessions/2026-10-19-school-map-editing.md).
 
 ## Implementation decisions
 
