@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { schoolMapGeoJson } from './school-map-data';
+import { schoolMapGeoJson, schoolMapPopup } from './school-map-data';
 import type { School } from '$lib/types/dashboard';
 
 const school: School = {
@@ -20,6 +20,31 @@ const oldFeature = {
 };
 
 describe('school map results', () => {
+	it('does not open a school popup for a province or district boundary', () => {
+		expect(schoolMapPopup({ name: 'GAUTENG', code: 'GP' })).toBeNull();
+		expect(schoolMapPopup({ name: 'District', province: 'GAUTENG' })).toBeNull();
+	});
+
+	it('requires a school identifier and finite counts before opening a popup', () => {
+		const properties = {
+			emis_number: school.id,
+			name: school.name,
+			province: school.province,
+			wrote: 10,
+			passed: 7
+		};
+		expect(schoolMapPopup(properties)).toMatchObject({
+			id: school.id,
+			passRate: 70,
+			passed: 7,
+			wrote: 10
+		});
+		expect(schoolMapPopup({ ...properties, emis_number: '' })).toBeNull();
+		expect(schoolMapPopup({ ...properties, passed: NaN })).toBeNull();
+		expect(schoolMapPopup({ ...properties, wrote: undefined })).toBeNull();
+		expect(schoolMapPopup({ ...properties, wrote: 0, passed: 0 })?.passRate).toBe(0);
+	});
+
 	it('uses the same current cohort as the directory, retaining the real geometry', () => {
 		const result = schoolMapGeoJson({ type: 'FeatureCollection', features: [oldFeature] }, [
 			school

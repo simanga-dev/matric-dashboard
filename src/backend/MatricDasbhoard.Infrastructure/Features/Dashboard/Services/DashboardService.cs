@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using MatricDasbhoard.Application.Features.Dashboard;
 using MatricDasbhoard.Application.Features.Dashboard.Dtos;
+using MatricDasbhoard.Domain.Entities;
 using MatricDasbhoard.Infrastructure.Persistence;
 using MatricDasbhoard.Shared;
 using Meilisearch;
@@ -307,27 +308,33 @@ internal sealed class DashboardService : IDashboardService
         // Left join onto the single latest-year performance row instead of three
         // correlated subqueries per school. The school directory pages through
         // every row, so per-row subqueries multiply badly.
-        var performances = _dbContext.SchoolPerformances
-            .Where(p => p.Year == latestYear && !p.IsDeleted);
-
-        var items = await (from s in query
-                           join p in performances on s.Id equals p.SchoolId into schoolPerformances
-                           from performance in schoolPerformances.DefaultIfEmpty()
-                           orderby s.CentreName, s.EmisNumber
-                           select new SchoolOutput(
-                               s.EmisNumber,
-                               s.CentreName,
-                               s.Province,
-                               s.DistrictName,
-                               performance == null ? 0 : performance.TotalWrote,
-                               performance == null ? 0 : performance.TotalAchieved,
-                               performance == null ? 0 : (double)performance.PercentAchieved,
-                               null))
+        var items = await CurrentSchoolOutputs(query, latestYear)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
 
         return new SchoolListOutput(items, totalCount, pageNumber, pageSize);
+    }
+
+    /// <summary>Projects the same current-year data for browsing and ranked search hits.</summary>
+    private IQueryable<SchoolOutput> CurrentSchoolOutputs(IQueryable<School> query, int year)
+    {
+        var performances = _dbContext.SchoolPerformances
+            .Where(p => p.Year == year && !p.IsDeleted);
+
+        return from s in query
+               join p in performances on s.Id equals p.SchoolId into schoolPerformances
+               from performance in schoolPerformances.DefaultIfEmpty()
+               orderby s.CentreName, s.EmisNumber
+               select new SchoolOutput(
+                   s.EmisNumber,
+                   s.CentreName,
+                   s.Province,
+                   s.DistrictName,
+                   performance == null ? 0 : performance.TotalWrote,
+                   performance == null ? 0 : performance.TotalAchieved,
+                   performance == null ? 0 : (double)performance.PercentAchieved,
+                   null);
     }
 
     /// <summary>
@@ -353,7 +360,15 @@ internal sealed class DashboardService : IDashboardService
                 return null;
             }
 
-            var schools = result.Hits.Select(ToSchoolOutput).ToList();
+            // The index ranks identifiers only. Its report-year metrics and school
+            // metadata may be stale, so hydrate hits from the serving database.
+            var ids = result.Hits.Select(hit => hit.Id ?? string.Empty).Distinct().ToList();
+            var latestYear = await GetLatestYearAsync(CancellationToken.None);
+            var matching = _dbContext.Schools.AsNoTracking()
+                .Where(s => !s.IsDeleted && ids.Contains(s.EmisNumber));
+            var current = await CurrentSchoolOutputs(matching, latestYear).ToListAsync();
+            var byId = current.ToDictionary(s => s.Id);
+            var schools = ids.Where(byId.ContainsKey).Select(id => byId[id]).ToList();
             return new SchoolListOutput(schools, result.EstimatedTotalHits, pageNumber, pageSize);
         }
         catch (MeilisearchApiError)
@@ -597,42 +612,12 @@ internal sealed class DashboardService : IDashboardService
             year);
     }
 
-    private static SchoolOutput ToSchoolOutput(MeilisearchSchool hit) => new(
-        Id: hit.Id ?? string.Empty,
-        Name: hit.CentreName ?? "Unknown",
-        Province: hit.Province ?? string.Empty,
-        Circuit: hit.DistrictName ?? string.Empty,
-        TotalWrote: (int)(hit.TotalWrote ?? 0),
-        TotalPassed: (int)(hit.TotalAchieved ?? 0),
-        PassRate: hit.PercentAchieved ?? 0,
-        TotalAchieved: null
-    );
-
     /// <summary>
-    /// Maps a Meilisearch school document (snake_case field names, per-year
-    /// metrics). The <c>school_id</c> field is the index primary key.
+    /// Reads the stable identifier from a ranked Meilisearch school document.
     /// </summary>
     private sealed class MeilisearchSchool
     {
         [JsonPropertyName("school_id")]
         public string? Id { get; set; }
-
-        [JsonPropertyName("centre_name")]
-        public string? CentreName { get; set; }
-
-        [JsonPropertyName("province")]
-        public string? Province { get; set; }
-
-        [JsonPropertyName("district_name")]
-        public string? DistrictName { get; set; }
-
-        [JsonPropertyName("total_wrote_2024")]
-        public double? TotalWrote { get; set; }
-
-        [JsonPropertyName("total_achieved_2024")]
-        public double? TotalAchieved { get; set; }
-
-        [JsonPropertyName("percent_achieved_2024")]
-        public double? PercentAchieved { get; set; }
     }
 }

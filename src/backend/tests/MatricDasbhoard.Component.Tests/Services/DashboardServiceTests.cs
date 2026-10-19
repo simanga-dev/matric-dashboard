@@ -12,6 +12,35 @@ namespace MatricDasbhoard.Component.Tests.Services;
 /// <summary>Regression coverage for database-backed dashboard data.</summary>
 public class DashboardServiceTests
 {
+    /// <summary>Search ranks identifiers but uses the same database cohort and metadata as browsing.</summary>
+    [Fact]
+    public async Task Search_HydratesCurrentResultsAndPreservesRelevanceOrder()
+    {
+        await using var db = TestDbContextFactory.Create();
+        var a = School("100", "Current A");
+        a.AddPerformance(new SchoolPerformance(2024, 0, 10, 5, 50));
+        a.AddPerformance(new SchoolPerformance(2025, 0, 20, 18, 90));
+        var b = School("200", "Current B");
+        b.AddPerformance(new SchoolPerformance(2024, 0, 10, 10, 100));
+        var deleted = School("300", "Deleted");
+        deleted.SoftDelete();
+        db.Schools.AddRange(a, b, deleted);
+        await db.SaveChangesAsync();
+        using var http = new HttpClient(new RankedSearchHandler()) { BaseAddress = new Uri("http://search.test") };
+        var service = new DashboardService(db, new MeilisearchClient(http));
+
+        var browse = await service.GetSchoolsAsync(1, 10);
+        var search = await service.GetSchoolsAsync(1, 10, "school");
+
+        Assert.Equal(["200", "100"], search.Items.Select(s => s.Id));
+        Assert.Equal(4, search.TotalCount);
+        foreach (var hit in search.Items)
+            Assert.Equal(browse.Items.Single(s => s.Id == hit.Id), hit);
+        Assert.Equal(90, search.Items[1].PassRate);
+        Assert.Equal("Current A", search.Items[1].Name);
+        Assert.Equal(0, search.Items[0].TotalWrote);
+    }
+
     /// <summary>Duplicate names must not cause overlapping or unstable pages.</summary>
     [Fact]
     public async Task Browse_OrdersDuplicateNamesByEmisNumber()
@@ -597,6 +626,21 @@ public class DashboardServiceTests
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
             Task.FromException<HttpResponseMessage>(new HttpRequestException("Connection refused"));
+    }
+
+    private sealed class RankedSearchHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
+            {
+                Content = new StringContent("""
+                    {"hits":[
+                        {"school_id":"200","centre_name":"Stale B","total_wrote_2024":10,"percent_achieved_2024":100},
+                        {"school_id":"100","centre_name":"Stale A","total_wrote_2024":10,"percent_achieved_2024":50},
+                        {"school_id":"300"},{"school_id":"missing"}
+                    ],"estimatedTotalHits":4,"offset":0,"limit":10,"processingTimeMs":0,"query":"school"}
+                    """, System.Text.Encoding.UTF8, "application/json")
+            });
     }
 }
 

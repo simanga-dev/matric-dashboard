@@ -5,7 +5,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { schoolPath } from '$lib/config';
 	import type { School } from '$lib/types/dashboard';
-	import { schoolMapGeoJson } from './school-map-data';
+	import { schoolMapGeoJson, schoolMapPopup } from './school-map-data';
 	import type Feature from 'ol/Feature';
 	import type { FeatureLike } from 'ol/Feature';
 	import type { StyleFunction } from 'ol/style/Style';
@@ -34,14 +34,6 @@
 		'/api/geo/wfs?service=WFS&version=1.0.0&request=GetFeature&outputFormat=application/json';
 	const wfsUrl = (typeName: string) => `${WFS_BASE}&typeName=${typeName}`;
 	const WFS_URL = wfsUrl('matric:school_locations');
-
-	interface SchoolProperties {
-		emis_number?: string;
-		name?: string;
-		province?: string;
-		passed?: number;
-		wrote?: number;
-	}
 
 	interface SchoolPopup {
 		id: string;
@@ -449,29 +441,20 @@
 			hidePopup = () => overlay.setPosition(undefined);
 
 			olMap.on('singleclick', (event) => {
-				const hit = olMap?.forEachFeatureAtPixel(event.pixel, (f) => f);
-				if (!hit) {
+				const hit = olMap?.forEachFeatureAtPixel(event.pixel, (f) => f, {
+					layerFilter: (layer) => layer === vecLayer
+				});
+				const selectedPopup = hit ? schoolMapPopup(hit.getProperties()) : null;
+				if (!selectedPopup) {
 					popup = null;
 					overlay.setPosition(undefined);
 					return;
 				}
 
-				const props = hit.getProperties() as SchoolProperties;
 				// Apply selection before opening the popup, so tree selections can dismiss it.
-				if (props.emis_number) {
-					selectedSchoolId = String(props.emis_number);
-					applySelection(selectedSchoolId);
-				}
-				const passed = Number(props.passed);
-				const wrote = Number(props.wrote);
-				popup = {
-					id: String(props.emis_number),
-					name: String(props.name),
-					province: String(props.province),
-					passRate: passRate(passed, wrote),
-					passed,
-					wrote
-				};
+				selectedSchoolId = selectedPopup.id;
+				applySelection(selectedSchoolId);
+				popup = selectedPopup;
 				overlay.setPosition(event.coordinate);
 			});
 
