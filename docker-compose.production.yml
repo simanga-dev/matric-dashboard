@@ -1,0 +1,75 @@
+# Standalone production file. Do not merge with docker-compose.yml.
+services:
+  api:
+    build:
+      context: src/backend
+      dockerfile: MatricDasbhoard.WebApi/Dockerfile
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ASPNETCORE_URLS: http://+:8080
+      DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "1"
+      ConnectionStrings__Database: ${DATABASE_CONNECTION_STRING:?Database connection string is required}
+      Authentication__Jwt__Key: ${JWT_SECRET:?JWT_SECRET is required}
+      Authentication__ExternalProviders__EncryptionKey: ${EXT_AUTH_ENCRYPTION_KEY:?EXT_AUTH_ENCRYPTION_KEY is required}
+      Authentication__ExternalProviders__AllowedRedirectUris__0: ${FRONTEND_URL:?FRONTEND_URL is required}/oauth/callback
+      FileStorage__Endpoint: ${FILE_STORAGE_ENDPOINT:?S3 API endpoint is required}
+      FileStorage__AccessKey: ${FILE_STORAGE_ACCESS_KEY:?Storage access key is required}
+      FileStorage__SecretKey: ${FILE_STORAGE_SECRET_KEY:?Storage secret key is required}
+      FileStorage__BucketName: ${FILE_STORAGE_BUCKET:-matric-dasbhoard-files}
+      FileStorage__UseSSL: ${FILE_STORAGE_USE_SSL:-false}
+      MEILI_URL: ${MEILI_URL:?Meilisearch URL is required}
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?Meilisearch key is required}
+      GeoServer__Enabled: "true"
+      GeoServer__BaseUrl: ${GEOSERVER_BASE_URL:?GeoServer URL is required}
+      Email__Enabled: ${EMAIL_ENABLED:-false}
+      Email__FromAddress: ${EMAIL_FROM_ADDRESS:-noreply@example.com}
+      Email__FromName: ${EMAIL_FROM_NAME:-MatricDasbhoard}
+      Email__FrontendBaseUrl: ${FRONTEND_URL:?FRONTEND_URL is required}
+      Email__Smtp__Host: ${SMTP_HOST:-}
+      Email__Smtp__Port: ${SMTP_PORT:-587}
+      Email__Smtp__Username: ${SMTP_USERNAME:-}
+      Email__Smtp__Password: ${SMTP_PASSWORD:-}
+      Email__Smtp__UseSsl: ${SMTP_USE_SSL:-true}
+      Captcha__SecretKey: ${TURNSTILE_SECRET_KEY:?Production Turnstile secret is required}
+      Cors__AllowAllOrigins: "false"
+      Cors__AllowedOrigins__0: ${FRONTEND_URL:?FRONTEND_URL is required}
+      # TLS terminates at Dokploy. Only the frontend is publicly routed.
+      Hosting__ForceHttps: "false"
+      Hosting__ReverseProxy__TrustedNetworks__0: ${TRUSTED_PROXY_NETWORK:?Set the actual frontend Docker network CIDR}
+    networks:
+      - default
+      - external-services
+    healthcheck:
+      test: ["CMD", "/app/healthprobe/HealthProbe"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: src/frontend
+      dockerfile: Dockerfile
+    environment:
+      API_URL: http://api:8080
+      ORIGIN: ${FRONTEND_URL:?FRONTEND_URL is required}
+      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:?Production Turnstile site key is required}
+      PUBLIC_MAP_IMAGERY_URL: ${PUBLIC_MAP_IMAGERY_URL:-}
+      PUBLIC_MAP_IMAGERY_ATTRIBUTION: ${PUBLIC_MAP_IMAGERY_ATTRIBUTION:-}
+      NODE_ENV: production
+      PORT: "3000"
+    expose:
+      - "3000"
+    networks:
+      - default
+      - external-services
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  external-services:
+    external: true
+    name: ${EXTERNAL_SERVICES_NETWORK:-dokploy-network}
