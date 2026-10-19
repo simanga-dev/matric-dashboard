@@ -15,5 +15,8 @@ public enum ErrorType
     NotFound = 2,
 
     /// <summary>Authenticated but insufficient privileges for this action (403 Forbidden).</summary>
-    Forbidden = 3
+    Forbidden = 3,
+
+    /// <summary>Optimistic concurrency conflict (409 Conflict).</summary>
+    Conflict = 4
 }

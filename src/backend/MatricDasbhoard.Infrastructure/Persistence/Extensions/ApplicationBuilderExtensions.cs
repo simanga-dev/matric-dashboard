@@ -97,6 +97,7 @@ public static class ApplicationBuilderExtensions
 
         // Admin gets user management + role viewing by default.
         // Roles.Manage is deliberately excluded - only Superuser can create/edit/delete roles.
+        // Schools.SpatialEdit is opt-in through custom editor roles, never a default User/Admin grant.
         var adminPermissions = new[]
         {
             AppPermissions.Users.View,

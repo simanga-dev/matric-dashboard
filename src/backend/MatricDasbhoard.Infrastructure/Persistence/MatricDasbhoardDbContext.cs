@@ -76,6 +76,9 @@ internal class MatricDasbhoardDbContext(DbContextOptions<MatricDasbhoardDbContex
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        // PostGIS-owned geometry tables and views use parameterized SQL, not EF geometry mapping.
+        // Keep their schema version in migration snapshots to make ownership explicit.
+        modelBuilder.HasAnnotation("SchoolSpatial:SchemaVersion", 1);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MatricDasbhoardDbContext).Assembly);
         modelBuilder.ApplyAuthSchema();
         modelBuilder.ApplyFuzzySearch();

@@ -29,10 +29,11 @@ public class ErrorTypeTests
     }
 
     [Fact]
-    public void ShouldHaveExactlyFourValues()
+    public void ShouldHaveExactlyFiveValues()
     {
         var values = Enum.GetValues<ErrorType>();
 
-        Assert.Equal(4, values.Length);
+        Assert.Equal(5, values.Length);
+        Assert.Equal(4, (int)ErrorType.Conflict);
     }
 }

@@ -15,6 +15,13 @@ namespace MatricDasbhoard.Application.Identity.Constants;
 /// </summary>
 public static class AppPermissions
 {
+    /// <summary>School map correction permissions, granted only explicitly.</summary>
+    public static class Schools
+    {
+        /// <summary>Edit school grounds and markers, and read correction history.</summary>
+        public const string SpatialEdit = "schools.spatial.edit";
+    }
+
     /// <summary>
     /// The claim type used for permission claims in JWT tokens and role claims.
     /// </summary>
