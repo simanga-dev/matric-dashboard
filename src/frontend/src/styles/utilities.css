@@ -86,6 +86,32 @@
 	animation: status-ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 
+/* Pass-rate bands. High follows the theme and chart colour, while medium and
+   low keep their amber/red meaning across presets and both colour schemes. */
+.pass-rate-text-high {
+	color: hsl(var(--pass-rate-high));
+}
+
+.pass-rate-text-medium {
+	color: hsl(var(--pass-rate-medium));
+}
+
+.pass-rate-text-low {
+	color: hsl(var(--pass-rate-low));
+}
+
+.pass-rate-bar-high {
+	background-color: hsl(var(--pass-rate-high));
+}
+
+.pass-rate-bar-medium {
+	background-color: hsl(var(--pass-rate-medium));
+}
+
+.pass-rate-bar-low {
+	background-color: hsl(var(--pass-rate-low));
+}
+
 /* Status colors */
 .status-online .status-indicator-dot,
 .status-online .status-indicator-ping {

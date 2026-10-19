@@ -12,13 +12,8 @@
 	import * as m from '$lib/paraglide/messages';
 	import { ThemeToggle, LanguageSelector, SchoolSearch } from '$lib/components/layout';
 	import { CircleHelp } from '@lucide/svelte';
-	import type { User } from '$lib/types';
 
-	interface Props {
-		user: User | null | undefined;
-	}
-
-	let { user }: Props = $props();
+	let { borderless = false }: { borderless?: boolean } = $props();
 
 	const segmentLabels: Record<string, () => string> = {
 		dashboard: m.nav_dashboard,
@@ -46,12 +41,6 @@
 		label: string;
 		href?: string;
 	}
-
-	let isDetailPage = $derived.by(() => {
-		const segments = page.url.pathname.split('/').filter(Boolean);
-		const meaningful = segments.filter((s) => s !== 'admin');
-		return meaningful.length > 1;
-	});
 
 	let crumbs = $derived.by((): Crumb[] => {
 		const pathname = page.url.pathname;
@@ -83,10 +72,13 @@
 	});
 </script>
 
-<header class="flex h-(--header-height) shrink-0 items-center gap-2 border-b px-4 lg:px-6">
+<header
+	class="flex h-(--header-height) shrink-0 items-center gap-2 border-border/50 bg-card px-4 lg:px-6"
+	class:border-b={!borderless}
+>
 	<div class="flex flex-1 items-center gap-2">
 		<SidebarTrigger class="-ml-1" />
-		<Separator orientation="vertical" class="mx-2 h-4" />
+		{#if !borderless}<Separator orientation="vertical" class="mx-2 h-4" />{/if}
 		{#key page.url.pathname}
 			<Breadcrumb.Root class="motion-safe:duration-200 motion-safe:animate-in motion-safe:fade-in">
 				<Breadcrumb.List>
@@ -107,7 +99,7 @@
 		{/key}
 	</div>
 
-	<SchoolSearch />
+	<SchoolSearch {borderless} />
 
 	<button
 		onclick={() => (shortcutsState.isCommandPaletteOpen = true)}

@@ -29,8 +29,9 @@ export function schoolPath(id: number | string): `/schools/${string}` {
  * Union of all permission string literals from the Permissions object.
  * Catches typos at compile time - only known permission values are accepted.
  */
-type PermissionValue =
-	(typeof Permissions)[keyof typeof Permissions][keyof (typeof Permissions)[keyof typeof Permissions]];
+type PermissionValue = {
+	[Group in keyof typeof Permissions]: (typeof Permissions)[Group][keyof (typeof Permissions)[Group]];
+}[keyof typeof Permissions];
 
 /**
  * Admin route registry entry - pairs a path with its required RBAC permission.

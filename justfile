@@ -21,9 +21,13 @@ test:
 geo-up:
     docker compose up -d postgres geoserver
 
-# Seed the sample school layer and configure GeoServer (run after geo-up)
+# Seed/publish school layers (run after geo-up and API database migrations)
 geo-bootstrap:
     ./scripts/geoserver/bootstrap.sh
+
+# Import real school coordinates from the DBE EMIS masterlists (run after geo-bootstrap)
+geo-locations:
+    ./scripts/import_school_locations.sh
 
 # Add a new EF Core migration
 migrate name:

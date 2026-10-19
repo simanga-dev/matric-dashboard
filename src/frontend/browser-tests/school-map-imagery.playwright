@@ -1,0 +1,38 @@
+async (page) => {
+	// Requires both runtime PUBLIC_MAP_IMAGERY_* settings. Use a fixture HTTPS
+	// XYZ URL and attribution on a disposable frontend, not a real paid provider.
+	const context = await page.context().browser().newContext({ viewport: { width: 1440, height: 1000 } });
+	const browser = await context.newPage();
+	const origin = new URL(page.url()).origin;
+	let failImagery = false;
+	const check = (value, message) => { if (!value) throw new Error(message); };
+	try {
+		await browser.route('**/*', async (route) => {
+			const request = route.request();
+			const url = new URL(request.url());
+			if (request.resourceType() === 'image' && url.origin !== origin && !url.hostname.endsWith('openstreetmap.org')) {
+				if (failImagery) return route.abort();
+				return route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"><rect width="256" height="256" fill="#829e78"/></svg>' });
+			}
+			return route.continue();
+		});
+		await browser.route('**/api/geo/**', (route) => route.fulfill({ json: { type: 'FeatureCollection', features: [] } }));
+		await browser.route(/https:\/\/[^/]*tile\.openstreetmap\.org\//, (route) => route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"/>' }));
+		await browser.goto(`${origin}/overview`);
+		const background = browser.getByRole('combobox', { name: 'Map background' });
+		check(await background.inputValue() === 'street', 'Imagery must not be preselected');
+		check(!await background.locator('option[value="imagery"]').isDisabled(), 'Requires configured approved imagery');
+		await browser.locator('.school-map .ol-viewport').waitFor();
+		await background.selectOption('imagery');
+		await browser.locator('.school-imagery canvas').waitFor();
+		check(await browser.locator('.school-map .ol-attribution').isVisible(), 'Imagery attribution must stay visible');
+		await browser.evaluate(() => document.documentElement.classList.add('dark'));
+		check(await browser.locator('.school-imagery canvas').evaluate((canvas) => getComputedStyle(canvas).filter) === 'none', 'Imagery must not inherit dark-mode street filters');
+		failImagery = true;
+		await browser.locator('.school-map').hover();
+		await browser.mouse.wheel(0, -800);
+		await browser.getByText('Imagery tiles could not be loaded. Showing OpenStreetMap instead.', { exact: true }).waitFor();
+		check(await background.inputValue() === 'street', 'Tile failure must restore OpenStreetMap');
+		return { runtimeImageryConfigured: true, streetDefault: true, attributionVisible: true, imageryUnfiltered: true, tileFailureFallback: true };
+	} finally { await context.close(); }
+}

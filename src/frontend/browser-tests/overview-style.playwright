@@ -1,0 +1,150 @@
+async (page) => {
+	const origin = new URL(page.url()).origin;
+	const context = await page.context().browser().newContext({
+		viewport: { width: 1600, height: 1000 }, locale: 'en'
+	});
+	const browser = await context.newPage();
+	const check = (condition, message) => {
+		if (!condition) throw new Error(message);
+	};
+	const school = { id: '1001', name: 'BROWSER TEST SCHOOL', province: 'GAUTENG', circuit: 'TEST CIRCUIT', totalWrote: 100, totalPassed: 88, passRate: 88, totalAchieved: null };
+	const years = [75, 78, 76, 84, 88].map((passRate, index) => ({ year: 2021 + index, totalWrote: 100, totalPassed: passRate, passRate }));
+	const surfaces = () => browser.evaluate(() => {
+		const style = (selector) => {
+			const element = document.querySelector(selector);
+			const css = getComputedStyle(element);
+			return { background: css.backgroundColor, border: css.borderTopWidth, radius: css.borderRadius, shadow: css.boxShadow };
+		};
+		return { metric: style('[data-overview-metric]'), summary: style('[data-overview-summary]'), foreground: getComputedStyle(document.documentElement).getPropertyValue('--foreground') };
+	});
+	const choose = async (group, name) => {
+		await browser.getByRole('group', { name: group, exact: true }).getByRole('button', { name, exact: true }).click();
+	};
+	const cardContrast = () => browser.evaluate(() => {
+		const luminance = (color) => {
+			const channels = color.match(/[\d.]+/g).slice(0, 3).map(Number).map((value) => value / 255);
+			const linear = channels.map((value) => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4);
+			return linear[0] * 0.2126 + linear[1] * 0.7152 + linear[2] * 0.0722;
+		};
+		return ['[data-overview-metric]', '[data-overview-summary]'].map((selector) => {
+			const card = document.querySelector(selector);
+			const label = card.querySelector('.text-muted-foreground');
+			const background = luminance(getComputedStyle(card).backgroundColor);
+			const foreground = luminance(getComputedStyle(label).color);
+			return (Math.max(background, foreground) + 0.05) / (Math.min(background, foreground) + 0.05);
+		});
+	});
+	try {
+		await context.addInitScript(() => {
+			localStorage.setItem('theme', 'light');
+			localStorage.setItem('theme-preset', 'neutral');
+		});
+		await browser.route('**/api/v1/dashboard/schools**', (route) => route.fulfill({ json:
+			new URL(route.request().url()).pathname.endsWith('/1001') ? {
+				...school, centreNumber: '1', quintile: 1, years,
+				comparison: { year: 2025, provinceRank: 1, provinceSchoolCount: 2, provinceAveragePassRate: 85, nationalAveragePassRate: 83 },
+				subjectsOfferedYear: 2025, subjectsOffered: []
+			} : { items: [school], totalCount: 1, pageNumber: 1, pageSize: 500, totalPages: 1, hasPreviousPage: false, hasNextPage: false }
+		}));
+		await browser.route('**/api/v1/dashboard/regions/stats**', (route) => route.fulfill({ json: {
+			scope: 'country', name: 'South Africa', province: null, year: 2025,
+			schoolCount: 1, totalWrote: 100, totalPassed: 88, passRate: 88, years
+		} }));
+		await browser.route('**/api/geo/**', (route) => route.fulfill({ json: { type: 'FeatureCollection', features: [] } }));
+		await browser.route(/https:\/\/[^/]*tile\.openstreetmap\.org\//, (route) => route.fulfill({ contentType: 'image/svg+xml', body: '<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256"/>' }));
+		// Enter through client navigation so the universal directory load uses our
+		// browser fixtures rather than the running server's shared directory cache.
+		await browser.goto(`${origin}/dashboard`);
+		check(await browser.locator('main[data-slot="sidebar-inset"] > header').evaluate((element) =>
+			getComputedStyle(element).borderBottomWidth !== '0px'
+		), 'Keep existing page framing outside Overview');
+		await browser.getByRole('link', { name: 'Overview', exact: true }).first().click();
+		await browser.getByRole('heading', { name: 'Country summary', exact: true }).waitFor();
+		check(await browser.evaluate(() => [
+			'.workspace', 'main[data-slot="sidebar-inset"] > header',
+			'[aria-label="School browser"] > header', '[aria-label="School details"] > header'
+		].every((selector) => {
+			const css = getComputedStyle(document.querySelector(selector));
+			return ['borderTopWidth', 'borderRightWidth', 'borderBottomWidth', 'borderLeftWidth'].every((side) => css[side] === '0px');
+		})), 'Overview shell and panel headers should be borderless');
+		check(await browser.locator('.workspace').evaluate((element) => getComputedStyle(element).boxShadow === 'none'), 'Do not replace the workspace border with a framing shadow');
+		check(await browser.evaluate(() => ['School browser', 'School details'].every((label) => {
+			const panel = document.querySelector(`section[aria-label="${label}"]`);
+			const header = panel.querySelector('header');
+			const headerBackground = getComputedStyle(header).backgroundColor;
+			return headerBackground !== 'rgba(0, 0, 0, 0)' && headerBackground !== getComputedStyle(panel).backgroundColor;
+		})), 'Borderless panel titles should have a distinct shaded background');
+		const light = await surfaces();
+		check(light.metric.background !== light.summary.background, 'Metric and summary surfaces should have distinct tones');
+		check(light.metric.border === '0px' && light.summary.border === '0px', 'Overview cards should not add competing borders');
+		check(light.metric.radius !== '0px', 'Default cards should have soft corners');
+		check(await browser.locator('[data-sidebar="menu-button"][data-active="true"]').first().evaluate((element) => element.getBoundingClientRect().height >= 44), 'Navigation should retain comfortable hit targets');
+		await browser.getByRole('button', { name: 'Customize', exact: true }).first().click();
+		for (const mode of ['Light', 'Dark']) {
+			await choose('Mode', mode);
+			for (const palette of ['Zinc', 'Slate', 'Stone', 'Gray', 'Neutral', 'Red', 'Rose', 'Orange', 'Green', 'Blue', 'Yellow', 'Violet', 'Amber', 'Purple', 'Teal']) {
+				await choose('Theme', palette);
+				check((await cardContrast()).every((ratio) => ratio >= 4.5), `Card labels need readable contrast in ${mode} ${palette}`);
+			}
+		}
+		await choose('Theme', 'Neutral');
+		await choose('Mode', 'Light');
+		await browser.keyboard.press('Escape');
+
+		await browser.getByRole('button', { name: 'Expand Gauteng', exact: true }).click();
+		await browser.getByRole('button', { name: 'Expand Test Circuit in Gauteng', exact: true }).click();
+		await browser.getByRole('button', { name: 'Browser Test School', exact: true }).click();
+		await browser.getByRole('heading', { name: 'Browser Test School', exact: true }).waitFor();
+		await browser.getByRole('heading', { name: 'NSC Results · 2025', exact: true }).waitFor();
+		check(await browser.locator('[aria-label="School browser"] ul.border-s').evaluateAll((guides) =>
+			guides.length >= 3 && guides.every((guide) => guide.classList.contains('border-border/40') && getComputedStyle(guide).borderInlineStartWidth === '1px')
+		), 'Keep the hierarchy guides visible but faded at every depth');
+		check(await browser.getByRole('link', { name: 'View full page for Browser Test School', exact: true }).evaluate((element) =>
+			!element.classList.contains('shadow-xs') && element.classList.contains('shadow-none')
+		), 'The full-school link should not have a decorative shadow');
+		check((await browser.getByRole('link', { name: 'View full page for Browser Test School', exact: true }).getAttribute('href')).endsWith('/schools/1001'), 'Keep full-school navigation intact');
+		const selectedUrl = browser.url();
+
+		const details = browser.getByRole('region', { name: 'School details', exact: true });
+		const originalWidth = await details.evaluate((element) => element.getBoundingClientRect().width);
+		await browser.getByRole('button', { name: 'Collapse school browser', exact: true }).click();
+		check(await browser.locator('.browser-rail').evaluate((element) => getComputedStyle(element).borderRightWidth === '0px'), 'Collapsed browser rail should stay borderless');
+		const retainedWidth = await details.evaluate((element) => element.getBoundingClientRect().width);
+		check(Math.abs(originalWidth - retainedWidth) < 2, 'Collapsing the tree should preserve details width');
+		await browser.getByRole('button', { name: 'Expand school browser', exact: true }).click();
+		await browser.getByRole('button', { name: 'Collapse school details', exact: true }).click();
+		check(await browser.locator('.details-rail').evaluate((element) => getComputedStyle(element).borderLeftWidth === '0px'), 'Collapsed details rail should stay borderless');
+		await browser.getByRole('button', { name: 'Expand school details', exact: true }).click();
+		check(browser.url() === selectedUrl, 'Panel controls should preserve the selected school');
+
+		await browser.getByRole('button', { name: 'Customize', exact: true }).first().click();
+		await choose('Mode', 'Dark');
+		const dark = await surfaces();
+		check(dark.metric.background !== light.metric.background, 'Dark mode should use dark card surfaces, not light pastels');
+		check(await browser.evaluate(() => ['--muted', '--sidebar-accent'].every((token) =>
+			getComputedStyle(document.documentElement).getPropertyValue(token).trim().split(/\s+/)[1] === '0%'
+		)), 'Neutral dark surfaces should not inherit a coloured tint');
+		await choose('Theme', 'Rose');
+		const rose = await surfaces();
+		check(rose.metric.background !== dark.metric.background, 'Surfaces should follow the chosen palette');
+		await choose('Radii', 'None');
+		check((await surfaces()).metric.radius === '0px', 'Keep radius customization');
+		await choose('Radii', 'Large');
+		await choose('Shadows', 'None');
+		const noShadow = (await surfaces()).metric.shadow;
+		await choose('Shadows', 'Large');
+		check((await surfaces()).metric.shadow !== noShadow, 'Keep shadow customization');
+		await choose('Shadows', 'Small');
+		await choose('Font', 'Small');
+		await browser.keyboard.press('Escape');
+		await browser.setViewportSize({ width: 375, height: 812 });
+		await browser.locator('[data-overview-summary]').scrollIntoViewIfNeeded();
+		check(await browser.locator('[data-resizable-panel-index="1"]').evaluate((element) =>
+			getComputedStyle(element).borderTopWidth === '0px' && getComputedStyle(element).borderBottomWidth === '0px'
+		), 'The mobile map should not reintroduce panel borders');
+		check(await browser.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'The styled workspace must not overflow on mobile');
+		return { light, dark, rose, selectionPreserved: true, collapsiblePanels: true, customizationsPreserved: true, mobile: true, passed: true };
+	} finally {
+		await context.close();
+	}
+}

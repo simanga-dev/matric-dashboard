@@ -4,16 +4,14 @@
 	import { EmailVerificationBanner } from '$lib/components/auth';
 	import { page } from '$app/state';
 	import { invalidateAll } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import { healthState } from '$lib/state';
-	import { routes } from '$lib/config';
 	import { cn } from '$lib/utils';
 
 	let { children, data } = $props();
 
 	// The overview is a full-bleed workspace: it manages its own height and
 	// wants no page padding or card frame around it.
-	let fullBleed = $derived(page.url.pathname === resolve(routes.overview));
+	let fullBleed = $derived(page.route.id === '/(app)/overview');
 
 	// When health polling detects the backend went down, re-run server loads.
 	// The (app) layout.server.ts will throw 503, showing the error page with
@@ -40,7 +38,7 @@
 			? 'md:peer-data-[variant=inset]:m-0 md:peer-data-[variant=inset]:ms-0 md:peer-data-[variant=inset]:rounded-none md:peer-data-[variant=inset]:shadow-none md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ms-0'
 			: undefined}
 	>
-		<ContentHeader user={data.user} />
+		<ContentHeader borderless={fullBleed} />
 		{#if data.user && !data.user.emailConfirmed}
 			<EmailVerificationBanner />
 		{/if}
@@ -60,7 +58,11 @@
 			>
 				{#key page.url.pathname}
 					<div
-						class="w-full motion-safe:duration-300 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4"
+						class={cn(
+							'w-full',
+							!fullBleed &&
+								'motion-safe:duration-300 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4'
+						)}
 					>
 						{@render children()}
 					</div>

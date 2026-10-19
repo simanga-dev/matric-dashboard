@@ -8,6 +8,7 @@
 		TwoFactorCard
 	} from '$lib/components/settings';
 	import { ConnectedAccountsCard } from '$lib/components/oauth';
+	import ThemePicker from '$lib/components/layout/ThemePicker.svelte';
 	import * as Card from '$lib/components/ui/card';
 	import { Button } from '$lib/components/ui/button';
 	import * as m from '$lib/paraglide/messages';
@@ -29,6 +30,16 @@
 <div class="space-y-6">
 	<PageHeader title={m.settings_title()} description={m.settings_description()} />
 	<div class="space-y-8">
+		<Card.Root>
+			<Card.Header>
+				<Card.Title>{m.theme_customize()}</Card.Title>
+				<Card.Description>{m.theme_description()}</Card.Description>
+			</Card.Header>
+			<Card.Content class="max-w-xl">
+				<ThemePicker />
+			</Card.Content>
+		</Card.Root>
+
 		{#if hasPassword}
 			<ChangePasswordForm />
 		{:else}

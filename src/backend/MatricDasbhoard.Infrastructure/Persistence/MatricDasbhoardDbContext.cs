@@ -60,12 +60,25 @@ internal class MatricDasbhoardDbContext(DbContextOptions<MatricDasbhoardDbContex
     public DbSet<SchoolPerformance> SchoolPerformances { get; set; }
 
     /// <summary>
+    /// Gets or sets the NSC examination subjects table.
+    /// </summary>
+    public DbSet<Subject> Subjects { get; set; }
+
+    /// <summary>
+    /// Gets or sets the per-school, per-subject performance records table for yearly NSC results.
+    /// </summary>
+    public DbSet<SchoolSubjectPerformance> SchoolSubjectPerformances { get; set; }
+
+    /// <summary>
     /// Configures the model by applying all entity configurations from this assembly
     /// and fuzzy search extensions.
     /// </summary>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        // PostGIS-owned geometry tables and views use parameterized SQL, not EF geometry mapping.
+        // Keep their schema version in migration snapshots to make ownership explicit.
+        modelBuilder.HasAnnotation("SchoolSpatial:SchemaVersion", 2);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MatricDasbhoardDbContext).Assembly);
         modelBuilder.ApplyAuthSchema();
         modelBuilder.ApplyFuzzySearch();

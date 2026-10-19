@@ -40,8 +40,20 @@
 	--color-sidebar-ring: hsl(var(--sidebar-ring));
 
 	/* Border radius */
-	--radius-sm: calc(var(--radius) - 4px);
-	--radius-md: calc(var(--radius) - 2px);
+	--radius-sm: max(0px, calc(var(--radius) - 4px));
+	--radius-md: max(0px, calc(var(--radius) - 2px));
 	--radius-lg: var(--radius);
-	--radius-xl: calc(var(--radius) + 4px);
+	--radius-xl: calc(var(--radius) * 1.5);
+
+	/* User-selected component shadows. */
+	--shadow-2xs: var(--appearance-shadow);
+	--shadow-xs: var(--appearance-shadow);
+	--shadow-sm: var(--appearance-shadow);
+	--shadow-md: var(--appearance-shadow);
+	--shadow-lg: var(--appearance-shadow);
+	--shadow-xl: var(--appearance-shadow);
+	--shadow-2xl: var(--appearance-shadow);
+	--color-chart-1: hsl(var(--chart-1));
+	--color-overview-metric: hsl(var(--overview-metric));
+	--color-overview-summary: hsl(var(--overview-summary));
 }

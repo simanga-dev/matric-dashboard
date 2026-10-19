@@ -108,18 +108,46 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`GeoServerOptions`** (config shape) | `appsettings.json`, `appsettings.Development.json`, `AppHost/Program.cs` env, `docker-compose.yml` api env |
 | **`GeoServerProxyMiddleware`** (route/behavior) | `GeoServerOptions.RoutePrefix`, frontend `api/geo/[...path]` proxy route |
 | **`api/geo/[...path]`** (frontend proxy route) | Backend `GeoServerOptions.RoutePrefix`, `SchoolGeoMap.svelte` WFS URL |
+| **`scripts/import_school_locations.py`** (coordinate source/normalization) | `scripts/import_school_locations.sh`, `scripts/geoserver/bootstrap.sh` (optional step), `justfile` `geo-locations`, `geo.school_locations` columns, `scripts/tests/test_spatial_operations.py`, `docs/spatial-operations.md`; masterlist headers `GIS_Long`/`GIS_Lat` vs `GIS_Longitude`/`GIS_Latitude` |
+| **`scripts/import_school_locations.sh`** (DBE env vars/psql call) | `scripts/import_school_locations.py`, `docs/spatial-operations.md` |
+| **School spatial profile/history schema or public views** | SchoolSpatial service/controller/DTOs/tests, EF migration/snapshot, `scripts/geoserver/bootstrap.sh` view publication and assigned feature IDs, `SchoolGeoMap.svelte`, `docs/spatial-operations.md`; never move editor corrections into the imported source table |
+| **`schools.spatial.edit` permission** | Backend `AppPermissions`, protected save/history endpoints, frontend `Permissions`, role tools/tests; never grant to default User |
+| **`PUBLIC_MAP_IMAGERY_URL` / `PUBLIC_MAP_IMAGERY_ATTRIBUTION`** | `src/frontend/.env.example`, `.env.test`, root `.env.example`, Compose frontend runtime environment, imagery config validation/tests, `docs/spatial-operations.md`; no provider or server secret by default |
+| **Spatial save or WFS cache behavior** | Canonical point/boundary updates, targeted geo cache invalidation, draft selection/navigation safety, editor API/helper/browser tests |
+| **GeoServer view feature IDs or empty-layer publication** | `scripts/geoserver/bootstrap.sh`, fake bootstrap regressions in `scripts/tests/test_spatial_operations.py`, opt-in real-container `scripts/geoserver/smoke_test.py` |
+| **DBE masterlist columns** (`NatEmis`, `Official_Institution_Name`, `GIS_*`) | `scripts/import_school_locations.py` header lookup, `scripts/tests/test_spatial_operations.py` workbook fixture |
 
 ### School Data (Postgres `marks` schema)
 
-School lists and lookups are read from PostgreSQL via EF (`DashboardService`). The CSV is loaded with the import script.
+School lists and lookups are read from PostgreSQL via EF (`DashboardService`). Free-text search uses Meilisearch with a PostgreSQL fallback. The CSV is loaded with the import script.
 
 | When you change... | Also update... |
 |---|---|
-| **`2024_nsc_school_performance_report.csv`** (columns) | `scripts/import_schools_to_db.py` (column names), `School`/`SchoolPerformance` entities, `DashboardService` projection |
+| **`2024_nsc_school_performance_report.csv`** (columns) | `scripts/import_schools_to_db.py` (column names), `scripts/import_school_locations.py` (roster columns), `School`/`SchoolPerformance` entities, `DashboardService` projection |
 | **`School`/`SchoolPerformance` entity** (fields) | EF configuration, migration, `scripts/import_schools_to_db.py`, `DashboardService` mapping, `SchoolOutput` / `SchoolDetailOutput` DTOs |
 | **`DashboardService.GetSchoolsAsync`** | `IDashboardService`, `DashboardController`, `SchoolOutput` DTO, `DashboardMapper` |
+| **Frontend school tree search and virtualization** (index, row geometry, keyboard navigation) | `SchoolTree.svelte` / `SchoolTree.test.ts` (DOM focus, breadcrumbs, scroll restoration and animation), `school-tree-model.ts` / `.test.ts`, `school-hierarchy.ts`; local matches use the precomputed directory index, zero-match queries fall back to `school-tree-search.ts` / `.test.ts` and `api/dashboard.ts` (`fetchSchools`) / `.test.ts`; DOM tests use jsdom and the browser condition in `vite.config.ts` |
+| **Pass-rate colour tokens** (`--pass-rate-*` in `themes.css`) | `utilities.css` (`pass-rate-text-*` / `pass-rate-bar-*`), `school-hierarchy.ts` (`passRateColor` / `resolvePassRateColor`) / `.test.ts`, `SchoolTree.svelte`, `SchoolGeoMap.svelte`, `SchoolDetailPanel.svelte`, `routes/(app)/schools/[id]`, `routes/(app)/subjects` |
+| **School detail cache and prefetch** (TTL, capacity, request coalescing) | `school-detail-cache.ts` / `.test.ts`, `SchoolTree.svelte` hover/focus prefetch, `SchoolDetailPanel.svelte` cache lookup and loading skeletons |
 | **`DashboardService.GetSchoolByIdAsync`** | `IDashboardService`, `DashboardController`, `SchoolDetailOutput` DTO, `DashboardMapper`, `MatricDasbhoard.Api.Tests/Features/Dashboard/DashboardMapperTests.cs` |
+| **`DashboardService.GetSchoolSubjectsAsync`** (per-school subjects) | `IDashboardService`, `DashboardController` (`GET schools/{id}/subjects?year=`), `SchoolSubjectsOutput` / `SchoolSubjectOutput` / `OfferedSubjectOutput` DTOs, `DashboardMapper`, frontend `api/dashboard.ts` (`fetchSchoolSubjects`), `routes/(app)/subjects/+page.svelte`, `SchoolDetailPanel.svelte` |
+| **`Subject` / `SchoolSubjectPerformance` entities** (fields) | EF configurations (`SubjectConfiguration`, `SchoolSubjectPerformanceConfiguration`), migration `AddSchoolSubjects`, `scripts/import_subject_results.py` column list, `DashboardService` subject projections, `ResponseContracts.cs` |
+| **`scripts/import_subject_results.py`** (SQL shape/school matching) | `scripts/import_subject_results.sh`, `marks."SchoolSubjectPerformances"` columns + unique (SchoolId, SubjectId, Year), `NSC_DB_PATH`, `scripts/import_subject_results.py` centre->EMIS fallback |
+| **`DashboardService.GetRegionStatsAsync`** | `IDashboardService`, `DashboardController`, `RegionStatsOutput` / `RegionYearOutput` DTOs, `DashboardMapper`, frontend `api/dashboard.ts` (`fetchRegionStats`), `SchoolDetailPanel.svelte` |
+| **`RegionStatsOutput` / `RegionStatsResponse`** (fields) | `DashboardMapper`, `MatricDasbhoard.Api.Tests/Contracts/ResponseContracts.cs`, frontend `types/dashboard.ts` (`RegionStats` / `RegionYear`) |
 | **`scripts/import_schools_to_db.py`** (import shape/identity validation) | `scripts/import_schools_to_db.sh`, entity columns, `scripts/tests/test_spatial_operations.py`, `docs/spatial-operations.md`; quarantine placeholders without synthesizing EMIS identifiers |
+
+### NSC Results (SQLite `data/nsc/matric.db`)
+
+Single SQLite file: per-school overall results (`schools`, `results`) and per-school subject results (`subjects`, `subject_aliases`, `report_sources`, `subject_results`). Each extractor refreshes only its own tables. `.env` `DATABASE_URL` / `DB_UI_NSC` point here for vim-dadbod.
+
+| When you change... | Also update... |
+|---|---|
+| **`scripts/extract_nsc_results.py`** (overall-report layout/columns) | `schools`/`results` schema, `LEGACY_LAYOUTS` metric order per report year (2012-2019) vs `ACHIEVED_REPORTS` (2020-2025), `scripts/import_nsc_history.py` (`DEFAULT_DB`, `NSC_DB_PATH`), `scripts/import_nsc_history.sh` |
+| **`scripts/extract_subject_results.py`** (layout detection/anchors) | `METRICS_PER_SUBJECT` per report year (2 vs 3 metrics), `SUBJECT_ALIASES`, `data/nsc/matric.db` tables (`subjects`, `subject_aliases`, `report_sources`, `subject_results`) |
+| **`subject_results` schema** (`subject_id` primary key) | `scripts/extract_subject_results.py` upsert statement; downstream joins to `schools.centre_number` (centres, not EMIS numbers) |
+| **Report PDFs in `data/school_subject_reports/`** | `scripts/extract_subject_results.py` file discovery (report year from filename, one file per province for 2014) and `--pdf-dir` defaults (`data/school_subject_reports`, `data/nsc/subject_pdfs`) |
+| **`scripts/download_dbe_reports.py`** (source page/parsing) | `data/reports/` folder layout; re-run is safe and skips existing files |
 
 ---
 

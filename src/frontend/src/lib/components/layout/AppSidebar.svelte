@@ -14,6 +14,7 @@
 		CircleHelp,
 		LogIn,
 		BookOpen,
+		BookMarked,
 		MapPinned,
 		Trophy,
 		List,
@@ -34,7 +35,8 @@
 	let { user }: Props = $props();
 
 	const sidebar = Sidebar.useSidebar();
-	let collapsed = $derived(sidebar.state === 'collapsed');
+	const navigationButtonClass =
+		'min-h-[44px] gap-3 rounded-lg px-3 text-sidebar-foreground/85 transition-colors hover:bg-sidebar-accent/60 data-[active=true]:bg-sidebar-accent/80 group-data-[collapsible=icon]:min-h-0';
 
 	type NavItem = { title: () => string; href: string; icon: Component<IconProps> };
 	type AdminNavItem = NavItem & { permission: AdminRoute['permission'] };
@@ -49,6 +51,11 @@
 			title: () => 'Top Achievers',
 			href: '/top-achievers',
 			icon: Trophy
+		},
+		{
+			title: () => 'Subjects',
+			href: '/subjects',
+			icon: BookMarked
 		}
 	];
 
@@ -115,31 +122,35 @@
 
 <!-- eslint-disable svelte/no-navigation-without-resolve -- hrefs are pre-resolved using resolve() in navMain -->
 <Sidebar.Root variant="inset" collapsible="icon" class="ps-[env(safe-area-inset-left,0px)]">
-	<Sidebar.Header>
+	<Sidebar.Header class="px-2 pt-3 pb-4">
 		<Sidebar.Menu>
 			<Sidebar.MenuItem>
-				<Sidebar.MenuButton size="lg">
+				<Sidebar.MenuButton size="lg" class="rounded-lg px-3">
 					{#snippet child({ props })}
 						<a href={resolve(routes.overview)} onclick={handleNavigate} {...props}>
 							<div
-								class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"
+								class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-foreground"
 							>
 								<Package2 class="size-4" />
 							</div>
-							<span class="truncate font-semibold">{m.app_name()}</span>
+							<span class="truncate font-semibold tracking-tight">{m.app_name()}</span>
 						</a>
 					{/snippet}
 				</Sidebar.MenuButton>
 			</Sidebar.MenuItem>
 		</Sidebar.Menu>
 	</Sidebar.Header>
-	<Sidebar.Content>
+	<Sidebar.Content class="gap-4">
 		<Sidebar.Group>
 			<Sidebar.GroupContent>
 				<Sidebar.Menu>
 					{#each navMain as item (item.href)}
 						<Sidebar.MenuItem>
-							<Sidebar.MenuButton tooltipContent={item.title()} isActive={isActive(item.href)}>
+							<Sidebar.MenuButton
+								class={navigationButtonClass}
+								tooltipContent={item.title()}
+								isActive={isActive(item.href)}
+							>
 								{#snippet child({ props })}
 									<a
 										href={item.href}
@@ -159,11 +170,17 @@
 		</Sidebar.Group>
 
 		<Sidebar.Group class="group-data-[collapsible=icon]:hidden">
-			<Sidebar.GroupLabel>Documents</Sidebar.GroupLabel>
+			<Sidebar.GroupLabel class="px-3 font-normal text-sidebar-foreground/60"
+				>Documents</Sidebar.GroupLabel
+			>
 			<Sidebar.Menu>
 				{#each documents as item (item.href)}
 					<Sidebar.MenuItem>
-						<Sidebar.MenuButton tooltipContent={item.title()}>
+						<Sidebar.MenuButton
+							class={navigationButtonClass}
+							tooltipContent={item.title()}
+							isActive={isActive(item.href)}
+						>
 							{#snippet child({ props })}
 								<a
 									href={item.href}
@@ -183,11 +200,17 @@
 
 		{#if visibleAdminItems.length > 0}
 			<Sidebar.Group class="group-data-[collapsible=icon]:hidden">
-				<Sidebar.GroupLabel>{m.nav_admin()}</Sidebar.GroupLabel>
+				<Sidebar.GroupLabel class="px-3 font-normal text-sidebar-foreground/60"
+					>{m.nav_admin()}</Sidebar.GroupLabel
+				>
 				<Sidebar.Menu>
 					{#each visibleAdminItems as item (item.href)}
 						<Sidebar.MenuItem>
-							<Sidebar.MenuButton tooltipContent={item.title()} isActive={isActive(item.href)}>
+							<Sidebar.MenuButton
+								class={navigationButtonClass}
+								tooltipContent={item.title()}
+								isActive={isActive(item.href)}
+							>
 								{#snippet child({ props })}
 									<a
 										href={item.href}
@@ -210,7 +233,7 @@
 		{#if !sidebar.isMobile}
 			<div class="flex items-center gap-1 group-data-[collapsible=icon]:flex-col">
 				<LanguageSelector />
-				<ThemeToggle {collapsed} />
+				<ThemeToggle />
 				<div class="flex-1 group-data-[collapsible=icon]:hidden"></div>
 				{#if user}
 					<UserNav {user} />
@@ -228,7 +251,7 @@
 				<Sidebar.MenuItem>
 					<Sidebar.MenuButton
 						size="sm"
-						class="h-6 px-2 py-1"
+						class="min-h-[44px] rounded-lg px-3 py-1 group-data-[collapsible=icon]:min-h-0"
 						tooltipContent={m.shortcuts_help()}
 						onclick={() => (shortcutsState.isHelpOpen = true)}
 					>

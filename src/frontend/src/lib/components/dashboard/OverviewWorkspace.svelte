@@ -12,17 +12,22 @@
 		type ResizableContext
 	} from '$lib/components/ui/resizable';
 	import { overviewWidths } from './overview-layout';
+	import type { School } from '$lib/types/dashboard';
 
 	let {
+		schools = [],
 		selectedSchoolId = $bindable(null),
 		selectedProvince = $bindable(null),
+		selectedDistrict = $bindable(null),
 		expandedProvinces = $bindable(new Set<string>()),
 		expandedCircuits = $bindable(new Set<string>()),
 		restoredSchoolId = null,
 		revealRequest = 0
 	}: {
+		schools?: School[];
 		selectedSchoolId?: string | null;
 		selectedProvince?: string | null;
+		selectedDistrict?: string | null;
 		expandedProvinces?: Set<string>;
 		expandedCircuits?: Set<string>;
 		restoredSchoolId?: string | null;
@@ -87,10 +92,12 @@
 					{#snippet child({ props, open })}
 						<div {...props} hidden={!open} inert={!open} class="h-full min-h-0">
 							<SchoolTree
+								initialSchools={schools}
 								{restoredSchoolId}
 								{revealRequest}
 								bind:selectedSchoolId
 								bind:selectedProvince
+								bind:selectedDistrict
 								bind:expandedProvinces
 								bind:expandedCircuits
 							>
@@ -99,7 +106,7 @@
 										bind:ref={treeCollapseButton}
 										aria-label="Collapse school browser"
 										title="Collapse school browser"
-										class="shrink-0 rounded-md p-1.5 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+										class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
 										><ChevronLeft class="size-4" /></Collapsible.Trigger
 									>
 								{/snippet}
@@ -123,7 +130,7 @@
 			</ResizablePanel>
 			<ResizableHandle />
 			<ResizablePanel defaultSize={60}>
-				<SchoolGeoMap bind:selectedSchoolId />
+				<SchoolGeoMap {schools} bind:selectedSchoolId {selectedProvince} {selectedDistrict} />
 			</ResizablePanel>
 			<ResizableHandle />
 			<ResizablePanel defaultSize={20}>
@@ -133,13 +140,13 @@
 							<Collapsible.Content id={detailsId} forceMount>
 								{#snippet child({ props, open })}
 									<div {...props} hidden={!open} inert={!open} class="h-full min-h-0 flex-1">
-										<SchoolDetailPanel {selectedSchoolId} {selectedProvince}>
+										<SchoolDetailPanel {selectedSchoolId} {selectedProvince} {selectedDistrict}>
 											{#snippet headerAction()}
 												<Collapsible.Trigger
 													bind:ref={detailsCollapseButton}
 													aria-label="Collapse school details"
 													title="Collapse school details"
-													class="shrink-0 rounded-md p-1.5 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+													class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
 													><ChevronRight class="size-4" /></Collapsible.Trigger
 												>
 											{/snippet}
@@ -196,12 +203,6 @@
 	.panel-rail {
 		background: hsl(var(--card));
 	}
-	.browser-rail {
-		border-right: 1px solid hsl(var(--border));
-	}
-	.details-rail {
-		border-left: 1px solid hsl(var(--border));
-	}
 	.panel-rail :global(.restore-button) {
 		width: 100%;
 		padding: 1rem 0.5rem;
@@ -226,7 +227,6 @@
 		}
 		.overview-panels > :global([data-resizable-panel-index='1']) {
 			height: 30rem;
-			border-block: 1px solid hsl(var(--border));
 		}
 		.overview-panels > :global([data-resizable-panel-index='2']) {
 			min-height: 22rem !important;
@@ -237,10 +237,6 @@
 		}
 		.overview-panels > :global([data-resizable-handle]) {
 			display: none;
-		}
-		.browser-rail,
-		.details-rail {
-			border: 0;
 		}
 		.panel-rail :global(.restore-button) {
 			height: 100%;

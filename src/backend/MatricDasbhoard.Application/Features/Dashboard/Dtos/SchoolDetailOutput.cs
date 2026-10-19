@@ -16,6 +16,8 @@ namespace MatricDasbhoard.Application.Features.Dashboard.Dtos;
 /// <param name="Years">Yearly NSC performance records, oldest first.</param>
 /// <param name="Comparison">Local context relative to the province and the country.</param>
 /// <param name="TotalAchieved">Learners who achieved bachelor passes, null when unavailable.</param>
+/// <param name="SubjectsOfferedYear">Latest year with subject data for the school, null when none.</param>
+/// <param name="SubjectsOffered">Subjects written in <paramref name="SubjectsOfferedYear"/>, ordered by name.</param>
 public record SchoolDetailOutput(
     string Id,
     string Name,
@@ -28,7 +30,9 @@ public record SchoolDetailOutput(
     double PassRate,
     IReadOnlyList<SchoolYearOutput> Years,
     SchoolComparisonOutput Comparison,
-    int? TotalAchieved = null
+    int? TotalAchieved = null,
+    int? SubjectsOfferedYear = null,
+    IReadOnlyList<OfferedSubjectOutput>? SubjectsOffered = null
 );
 
 /// <summary>
