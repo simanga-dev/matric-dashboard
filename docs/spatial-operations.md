@@ -202,8 +202,10 @@ after the initial schema/sample setup.
 
 `geo.school_locations` remains the imported source. Editor grounds and point
 overrides live separately in `geo.school_spatial_profiles`. The effective point
-view chooses the editor override first and the imported point second. A later
-DBE import may refresh the source coordinates but cannot undo a manual override.
+view chooses the editor override first and the imported point second. If that
+view is not published or returns no features, the map falls back to the legacy
+`school_locations` layer so imported circles remain visible until publication. A
+later DBE import may refresh the source coordinates but cannot undo a manual override.
 Sample seeds also leave editor profiles alone. A school with no imported point
 can still receive an editor marker.
 

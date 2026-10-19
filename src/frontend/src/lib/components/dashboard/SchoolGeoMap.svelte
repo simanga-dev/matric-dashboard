@@ -4,7 +4,7 @@
 	import { hasPermission, Permissions } from '$lib/utils/permissions';
 	import { mapImagery, attributionHtml } from './school-map-imagery';
 	import { selectionWhileEditing } from './school-map-selection';
-	import { applyCanonicalSpatial } from './school-map-publication';
+	import { applyCanonicalSpatial, loadPublishedSchoolLocations } from './school-map-publication';
 	import { spatialMapStyle } from './school-map-style';
 	import type { SpatialState } from '$lib/api/school-spatial-contract';
 	import { refreshAuthoritativeSpatialStates } from '$lib/api/school-spatial';
@@ -55,6 +55,7 @@
 		'/api/geo/wfs?service=WFS&version=1.0.0&request=GetFeature&outputFormat=application/json';
 	const wfsUrl = (typeName: string) => `${WFS_BASE}&typeName=${typeName}`;
 	const WFS_URL = wfsUrl('matric:school_locations_effective');
+	const LEGACY_WFS_URL = wfsUrl('matric:school_locations');
 	const GROUNDS_URL = wfsUrl('matric:school_boundaries');
 	let canEdit = $derived(hasPermission(page.data.user, Permissions.Schools.SpatialEdit));
 	let imageryConfig = $derived(
@@ -97,6 +98,7 @@
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 	let featureCount = $state(0);
+	let usingImportedLocations = $state(false);
 	let popup = $state<SchoolPopup | null>(null);
 	let selectedLocationMissing = $state(false);
 
@@ -186,16 +188,6 @@
 		}
 	}
 
-	const SCHOOL_ICON_NODE = [
-		'<path d="M14 21v-3a2 2 0 0 0-4 0v3"/>',
-		'<path d="M18 5v16"/>',
-		'<path d="m4 6 7.106-3.79a2 2 0 0 1 1.788 0L20 6"/>',
-		'<path d="m6 11-3.52 2.147a1 1 0 0 0-.48.854V19a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-5a1 1 0 0 0-.48-.853L18 11"/>',
-		'<path d="M6 5v16"/>',
-		'<circle cx="12" cy="9" r="2"/>'
-	].join('');
-
-	const markerIconCache: Record<string, string> = {};
 	// Resolving theme variables costs a style read, so cache one colour per band
 	// and clear it when the palette changes.
 	let markerColorCache: Partial<Record<PassRateBand, string>> = {};
@@ -207,23 +199,6 @@
 		const color = resolvePassRateColor(rate);
 		markerColorCache[band] = color;
 		return color;
-	}
-
-	/** Lucide school glyph as an OpenLayers icon, haloed so it reads on the basemap. */
-	function schoolMarkerIcon(color: string, selected: boolean): string {
-		const key = `${color}:${selected ? 1 : 0}`;
-		const cached = markerIconCache[key];
-		if (cached) return cached;
-		const halo = selected
-			? `<g stroke="#111827" stroke-width="5">${SCHOOL_ICON_NODE}</g>`
-			: `<g stroke="#ffffff" stroke-width="4">${SCHOOL_ICON_NODE}</g>`;
-		const svg =
-			'<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" ' +
-			`fill="none" stroke-linecap="round" stroke-linejoin="round">${halo}` +
-			`<g stroke="${color}" stroke-width="2">${SCHOOL_ICON_NODE}</g></svg>`;
-		const src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-		markerIconCache[key] = src;
-		return src;
 	}
 
 	function findFeature(emis: string): FeatureLike | null {
@@ -298,12 +273,13 @@
 		fitSchools = null;
 		loading = true;
 		error = null;
+		usingImportedLocations = false;
 		try {
-			// A missing published point layer must not prevent adding a missing marker.
-			const geojson = await loadGeoJson(WFS_URL).catch(() => ({
-				type: 'FeatureCollection',
-				features: []
-			}));
+			// A missing corrected layer must not hide imported school points or
+			// prevent adding a missing marker.
+			const schoolsLayer = await loadPublishedSchoolLocations(loadGeoJson, WFS_URL, LEGACY_WFS_URL);
+			usingImportedLocations = schoolsLayer.fallback;
+			const geojson = schoolsLayer.geojson;
 			if (disposed) return;
 
 			const [
@@ -336,7 +312,7 @@
 
 			const { fromLonLat } = proj;
 			if (disposed) return;
-			const { Style, Icon: IconStyle, Fill, Stroke } = style;
+			const { Style, Circle: CircleStyle, Fill, Stroke } = style;
 
 			const reader = new GeoJSON();
 			const source = new VectorSource();
@@ -362,20 +338,19 @@
 			};
 			for (const state of await refreshAuthoritativeSpatialStates()) updateCanonical(state);
 			refreshSpatialLayers = async () => {
-				const [points, grounds] = await Promise.all([
-					loadGeoJson(WFS_URL).catch(() => null),
+				const [schoolsLayer, grounds] = await Promise.all([
+					loadPublishedSchoolLocations(loadGeoJson, WFS_URL, LEGACY_WFS_URL),
 					loadGeoJson(GROUNDS_URL).catch(() => null)
 				]);
 				if (disposed) return;
-				if (points) {
-					source.clear();
-					source.addFeatures(
-						reader.readFeatures(schoolMapGeoJson(points, schools), {
-							dataProjection: 'EPSG:4326',
-							featureProjection: 'EPSG:3857'
-						})
-					);
-				}
+				usingImportedLocations = schoolsLayer.fallback;
+				source.clear();
+				source.addFeatures(
+					reader.readFeatures(schoolMapGeoJson(schoolsLayer.geojson, schools), {
+						dataProjection: 'EPSG:4326',
+						featureProjection: 'EPSG:3857'
+					})
+				);
 				if (grounds) {
 					groundsSource.clear();
 					groundsSource.addFeatures(
@@ -433,10 +408,13 @@
 
 				return new Style({
 					zIndex: isSelected ? 2 : 1,
-					image: new IconStyle({
-						src: schoolMarkerIcon(markerColor(rate), isSelected),
-						anchor: [0.5, 0.5],
-						scale: isSelected ? 1.15 : 0.85
+					image: new CircleStyle({
+						radius: isSelected ? 8 : 6,
+						fill: new Fill({ color: markerColor(rate) }),
+						stroke: new Stroke({
+							color: isSelected ? '#111827' : '#ffffff',
+							width: isSelected ? 3 : 2
+						})
 					})
 				});
 			};
@@ -636,6 +614,9 @@
 	class="flex h-full min-h-0 flex-col bg-card text-card-foreground"
 >
 	{#if imageryMessage}<p role="status" class="p-2 text-xs">{imageryMessage}</p>{/if}
+	{#if usingImportedLocations}<p role="status" class="p-2 text-xs text-muted-foreground">
+			Showing imported school points until corrected school layers are published.
+		</p>{/if}
 	{#if selectionMessage && editing}<p role="status" class="p-2 text-xs">{selectionMessage}</p>{/if}
 	<div class="relative flex min-h-0 flex-1 flex-col" aria-busy={loading}>
 		{#if loading}
