@@ -12,7 +12,6 @@
 	import 'ol/ol.css';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { schoolPath } from '$lib/config';
 	import type { School } from '$lib/types/dashboard';
 	import { schoolMapGeoJson, schoolMapPopup } from './school-map-data';
@@ -70,6 +69,7 @@
 	let imageryMessage = $state('');
 	let editing = $state<{ emis: string; name: string } | null>(null);
 	let toolbarCollapsed = $state(false);
+	let layersPanelOpen = $state(false);
 	let toolbarWidth = $state(0);
 	let editorRef = $state<SpatialEditorHandle | null>(null);
 	let editorStatus = $state<SpatialEditorStatus | null>(null);
@@ -632,7 +632,21 @@
 	function chooseTool(tool: EditTool) {
 		editorRef?.selectTool(tool);
 	}
+	function toggleMapPanel() {
+		if (editing) {
+			if (editorRef) editorRef.cancelEdit();
+			else closeEditor();
+			return;
+		}
+		if (layersPanelOpen) {
+			layersPanelOpen = false;
+			return;
+		}
+		openEditor();
+		if (!editing) layersPanelOpen = true;
+	}
 	function openEditor() {
+		layersPanelOpen = false;
 		if (!selectedSchoolId || !canEdit) return;
 		const school = schools.find((school) => school.id === selectedSchoolId);
 		editorStatus = null;
@@ -643,6 +657,7 @@
 		selectionMessage = '';
 	}
 	function closeEditor() {
+		layersPanelOpen = false;
 		editing = null;
 		editorRef = null;
 		editorStatus = null;
@@ -659,6 +674,7 @@
 			else closeEditor();
 			if (editing) return;
 		}
+		layersPanelOpen = false;
 		toolbarCollapsed = true;
 	}
 	function saved(state: SpatialState) {
@@ -734,33 +750,16 @@
 								class="flex min-w-0 flex-nowrap items-center justify-end gap-1 overflow-hidden transition-opacity duration-150 motion-reduce:transition-none"
 								class:opacity-0={toolbarCollapsed}
 							>
-								<DropdownMenu.Root>
-									<DropdownMenu.Trigger>
-										{#snippet child({ props })}
-											<button
-												{...props}
-												type="button"
-												aria-label="Map layers"
-												title="Map layers"
-												class={toolbarButtonClass()}
-											>
-												<Layers2 class="size-4" />
-											</button>
-										{/snippet}
-									</DropdownMenu.Trigger>
-									<DropdownMenu.Content align="end" class="min-w-44">
-										<DropdownMenu.Label>Map layers</DropdownMenu.Label>
-										<DropdownMenu.RadioGroup
-											value={imagerySelected ? 'imagery' : 'street'}
-											onValueChange={(value) => switchBackground?.(value === 'imagery')}
-										>
-											<DropdownMenu.RadioItem value="street">Street map</DropdownMenu.RadioItem>
-											<DropdownMenu.RadioItem value="imagery" disabled={!imageryConfig}>
-												Approved imagery{imageryConfig ? '' : ' (not configured)'}
-											</DropdownMenu.RadioItem>
-										</DropdownMenu.RadioGroup>
-									</DropdownMenu.Content>
-								</DropdownMenu.Root>
+								<button
+									type="button"
+									aria-label="Map layers"
+									title="Map layers"
+									aria-expanded={layersPanelOpen || !!editing}
+									onclick={toggleMapPanel}
+									class={toolbarButtonClass(layersPanelOpen || !!editing)}
+								>
+									<Layers2 class="size-4" />
+								</button>
 								<button
 									type="button"
 									aria-label="Fit all school locations"
@@ -967,35 +966,70 @@
 							</Button>
 						{/if}
 					</div>
-					{#if editing && olMap && canEdit}
+					{#if layersPanelOpen || (editing && olMap && canEdit)}
 						<div
 							class="absolute end-3 top-18 z-20 flex max-h-[min(26rem,calc(100%_-_5.5rem))] w-[min(26rem,calc(100%_-_1.5rem))] flex-col overflow-hidden rounded-lg border bg-card/95 text-sm shadow-lg backdrop-blur"
 							style:width={toolbarWidth ? `max(20rem, ${toolbarWidth}px)` : undefined}
 						>
-							{#await import('./SchoolMapEditor.svelte')}
-								<p role="status" class="p-3">Opening school map editor…</p>
-							{:then { default: SchoolMapEditor }}
-								<div class="min-h-0 overflow-y-auto">
-									<SchoolMapEditor
-										bind:this={editorRef}
-										map={olMap}
-										emis={editing.emis}
-										name={editing.name}
-										onloaded={(state) => updateCanonical?.(state)}
-										onsaved={saved}
-										onstatus={(status) => (editorStatus = status)}
-										onclose={closeEditor}
-									/>
-								</div>
-							{:catch}
-								<p role="alert" class="p-3">
-									The editor could not be loaded. <button
-										type="button"
-										class="underline"
-										onclick={closeEditor}>Close editor</button
-									>
-								</p>
-							{/await}
+							<div class="min-h-0 overflow-y-auto">
+								<fieldset class="m-3 rounded-md border p-2 text-xs">
+									<legend class="px-1 font-medium">Map layers</legend>
+									<div class="flex flex-wrap gap-4">
+										<label class="flex cursor-pointer items-center gap-2">
+											<input
+												type="radio"
+												name="editor-map-background"
+												value="street"
+												checked={!imagerySelected}
+												onchange={() => switchBackground?.(false)}
+											/>
+											Street map
+										</label>
+										<label class="flex items-center gap-2" class:opacity-50={!imageryConfig}>
+											<input
+												type="radio"
+												name="editor-map-background"
+												value="imagery"
+												checked={imagerySelected}
+												disabled={!imageryConfig}
+												onchange={() => switchBackground?.(true)}
+											/>
+											Approved imagery{imageryConfig ? '' : ' (not configured)'}
+										</label>
+									</div>
+								</fieldset>
+								{#if canEdit && !selectedSchoolId}
+									<p class="px-3 pb-3 text-xs text-muted-foreground">
+										Select a school to access the school map editing options.
+									</p>
+								{/if}
+								{#if editing && olMap && canEdit}
+									<div>
+										{#await import('./SchoolMapEditor.svelte')}
+											<p role="status" class="p-3">Opening school map editor…</p>
+										{:then { default: SchoolMapEditor }}
+											<SchoolMapEditor
+												bind:this={editorRef}
+												map={olMap}
+												emis={editing.emis}
+												name={editing.name}
+												onloaded={(state) => updateCanonical?.(state)}
+												onsaved={saved}
+												onstatus={(status) => (editorStatus = status)}
+												onclose={closeEditor}
+											/>
+										{:catch}
+											<p role="alert" class="p-3">
+												The editor could not be loaded. <button
+													type="button"
+													class="underline"
+													onclick={closeEditor}>Close editor</button
+												>
+											</p>
+										{/await}
+									</div>
+								{/if}
+							</div>
 						</div>
 					{/if}
 				</div>
