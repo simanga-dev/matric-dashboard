@@ -86,6 +86,7 @@ Proposed `geo.school_spatial_profiles`:
 - `school_id`: UUID primary key and foreign key to `marks."Schools"`.
 - `boundary`: nullable `geometry(MultiPolygon,4326)`. Accept a Polygon request and normalize it to MultiPolygon. Initially draw one polygon, but allow the data model to support detached school parcels later.
 - `location_override`: nullable `geometry(Point,4326)`.
+- `location_footprint`: nullable editable `geometry(MultiPolygon,4326)` representing the school's approximate location. The API returns a generated 25 m circle when no correction is stored.
 - `revision`: concurrency token, incremented on every saved change.
 - Change reason and source description, plus server-owned editor and UTC timestamps.
 - Spatial indexes and geometry checks. Select the school deletion policy explicitly; do not cascade away correction history by default.
@@ -97,7 +98,8 @@ Add an append-only history table with complete before/after profile snapshots, r
 Publish two read-only GeoServer views:
 
 - `matric:school_boundaries`: current, nonempty school grounds with school identifiers and safe display metadata.
-- `matric:school_locations_effective`: use the location override when present, otherwise the imported location. Start from application schools and left-join imported coordinates and profiles, so an editor can add a marker even when no imported point exists.
+- `matric:school_locations_effective`: keep the existing point layer for compatibility.
+- `matric:school_footprints`: publish editable location-footprint polygons. Use the stored footprint when present, otherwise generate a small circle around the effective point. Start from application schools and left-join imported coordinates and profiles, so an editor can add a marker even when no imported point exists.
 
 Retain the existing `matric:school_locations` contract for other consumers. Switch this frontend to the effective layer. Do not publish editor identities, history, or private correction notes in public WFS properties. Add layer schemas and feature IDs to the publication tests.
 

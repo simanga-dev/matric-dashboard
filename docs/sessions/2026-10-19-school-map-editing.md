@@ -23,8 +23,9 @@ school markers. Imagery is configurable, with no provider selected by default.
 
 ## Publication and operations
 
-- Existing school-location layer remains available. New effective-marker and
-  grounds views expose no private correction metadata.
+- Existing point layer `school_locations_effective` remains available. The new
+  `school_footprints` polygon view and `school_boundaries` view expose no private
+  correction metadata.
 - GeoServer bootstrap assigns stable UUID keys through `geo.gt_pk_metadata`,
   handles empty spatial views, and refuses to overwrite another metadata setup.
   WFS JSON exceptions are rejected rather than mistaken for an empty layer.
@@ -40,12 +41,13 @@ school markers. Imagery is configurable, with no provider selected by default.
 - The floating map toolbar holds the background switcher, fit/home controls, and
   every editing action: draw, edit grounds, add/move marker, save, and cancel.
   The panel below keeps evidence, warnings, area, revision, and history.
-- School points render as small performance-coloured circles instead of school
-  glyphs. Editors correct a coordinate by moving its circle in the draft, while
-  grounds remain separate polygons.
-- If the corrected point layer is unavailable or empty, the map falls back to
-  imported `school_locations` points and says so. The fallback disappears once
-  the corrected layer is published.
+- Each school renders as an editable location-footprint polygon instead of a
+  point icon. A 25 m circular footprint is generated when no correction exists.
+  Editors can move or reshape it independently from the imported point and the
+  school-grounds polygon.
+- If the corrected footprint layer is unavailable or empty, the map converts
+  imported `school_locations` points into the same small polygon shape and says
+  so. The fallback disappears once the corrected layer is published.
 - Marker changes are independent of grounds geometry. Errors and HTTP 409 retain
   the local draft rather than silently reverting or overwriting saved data.
 - The browser client uses generated OpenAPI routes with runtime GeoJSON narrowing.
@@ -57,9 +59,9 @@ school markers. Imagery is configurable, with no provider selected by default.
 
 ## Verification
 
-- Backend build passed. Release tests passed, 1,226 tests and 15 existing skips,
-  including 11 PostGIS integration tests in disposable containers.
-- Frontend tests passed, 544 tests. Lint and type checks passed; the 11 reported
+- Backend build passed. Release tests passed, 1,231 tests and 15 existing skips,
+  including PostGIS integration tests in disposable containers.
+- Frontend tests passed, 546 tests. Lint and type checks passed; the 11 reported
   Svelte warnings already existed in unrelated components. Production build passed.
 - Browser editing and imagery regressions passed against a production build with
   fixture API routes. Editing coverage includes missing markers, drawing grounds,

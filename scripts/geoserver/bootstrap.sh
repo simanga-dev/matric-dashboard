@@ -23,7 +23,7 @@
 #   GEOSERVER_ADMIN_PASSWORD   default from container env, else from .env
 #   GEOSERVER_WORKSPACE        default matric
 #   GEOSERVER_DATASTORE        default schools
-#   GEOSERVER_LAYERS           default "school_locations school_locations_effective school_boundaries provinces districts"
+#   GEOSERVER_LAYERS           default "school_locations school_locations_effective school_footprints school_boundaries provinces districts"
 #   PG_CONTAINER               default auto-detected running postgis container
 #   PG_HOST                    default auto-detected network alias (compose: postgres, Aspire: db)
 #   PG_PORT                    default 5432
@@ -70,7 +70,7 @@ command -v curl >/dev/null || { echo "curl is required" >&2; exit 1; }
 
 WS="${GEOSERVER_WORKSPACE:-matric}"
 DS="${GEOSERVER_DATASTORE:-schools}"
-LAYERS="${GEOSERVER_LAYERS:-school_locations school_locations_effective school_boundaries provinces districts}"
+LAYERS="${GEOSERVER_LAYERS:-school_locations school_locations_effective school_footprints school_boundaries provinces districts}"
 PG_SCHEMA="${PG_SCHEMA:-geo}"
 PG_PORT="${PG_PORT:-5432}"
 
@@ -139,7 +139,7 @@ echo "  sample layer seeded"
 SPATIAL_VIEWS=""
 for LAYER in $LAYERS; do
     case "$LAYER" in
-        school_locations_effective|school_boundaries)
+        school_locations_effective|school_footprints|school_boundaries)
             exists="$(docker exec -e PGPASSWORD="$PG_PASSWORD" "$PG_CONTAINER" \
                 psql -v ON_ERROR_STOP=1 -U "$PG_USER" -d "$PG_DB" -tAc \
                 "SELECT to_regclass('$PG_SCHEMA.$LAYER') IS NOT NULL;")"
@@ -327,7 +327,7 @@ for LAYER in $LAYERS; do
     payload="$(jq -n --arg name "$LAYER" '{featureType:{name:$name}}')"
     recalculate="nativebbox,latlonbbox"
     case "$LAYER" in
-        school_locations_effective|school_boundaries)
+        school_locations_effective|school_footprints|school_boundaries)
             has_geometry="$(docker exec -e PGPASSWORD="$PG_PASSWORD" "$PG_CONTAINER" \
                 psql -v ON_ERROR_STOP=1 -U "$PG_USER" -d "$PG_DB" -tAc \
                 "SELECT EXISTS (SELECT 1 FROM $PG_SCHEMA.$LAYER WHERE geom IS NOT NULL);")"

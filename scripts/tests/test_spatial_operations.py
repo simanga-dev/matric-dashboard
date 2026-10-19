@@ -513,9 +513,9 @@ elif name == 'curl':
             bounds_calls = [args for name, args in calls if name == "curl" and "PUT" in args
                             and any("featuretypes/" in arg for arg in args)]
             puts = [arg for args in bounds_calls for arg in args]
-            self.assertEqual(len(bounds_calls), 5)
-            for layer in ("school_locations", "school_locations_effective", "school_boundaries",
-                          "provinces", "districts"):
+            self.assertEqual(len(bounds_calls), 6)
+            for layer in ("school_locations", "school_locations_effective", "school_footprints",
+                          "school_boundaries", "provinces", "districts"):
                 self.assertTrue(any(f"featuretypes/{layer}?" in arg for arg in puts), layer)
             seeds = [i for i, (name, _) in enumerate(calls) if name == "python3"]
             first_put = next(i for i, (name, args) in enumerate(calls) if name == "curl" and "PUT" in args
@@ -552,7 +552,7 @@ elif name == 'curl':
             publications = [json.loads(args[args.index("-d") + 1])["featureType"]
                             for name, args in calls if name == "curl" and "POST" in args
                             and any(arg.endswith("/featuretypes") for arg in args)]
-            self.assertEqual(len(publications), 5)
+            self.assertEqual(len(publications), 6)
             for feature_type in publications:
                 self.assertEqual(feature_type["nativeBoundingBox"]["crs"], "EPSG:4326")
             env["PUBLISH_STATUS"] = "500"
@@ -571,7 +571,7 @@ elif name == 'curl':
                                     env=env, capture_output=True, text=True, check=False)
             self.assertEqual(result.returncode, 0, result.stderr)
             calls = [json.loads(line) for line in log.read_text().splitlines()]
-            for layer in ("school_locations_effective", "school_boundaries"):
+            for layer in ("school_locations_effective", "school_footprints", "school_boundaries"):
                 keys = [args for name, args in calls if name == "docker" and "-c" in args
                         and f"'geo','{layer}','id',1,'assigned'" in args[args.index("-c") + 1]]
                 self.assertEqual(len(keys), 1)

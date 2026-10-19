@@ -97,6 +97,10 @@ def main():
 CREATE VIEW geo.school_locations_effective AS
 SELECT md5(emis_number)::uuid AS id, emis_number,name,province,district,quintile,wrote,passed,is_sample,
        geom::geometry(Point,4326) AS geom FROM geo.school_locations;
+CREATE VIEW geo.school_footprints AS
+SELECT id,emis_number,name,province,district,quintile,wrote,passed,is_sample,
+       ST_SetSRID(ST_Multi(ST_Buffer(geom::geography,25,3)::geometry),4326)::geometry(MultiPolygon,4326) AS geom
+FROM geo.school_locations_effective;
 CREATE VIEW geo.school_boundaries AS
 SELECT s.id,s.emis_number,s.name,s.province,s.district,g.geom::geometry(MultiPolygon,4326) AS geom
 FROM geo.school_locations_effective s JOIN geo.smoke_grounds g ON g.id=s.id;
@@ -158,7 +162,7 @@ FROM geo.school_locations_effective s JOIN geo.smoke_grounds g ON g.id=s.id;
             GEOSERVER_DATASTORE="schools",
             IMPORT_LOCATIONS="0",
             IMPORT_BOUNDARIES="0",
-            GEOSERVER_LAYERS="school_locations school_locations_effective school_boundaries",
+            GEOSERVER_LAYERS="school_locations school_locations_effective school_footprints school_boundaries",
         )
         result = subprocess.run(
             ["bash", str(ROOT / "scripts/geoserver/bootstrap.sh")],
@@ -181,10 +185,16 @@ FROM geo.school_locations_effective s JOIN geo.smoke_grounds g ON g.id=s.id;
                 return json.load(response)["features"]
 
         points = features("school_locations_effective")
+        footprints = features("school_footprints")
         assert len(points) == 12, points
+        assert len(footprints) == 12, footprints
+        assert all(f["geometry"]["type"] == "MultiPolygon" for f in footprints), footprints[0]
         assert features("school_boundaries") == []
         assert [f["id"] for f in points] == [
             f["id"] for f in features("school_locations_effective")
+        ]
+        assert [f["id"] for f in footprints] == [
+            f["id"] for f in features("school_footprints")
         ]
         assert len({f["id"] for f in points}) == 12
         assert all(f["properties"].get("id") for f in points), points[0]
@@ -204,6 +214,9 @@ FROM geo.school_locations_effective s JOIN geo.smoke_grounds g ON g.id=s.id;
             raise RuntimeError(result.stdout + result.stderr)
         assert [f["id"] for f in points] == [
             f["id"] for f in features("school_locations_effective")
+        ]
+        assert [f["id"] for f in footprints] == [
+            f["id"] for f in features("school_footprints")
         ]
         assert grounds[0]["id"] == features("school_boundaries")[0]["id"]
         print(

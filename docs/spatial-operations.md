@@ -176,7 +176,7 @@ keyboard-only coordinate editor.
    absent, without seeding it. Existing source rows are never replaced.
 
 3. Run `scripts/geoserver/bootstrap.sh` against that same stack. It now publishes
-   `school_locations_effective` and `school_boundaries` in addition to the
+   `school_footprints` and `school_boundaries` in addition to the
    existing layers. It refuses publication if the spatial migration is missing.
    To publish only the legacy layers for an older API, explicitly set
    `GEOSERVER_LAYERS="school_locations provinces districts"`.
@@ -200,12 +200,14 @@ after the initial schema/sample setup.
 
 ### Correction precedence and recovery
 
-`geo.school_locations` remains the imported source. Editor grounds and point
-overrides live separately in `geo.school_spatial_profiles`. The effective point
-view chooses the editor override first and the imported point second. If that
-view is not published or returns no features, the map falls back to the legacy
-`school_locations` layer so imported circles remain visible until publication. A
-later DBE import may refresh the source coordinates but cannot undo a manual override.
+`geo.school_locations` remains the imported source. Editor grounds, point
+overrides, and editable location footprints live separately in
+`geo.school_spatial_profiles`. The `school_footprints` view chooses the stored footprint,
+or generates a small 25 m circular polygon around the editor override or imported
+point. If that view is not published or returns no features, the frontend converts
+legacy `school_locations` points into the same small polygon shape so school areas
+remain visible until publication. A later DBE import may refresh the source
+coordinates but cannot undo a manual override or footprint.
 Sample seeds also leave editor profiles alone. A school with no imported point
 can still receive an editor marker.
 
