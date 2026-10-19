@@ -16,6 +16,7 @@ public static class SpatialGeometryValidation
         var count = 0;
         var rings = 0;
         if (input.Boundary is { ValueKind: not JsonValueKind.Null } boundary && !BoundaryValid(boundary, ref count, ref rings)) return false;
+        if (input.Footprint is { ValueKind: not JsonValueKind.Null } footprint && !BoundaryValid(footprint, ref count, ref rings)) return false;
         return input.LocationMode == "imported"
             ? input.Location is null or { ValueKind: JsonValueKind.Null }
             : input.Location is { } point && Shape(point, "Point", out var coords) && Position(coords);

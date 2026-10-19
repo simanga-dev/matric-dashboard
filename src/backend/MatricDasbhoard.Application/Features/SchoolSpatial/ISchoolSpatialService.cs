@@ -16,13 +16,15 @@ public interface ISchoolSpatialService
 
 /// <summary>Full replacement. Imported mode never creates or clears an override.</summary>
 public sealed record SaveSpatialInput(long ExpectedRevision, JsonElement? Boundary, string LocationMode,
-    JsonElement? Location, string Reason, string SourceDescription);
+    JsonElement? Location, string Reason, string SourceDescription, JsonElement? Footprint = null);
 
 /// <summary>Public canonical EPSG:4326 GeoJSON state. Geometry coordinates are longitude first.</summary>
 public sealed record SpatialStateOutput(string EmisNumber, JsonElement? Boundary, JsonElement? Location,
-    bool HasLocationOverride, string LocationSource, long Revision, double? AreaSquareMetres, IReadOnlyList<string> Warnings);
+    bool HasLocationOverride, string LocationSource, long Revision, double? AreaSquareMetres,
+    IReadOnlyList<string> Warnings, JsonElement? Footprint = null, string FootprintSource = "missing");
 
 /// <summary>Editor-only geometry history. Actor identifiers are deliberately omitted.</summary>
 public sealed record SpatialHistoryOutput(long Revision, DateTimeOffset ChangedAt, string Reason,
     string SourceDescription, JsonElement? BeforeBoundary, JsonElement? AfterBoundary,
-    JsonElement? BeforeLocationOverride, JsonElement? AfterLocationOverride);
+    JsonElement? BeforeLocationOverride, JsonElement? AfterLocationOverride,
+    JsonElement? BeforeFootprint = null, JsonElement? AfterFootprint = null);

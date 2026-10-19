@@ -59,10 +59,11 @@ public class SchoolSpatialControllerTests : IClassFixture<CustomWebApplicationFa
         Assert.NotNull(body);
         Assert.Equal("001234567", body.EmisNumber);
         Assert.Equal("missing", body.LocationSource);
+        Assert.Equal("missing", body.FootprintSource);
         Assert.False(body.HasLocationOverride);
         Assert.Equal(0, body.Revision);
         var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync()).RootElement;
-        Assert.Equal(8, json.EnumerateObject().Count());
+        Assert.Equal(10, json.EnumerateObject().Count());
         Assert.False(json.TryGetProperty("reason", out _));
     }
 

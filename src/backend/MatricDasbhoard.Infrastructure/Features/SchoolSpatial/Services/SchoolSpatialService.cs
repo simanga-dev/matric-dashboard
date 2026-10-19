@@ -42,6 +42,7 @@ internal sealed class SchoolSpatialService(MatricDasbhoardDbContext context, IUs
             """
             SELECT revision, boundary IS NOT NULL, location_override IS NOT NULL,
               jsonb_build_object('schoolId', school_id, 'boundary', ST_AsGeoJSON(boundary, 15)::jsonb,
+                'locationFootprint', ST_AsGeoJSON(location_footprint, 15)::jsonb,
                 'locationOverride', ST_AsGeoJSON(location_override, 15)::jsonb,
                 'revision', revision, 'reason', reason, 'sourceDescription', source_description,
                 'actorId', actor_id, 'changedAt', changed_at)::text
@@ -64,18 +65,21 @@ internal sealed class SchoolSpatialService(MatricDasbhoardDbContext context, IUs
         if (revision != input.ExpectedRevision)
             return Result<SpatialStateOutput>.Failure(SpatialErrors.Conflict, ErrorType.Conflict);
         var boundary = JsonText(input.Boundary);
+        var footprint = JsonText(input.Footprint);
         var location = input.LocationMode == "override" ? JsonText(input.Location) : null;
         if ((hadBoundary && boundary is null) || (hadOverride && location is null))
             return Result<SpatialStateOutput>.Failure(SpatialErrors.CannotClear);
+        // A null footprint preserves the existing one rather than clearing it.
 
         // No ST_MakeValid: invalid drafts must be corrected by the editor, not silently repaired.
-        if (boundary is not null)
+        foreach (var value in new[] { boundary, footprint })
         {
+            if (value is null) continue;
             await using var validity = Command(connection, transaction,
                 """
                 SELECT ST_IsValid(g) AND NOT ST_IsEmpty(g) AND ST_Area(g::geography) > 0
-                FROM (SELECT ST_SetSRID(ST_GeomFromGeoJSON(@boundary),4326) g) draft
-                """, ("boundary", boundary));
+                FROM (SELECT ST_SetSRID(ST_GeomFromGeoJSON(@shape),4326) g) draft
+                """, ("shape", value));
             if (await validity.ExecuteScalarAsync(cancellationToken) is not true)
                 return Result<SpatialStateOutput>.Failure(SpatialErrors.InvalidGeometry);
         }
@@ -85,11 +89,14 @@ internal sealed class SchoolSpatialService(MatricDasbhoardDbContext context, IUs
             """
             WITH saved AS (
               INSERT INTO geo.school_spatial_profiles
-                (school_id, boundary, location_override, revision, actor_id, changed_at, reason, source_description)
+                (school_id, boundary, location_override, location_footprint, revision, actor_id, changed_at, reason, source_description)
               VALUES (@school, ST_Multi(ST_SetSRID(ST_GeomFromGeoJSON(@boundary),4326)),
-                ST_SetSRID(ST_GeomFromGeoJSON(@location),4326), @revision, @actor, @time, @reason, @source)
+                ST_SetSRID(ST_GeomFromGeoJSON(@location),4326),
+                ST_Multi(ST_SetSRID(ST_GeomFromGeoJSON(@footprint),4326)), @revision, @actor, @time, @reason, @source)
               ON CONFLICT (school_id) DO UPDATE SET boundary=EXCLUDED.boundary,
-                location_override=EXCLUDED.location_override, revision=EXCLUDED.revision,
+                location_override=EXCLUDED.location_override,
+                location_footprint=COALESCE(EXCLUDED.location_footprint, geo.school_spatial_profiles.location_footprint),
+                revision=EXCLUDED.revision,
                 actor_id=EXCLUDED.actor_id, changed_at=EXCLUDED.changed_at,
                 reason=EXCLUDED.reason, source_description=EXCLUDED.source_description
               RETURNING *
@@ -98,11 +105,12 @@ internal sealed class SchoolSpatialService(MatricDasbhoardDbContext context, IUs
               (school_id, revision, actor_id, changed_at, reason, source_description, before_profile, after_profile)
             SELECT school_id, revision, actor_id, changed_at, reason, source_description, @before::jsonb,
               jsonb_build_object('schoolId', school_id, 'boundary', ST_AsGeoJSON(boundary,15)::jsonb,
+                'locationFootprint', ST_AsGeoJSON(location_footprint,15)::jsonb,
                 'locationOverride', ST_AsGeoJSON(location_override,15)::jsonb,
                 'revision', revision, 'reason', reason, 'sourceDescription', source_description,
                 'actorId', actor_id, 'changedAt', changed_at)
             FROM saved
-            """, ("school", schoolId), ("boundary", boundary), ("location", location), ("revision", revision + 1),
+            """, ("school", schoolId), ("boundary", boundary), ("footprint", footprint), ("location", location), ("revision", revision + 1),
             ("actor", userContext.AuthenticatedUserId), ("time", changedAt), ("reason", input.Reason.Trim()),
             ("source", input.SourceDescription.Trim()), ("before", before));
         await save.ExecuteNonQueryAsync(cancellationToken);
@@ -127,14 +135,16 @@ internal sealed class SchoolSpatialService(MatricDasbhoardDbContext context, IUs
             """
             SELECT revision, changed_at, reason, source_description,
               (before_profile->'boundary')::text, (after_profile->'boundary')::text,
-              (before_profile->'locationOverride')::text, (after_profile->'locationOverride')::text
+              (before_profile->'locationOverride')::text, (after_profile->'locationOverride')::text,
+              (before_profile->'locationFootprint')::text, (after_profile->'locationFootprint')::text
             FROM geo.school_spatial_history WHERE school_id=@school ORDER BY revision DESC LIMIT 100
             """, ("school", school));
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         var history = new List<SpatialHistoryOutput>();
         while (await reader.ReadAsync(cancellationToken))
             history.Add(new(reader.GetInt64(0), reader.GetFieldValue<DateTimeOffset>(1), reader.GetString(2), reader.GetString(3),
-                Geometry(reader, 4), Geometry(reader, 5), Geometry(reader, 6), Geometry(reader, 7)));
+                Geometry(reader, 4), Geometry(reader, 5), Geometry(reader, 6), Geometry(reader, 7),
+                Geometry(reader, 8), Geometry(reader, 9)));
         return Result<IReadOnlyList<SpatialHistoryOutput>>.Success(history);
     }
 
@@ -165,7 +175,11 @@ internal sealed class SchoolSpatialService(MatricDasbhoardDbContext context, IUs
                 JOIN marks."Schools" other_school ON other_school."Id"=other.school_id
                 WHERE other.school_id<>s."Id" AND NOT other_school."IsDeleted"
                 AND other.boundary && p.boundary AND ST_Intersects(other.boundary,p.boundary)
-                AND ST_Area(ST_Intersection(other.boundary,p.boundary)::geography)>1), s."Province"
+                AND ST_Area(ST_Intersection(other.boundary,p.boundary)::geography)>1), s."Province",
+              ST_AsGeoJSON(COALESCE(p.location_footprint,
+                ST_SetSRID(ST_Multi(ST_Buffer(COALESCE(p.location_override,l.geom)::geography,25,3)::geometry),4326)),15),
+              CASE WHEN p.location_footprint IS NOT NULL THEN 'editor'
+                WHEN COALESCE(p.location_override,l.geom) IS NOT NULL THEN 'default' ELSE 'missing' END
             FROM marks."Schools" s LEFT JOIN geo.school_spatial_profiles p ON p.school_id=s."Id"
               LEFT JOIN geo.school_locations l ON l.emis_number=s."EmisNumber"
             WHERE s."EmisNumber"=@emis AND NOT s."IsDeleted"
@@ -182,7 +196,8 @@ internal sealed class SchoolSpatialService(MatricDasbhoardDbContext context, IUs
             if (reader.GetBoolean(8)) warnings.Add("The corrected marker is over 1 km from the imported marker.");
             if (reader.GetBoolean(9)) warnings.Add("The grounds overlap another school's grounds. Shared campuses may be valid.");
             state = new(reader.GetString(0), Geometry(reader, 1), Geometry(reader, 2), reader.GetBoolean(3),
-                reader.GetString(4), reader.GetInt64(5), area, warnings);
+                reader.GetString(4), reader.GetInt64(5), area, warnings,
+                Geometry(reader, 11), reader.GetString(12));
             province = reader.GetString(10);
         }
         // Administrative boundaries are optional and may not have been imported yet.

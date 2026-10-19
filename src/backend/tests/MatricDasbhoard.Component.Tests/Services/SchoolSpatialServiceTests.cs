@@ -21,7 +21,9 @@ public sealed class SchoolSpatialServiceTests(PostgisFixture fixture) : IClassFi
     private static readonly JsonElement Boundary = JsonSerializer.Deserialize<JsonElement>(
         """{"type":"Polygon","coordinates":[[[28,-26],[28.002,-26],[28.002,-26.002],[28,-26.002],[28,-26]]]}""");
     private static readonly JsonElement Point = JsonSerializer.Deserialize<JsonElement>("""{"type":"Point","coordinates":[28.001,-26.001]}""");
-    private static SaveSpatialInput Input(long revision = 0) => new(revision, Boundary, "override", Point, "Correct grounds", "Field visit");
+    private static readonly JsonElement Footprint = JsonSerializer.Deserialize<JsonElement>(
+        """{"type":"MultiPolygon","coordinates":[[[[27.9998,-26.0012],[28.0002,-26.0012],[28.0002,-26.0008],[27.9998,-26.0008],[27.9998,-26.0012]]]]}""");
+    private static SaveSpatialInput Input(long revision = 0) => new(revision, Boundary, "override", Point, "Correct grounds", "Field visit", Footprint);
 
     private static IUserContext Editor()
     {
@@ -53,10 +55,15 @@ public sealed class SchoolSpatialServiceTests(PostgisFixture fixture) : IClassFi
         await using var db = fixture.Context();
         Assert.False(db.Database.HasPendingModelChanges());
         var service = new SchoolSpatialService(db, Editor(), new FakeTimeProvider(Now));
+        var initial = await service.GetAsync(school.EmisNumber, default);
+        Assert.Equal("default", initial.Value.FootprintSource);
+        Assert.Equal("MultiPolygon", initial.Value.Footprint?.GetProperty("type").GetString());
         var first = await service.SaveAsync(school.EmisNumber, Input(), default);
         Assert.True(first.IsSuccess, first.Error);
         Assert.Equal(1, first.Value.Revision);
         Assert.Equal("MultiPolygon", first.Value.Boundary?.GetProperty("type").GetString());
+        Assert.Equal("MultiPolygon", first.Value.Footprint?.GetProperty("type").GetString());
+        Assert.Equal("editor", first.Value.FootprintSource);
         Assert.Equal("editor", first.Value.LocationSource);
         Assert.True(first.Value.AreaSquareMetres is > 40000 and < 50000);
         Assert.Contains(first.Value.Warnings, x => x.Contains("1 km"));
@@ -69,6 +76,9 @@ public sealed class SchoolSpatialServiceTests(PostgisFixture fixture) : IClassFi
         Assert.Null(history.Value[1].BeforeBoundary);
         Assert.Null(history.Value[1].BeforeLocationOverride);
         Assert.NotNull(history.Value[1].AfterLocationOverride);
+        Assert.NotNull(history.Value[0].BeforeFootprint);
+        Assert.Null(history.Value[1].BeforeFootprint);
+        Assert.NotNull(history.Value[1].AfterFootprint);
         // Real imports and sample bootstrap touch source rows only, not corrections.
         await db.Database.ExecuteSqlInterpolatedAsync($"""
             UPDATE geo.school_locations SET geom=ST_SetSRID(ST_MakePoint(29,-27),4326),is_sample=false
@@ -330,7 +340,7 @@ public sealed class SchoolSpatialServiceTests(PostgisFixture fixture) : IClassFi
         Assert.True((await new SchoolSpatialService(db, Editor(), TimeProvider.System).SaveAsync(school.EmisNumber, Input(), default)).IsSuccess);
         await using var connection = new NpgsqlConnection(fixture.ConnectionString);
         await connection.OpenAsync();
-        foreach (var view in new[] { "school_boundaries", "school_locations_effective" })
+        foreach (var view in new[] { "school_boundaries", "school_footprints" })
         {
             await using var command = new NpgsqlCommand($"SELECT * FROM geo.{view} WHERE id=@id", connection);
             command.Parameters.AddWithValue("id", school.Id);
@@ -343,7 +353,11 @@ public sealed class SchoolSpatialServiceTests(PostgisFixture fixture) : IClassFi
             }
             await using var geometry = new NpgsqlCommand("SELECT type FROM geometry_columns WHERE f_table_schema='geo' AND f_table_name=@view AND srid=4326", connection);
             geometry.Parameters.AddWithValue("view", view);
-            Assert.Equal(view == "school_boundaries" ? "MULTIPOLYGON" : "POINT", await geometry.ExecuteScalarAsync());
+            Assert.Equal("MULTIPOLYGON", await geometry.ExecuteScalarAsync());
         }
+        await using var legacyGeometry = new NpgsqlCommand(
+            "SELECT type FROM geometry_columns WHERE f_table_schema='geo' AND f_table_name='school_locations_effective' AND srid=4326",
+            connection);
+        Assert.Equal("POINT", await legacyGeometry.ExecuteScalarAsync());
     }
 }

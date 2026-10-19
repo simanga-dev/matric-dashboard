@@ -19,7 +19,7 @@ namespace MatricDasbhoard.Infrastructure.Persistence.Migrations
             modelBuilder
                 .HasAnnotation("ProductVersion", "10.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63)
-                .HasAnnotation("SchoolSpatial:SchemaVersion", 1);
+                .HasAnnotation("SchoolSpatial:SchemaVersion", 2);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 

@@ -28,6 +28,25 @@ public class SpatialGeometryValidationTests
     [InlineData("{\"type\":\"Polygon\",\"coordinates\":null}")]
     public void InvalidBoundary_FailsStructuralValidation(string json) => Assert.False(SpatialGeometryValidation.IsValid(Input(json)));
 
+    [Fact]
+    public void ValidFootprint_PassesStructuralValidation()
+    {
+        var footprint = JsonSerializer.Deserialize<JsonElement>(
+            """{"type":"MultiPolygon","coordinates":[[[[28,-26],[28.001,-26],[28.001,-26.001],[28,-26]]]]}""");
+        Assert.True(SpatialGeometryValidation.IsValid(Input() with { Footprint = footprint }));
+    }
+
+    [Theory]
+    [InlineData("{\"type\":\"Point\",\"coordinates\":[28,-26]}")]
+    [InlineData("{\"type\":\"Polygon\",\"coordinates\":[]}")]
+    [InlineData("{\"type\":\"Polygon\",\"coordinates\":[[[28,-26],[28.001,-26],[28,-26]]]}")]
+    [InlineData("{}")]
+    public void InvalidFootprint_FailsStructuralValidation(string json)
+    {
+        var footprint = JsonSerializer.Deserialize<JsonElement>(json);
+        Assert.False(SpatialGeometryValidation.IsValid(Input() with { Footprint = footprint }));
+    }
+
     [Theory]
     [InlineData("override", null, false)]
     [InlineData("imported", "{\"type\":\"Point\",\"coordinates\":[28,-26]}", false)]

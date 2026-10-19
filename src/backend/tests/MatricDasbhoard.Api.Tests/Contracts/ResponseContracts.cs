@@ -3,7 +3,8 @@ namespace MatricDasbhoard.Api.Tests.Contracts;
 /// <summary>Frozen public school spatial contract, no private correction metadata.</summary>
 internal record SpatialStateContract(string EmisNumber, System.Text.Json.JsonElement? Boundary,
     System.Text.Json.JsonElement? Location, bool HasLocationOverride, string LocationSource,
-    long Revision, double? AreaSquareMetres, List<string> Warnings);
+    long Revision, double? AreaSquareMetres, List<string> Warnings,
+    System.Text.Json.JsonElement? Footprint, string FootprintSource);
 
 /// <summary>Frozen v1 school detail fields retained for existing API consumers.</summary>
 internal record SchoolDetailV1Contract(string Id, string Name, string Province, string Circuit,

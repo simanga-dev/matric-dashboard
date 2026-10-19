@@ -70,8 +70,10 @@ public sealed class SaveSpatialRequest
     public required string Reason { get; init; }
     /// <summary>Required evidence description, at most 1000 characters. Never published.</summary>
     public required string SourceDescription { get; init; }
+    /// <summary>Optional editable footprint polygon. Null preserves the current footprint.</summary>
+    public JsonElement? Footprint { get; init; }
     /// <summary>Maps the HTTP request to the application contract.</summary>
-    internal SaveSpatialInput ToInput() => new(ExpectedRevision, Boundary, LocationMode, Location, Reason, SourceDescription);
+    internal SaveSpatialInput ToInput() => new(ExpectedRevision, Boundary, LocationMode, Location, Reason, SourceDescription, Footprint);
 }
 
 /// <summary>Validates bounded request shapes before database access.</summary>
