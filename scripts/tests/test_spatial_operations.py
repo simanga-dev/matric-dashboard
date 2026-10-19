@@ -353,6 +353,36 @@ class SampleSeedTests(unittest.TestCase):
         self.assertEqual(self.seed_sql([]), "")
         self.assertEqual(self.seed_sql([{"id": ""}]), "")
 
+    def test_source_import_and_sample_seed_do_not_touch_editor_profiles(self):
+        # The real PostGIS migration/view behavior is covered by backend tests.
+        # This harness proves that the actual import/seed SQL only changes the
+        # source table, leaving independently stored editor data untouched.
+        self.db.executescript("""
+            CREATE TABLE geo.school_spatial_profiles (
+                school_id TEXT PRIMARY KEY, boundary TEXT, location_override TEXT,
+                revision INTEGER, reason TEXT
+            );
+            INSERT INTO geo.school_spatial_profiles VALUES
+                ('school-uuid','editor grounds','editor point',7,'Field correction');
+        """)
+        expected = self.db.execute("SELECT * FROM geo.school_spatial_profiles").fetchall()
+        output = io.StringIO()
+        with patch.object(LOCATIONS, "load_report", return_value=[{
+            "emis_number": "001234567", "centre_name": "School", "province": "GAUTENG"
+        }]), patch.object(LOCATIONS, "read_workbook", return_value={"001234567": (28.1, -26.1)}), \
+                patch.object(LOCATIONS.os.path, "exists", return_value=False), \
+                contextlib.redirect_stdout(output), contextlib.redirect_stderr(io.StringIO()):
+            LOCATIONS.main()
+        for _ in range(2):
+            self.db.executescript(output.getvalue())
+            self.db.executescript(self.seed_sql([
+                {"id": "001234567", "name": "Sample overwrite", "province": "Gauteng"}
+            ]))
+            self.assertEqual(self.db.execute("SELECT * FROM geo.school_spatial_profiles").fetchall(), expected)
+            self.assertEqual(self.db.execute(
+                "SELECT geom,is_sample FROM geo.school_locations WHERE emis_number='001234567'"
+            ).fetchone(), ("28.1,-26.1:4326", 0))
+
     def test_failed_sample_insert_can_roll_back_sample_deletion(self):
         self.db.execute("INSERT INTO geo.school_locations (emis_number,name,is_sample,geom) VALUES ('old','Retain',true,'old point')")
         self.db.commit()
@@ -391,6 +421,8 @@ class ComposeTests(unittest.TestCase):
                 data_mount = services["postgres"]["volumes"][0]
                 self.assertEqual((data_mount["source"], data_mount["target"]), (volume, target))
                 self.assertEqual(services["geoserver"]["ports"][0]["host_ip"], "127.0.0.1")
+                self.assertEqual(services["frontend"]["environment"]["PUBLIC_MAP_IMAGERY_URL"],
+                                 env.get("PUBLIC_MAP_IMAGERY_URL", ""))
 
 
 @unittest.skipUnless(shutil.which("jq"), "jq required for bootstrap shell regression")
@@ -403,13 +435,27 @@ with open(os.environ['TEST_LOG'], 'a') as handle:
     handle.write(json.dumps([name, args]) + '\\n')
 if name == 'docker' and 'psql' in args:
     sys.stdin.read()
+    if '-tAc' in args:
+        query = args[args.index('-tAc') + 1]
+        print(os.environ.get('SPATIAL_VIEWS_PRESENT', 't') if 'to_regclass' in query
+              else os.environ.get('HAS_GEOMETRY', 't'))
 elif name == 'python3':
     print('BEGIN; COMMIT;')
 elif name == 'curl':
     if '-w' in args:
-        print(os.environ.get('BOUNDS_STATUS', '200') if 'PUT' in args else '200', end='')
+        status = os.environ.get('GET_STATUS', '200')
+        if 'PUT' in args:
+            status = os.environ.get('BOUNDS_STATUS', '200')
+        elif 'POST' in args:
+            status = os.environ.get('PUBLISH_STATUS', '200') if any(arg.endswith('/featuretypes') for arg in args) else '201'
+        print(status, end='')
     elif any('GetFeature' in arg for arg in args):
-        print('{"features":[]}')
+        print(os.environ.get('WFS_BODY', '{"features":[]}'))
+    elif any('datastores/' in arg and arg.endswith('.json') for arg in args):
+        entries = [{'@key':'host','$':'postgres'}]
+        if os.environ.get('METADATA_TABLE'):
+            entries.append({'@key':'Primary key metadata table','$':os.environ['METADATA_TABLE']})
+        print(json.dumps({'dataStore':{'connectionParameters':{'entry':entries}}}))
 """
 
     def stub_env(self, directory, log, **overrides):
@@ -464,14 +510,118 @@ elif name == 'curl':
                                     env=env, capture_output=True, text=True, check=False)
             self.assertEqual(result.returncode, 0, result.stderr)
             calls = [json.loads(line) for line in log.read_text().splitlines()]
-            puts = [arg for name, args in calls if name == "curl" and "PUT" in args for arg in args]
-            self.assertEqual(len([1 for name, args in calls if name == "curl" and "PUT" in args]), 3)
-            for layer in ("school_locations", "provinces", "districts"):
+            bounds_calls = [args for name, args in calls if name == "curl" and "PUT" in args
+                            and any("featuretypes/" in arg for arg in args)]
+            puts = [arg for args in bounds_calls for arg in args]
+            self.assertEqual(len(bounds_calls), 5)
+            for layer in ("school_locations", "school_locations_effective", "school_boundaries",
+                          "provinces", "districts"):
                 self.assertTrue(any(f"featuretypes/{layer}?" in arg for arg in puts), layer)
             seeds = [i for i, (name, _) in enumerate(calls) if name == "python3"]
-            first_put = next(i for i, (name, args) in enumerate(calls) if name == "curl" and "PUT" in args)
+            first_put = next(i for i, (name, args) in enumerate(calls) if name == "curl" and "PUT" in args
+                             and any("featuretypes/" in arg for arg in args))
             self.assertTrue(all(seed < first_put for seed in seeds))
             self.assertIn("boundaries imported", result.stdout)
+
+    def test_missing_spatial_migration_fails_before_publication(self):
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            log = directory / "calls.jsonl"
+            env = self.stub_env(directory, log, SPATIAL_VIEWS_PRESENT="f")
+            result = subprocess.run(["bash", str(ROOT / "scripts/geoserver/bootstrap.sh")],
+                                    env=env, capture_output=True, text=True, check=False)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("Apply the API spatial migration", result.stderr)
+            calls = [json.loads(line) for line in log.read_text().splitlines()]
+            self.assertFalse(any(name == "curl" for name, _ in calls))
+
+    def test_new_layers_have_initial_bounds_and_metadata_store_setting(self):
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            log = directory / "calls.jsonl"
+            env = self.stub_env(directory, log, GET_STATUS="404", IMPORT_BOUNDARIES="0",
+                                DBE_DIR=str(directory / "no-dbe"))
+            result = subprocess.run(["bash", str(ROOT / "scripts/geoserver/bootstrap.sh")],
+                                    env=env, capture_output=True, text=True, check=False)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            calls = [json.loads(line) for line in log.read_text().splitlines()]
+            store = next(args for name, args in calls if name == "curl" and "POST" in args
+                         and any(arg.endswith("/datastores") for arg in args))
+            entries = json.loads(store[store.index("-d") + 1])["dataStore"]["connectionParameters"]["entry"]
+            self.assertIn({"@key": "Primary key metadata table", "$": "geo.gt_pk_metadata"}, entries)
+            publications = [json.loads(args[args.index("-d") + 1])["featureType"]
+                            for name, args in calls if name == "curl" and "POST" in args
+                            and any(arg.endswith("/featuretypes") for arg in args)]
+            self.assertEqual(len(publications), 5)
+            for feature_type in publications:
+                self.assertEqual(feature_type["nativeBoundingBox"]["crs"], "EPSG:4326")
+            env["PUBLISH_STATUS"] = "500"
+            result = subprocess.run(["bash", str(ROOT / "scripts/geoserver/bootstrap.sh")],
+                                    env=env, capture_output=True, text=True, check=False)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("Could not publish", result.stderr)
+
+    def test_empty_spatial_views_publish_with_explicit_bounds_and_stable_keys(self):
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            log = directory / "calls.jsonl"
+            env = self.stub_env(directory, log, HAS_GEOMETRY="f", IMPORT_BOUNDARIES="0",
+                                DBE_DIR=str(directory / "no-dbe"))
+            result = subprocess.run(["bash", str(ROOT / "scripts/geoserver/bootstrap.sh")],
+                                    env=env, capture_output=True, text=True, check=False)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            calls = [json.loads(line) for line in log.read_text().splitlines()]
+            for layer in ("school_locations_effective", "school_boundaries"):
+                keys = [args for name, args in calls if name == "docker" and "-c" in args
+                        and f"'geo','{layer}','id',1,'assigned'" in args[args.index("-c") + 1]]
+                self.assertEqual(len(keys), 1)
+                bounds = next(args for name, args in calls if name == "curl" and "PUT" in args
+                              and any(f"featuretypes/{layer}?" in arg for arg in args))
+                self.assertTrue(any(arg.endswith("?recalculate=") for arg in bounds))
+                payload = json.loads(bounds[bounds.index("-d") + 1])["featureType"]
+                self.assertEqual(payload["nativeBoundingBox"]["minx"], -180)
+                self.assertEqual(payload["latLonBoundingBox"]["maxy"], 90)
+            store = next(args for name, args in calls if name == "curl" and "PUT" in args
+                         and any(arg.endswith("/datastores/schools") for arg in args))
+            entries = json.loads(store[store.index("-d") + 1])["dataStore"]["connectionParameters"]["entry"]
+            settings = {entry["@key"]: entry["$"] for entry in entries}
+            self.assertEqual(settings["Primary key metadata table"], "geo.gt_pk_metadata")
+            self.assertEqual(settings["host"], "postgres")
+
+    def test_rejects_unsafe_schema_and_layer_identifiers(self):
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            log = directory / "calls.jsonl"
+            for overrides in ({"PG_SCHEMA": "geo;drop"}, {"GEOSERVER_LAYERS": "school_locations;drop"}):
+                env = self.stub_env(directory, log, **overrides)
+                result = subprocess.run(["bash", str(ROOT / "scripts/geoserver/bootstrap.sh")],
+                                        env=env, capture_output=True, text=True, check=False)
+                self.assertNotEqual(result.returncode, 0)
+            self.assertFalse(log.exists())
+
+    def test_does_not_overwrite_custom_store_key_metadata(self):
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            log = directory / "calls.jsonl"
+            env = self.stub_env(directory, log, METADATA_TABLE="custom.existing_keys")
+            result = subprocess.run(["bash", str(ROOT / "scripts/geoserver/bootstrap.sh")],
+                                    env=env, capture_output=True, text=True, check=False)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("uses another primary-key metadata table", result.stderr)
+            calls = [json.loads(line) for line in log.read_text().splitlines()]
+            self.assertFalse(any(name == "curl" and "PUT" in args for name, args in calls))
+
+    def test_wfs_json_exception_is_not_accepted_as_an_empty_layer(self):
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            log = directory / "calls.jsonl"
+            env = self.stub_env(directory, log, WFS_BODY='{"exceptions":[{"text":"Layer failed"}]}',
+                                GEOSERVER_LAYERS="school_locations", IMPORT_BOUNDARIES="0",
+                                DBE_DIR=str(directory / "no-dbe"))
+            result = subprocess.run(["bash", str(ROOT / "scripts/geoserver/bootstrap.sh")],
+                                    env=env, capture_output=True, text=True, check=False)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("Expected a WFS feature collection", result.stderr)
 
     def test_real_coordinate_import_runs_before_bounds_refresh_when_masterlist_present(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -139,3 +139,125 @@ docker compose config --quiet
 Compose validation requires configured secrets. Tests use temporary CSV files,
 in-memory SQL databases, and fake Docker/HTTP commands. They do not import data
 into a running database or bootstrap the user's GeoServer.
+
+## School grounds and editor location corrections
+
+School map editing uses the `schools.spatial.edit` permission. Grant it to a
+custom editor role in the existing administration screens, then assign that role
+to approved users. The default User role must not receive it. Superusers retain
+their existing permission bypass. Users may need a refreshed sign-in token after
+a role change.
+
+Editors select a school, open **Edit school map**, draw or modify its grounds,
+and independently add or move its marker. They must provide a reason and source
+description before saving. Save publishes the whole draft; Cancel discards it.
+These are editor-traced school grounds, not surveyed cadastral boundaries.
+Drawing and vertex editing currently require a mouse, pen, or touch pointer.
+The form and toolbar support keyboard focus, but this version does not include a
+keyboard-only coordinate editor.
+
+### Deployment order
+
+1. Back up the application database, including the `marks`, `geo`, and migration
+   history schemas. Verify the backup is restorable.
+2. Deploy the API and apply its EF migrations against the intended database. For
+   a manually managed deployment, use the established connection configuration
+   with the following command:
+
+   ```bash
+   dotnet ef database update \
+     --project src/backend/MatricDasbhoard.Infrastructure \
+     --startup-project src/backend/MatricDasbhoard.WebApi
+   ```
+
+   PostGIS must be available on the database server. Install the extension with
+   a database administrator first if the migration role cannot create it. On a
+   fresh installation the migration provisions the imported location table if
+   absent, without seeding it. Existing source rows are never replaced.
+
+3. Run `scripts/geoserver/bootstrap.sh` against that same stack. It now publishes
+   `school_locations_effective` and `school_boundaries` in addition to the
+   existing layers. It refuses publication if the spatial migration is missing.
+   To publish only the legacy layers for an older API, explicitly set
+   `GEOSERVER_LAYERS="school_locations provinces districts"`.
+4. Deploy the frontend and grant the editor permission to the pilot group.
+5. Save a correction on a known school and confirm that reloading the page shows
+   the same grounds and marker. Check the editor-only history.
+
+The migration owns the correction tables and public views. Bootstrap does not
+create another definition of them. Bootstrap owns `geo.gt_pk_metadata` and
+configures the GeoServer store to use the school UUID as the view feature key.
+If the store already uses a different primary-key metadata table, bootstrap
+stops instead of replacing it. Preserve the existing assignments in
+`geo.gt_pk_metadata` and explicitly update the store setting before continuing,
+or use a separate GeoServer store for these layers.
+Empty school grounds are valid before the first correction; bootstrap publishes
+empty spatial views with explicit world bounds instead of trying to infer bounds
+from no features. Subsequent bootstrap runs recalculate bounds for nonempty
+layers. Bootstrap retains its existing sample/import steps; set `SEED_FROM_API=0`,
+`IMPORT_LOCATIONS=0`, and `IMPORT_BOUNDARIES=0` for publication-only maintenance
+after the initial schema/sample setup.
+
+### Correction precedence and recovery
+
+`geo.school_locations` remains the imported source. Editor grounds and point
+overrides live separately in `geo.school_spatial_profiles`. The effective point
+view chooses the editor override first and the imported point second. A later
+DBE import may refresh the source coordinates but cannot undo a manual override.
+Sample seeds also leave editor profiles alone. A school with no imported point
+can still receive an editor marker.
+
+Each successful save creates a revision and a complete before/after history
+entry in the same transaction. Actor and time come from the server. History is
+editor-only; the public GeoServer views omit actor identities, reasons, source
+notes, and revision history. GeoServer proxy requests remain read-only.
+The history API returns the latest 100 revisions; the database retains all
+revisions. Initial request limits are 1 MiB, 10,000 boundary positions, 100 polygon
+components, and 100 total rings. Reasons are limited to 2,000 characters and
+source descriptions to 1,000. Review these limits during the pilot rather than
+raising them to accept an unexpectedly detailed parcel import.
+
+If another editor saves first, the API returns HTTP 409 and the frontend retains
+the local draft. Compare with the current saved state before making another
+change. Do not force an overwrite by editing the revision in a request.
+
+Boundary deletion, clearing an existing point override, and one-click historical
+restore are not part of this version. To correct an incorrect edit, make another
+edit with a reason. For database recovery, restore a verified backup into a
+separate database first, reconcile revision history, and promote it through the
+normal deployment process. Do not drop correction tables or reset volumes to
+repair a map or GeoServer publication problem.
+
+### Optional imagery
+
+No imagery provider is selected by default. Configure both runtime variables
+only after checking the provider's South African coverage, tracing rights,
+attribution requirements, quotas, and deployment license:
+
+```dotenv
+PUBLIC_MAP_IMAGERY_URL=https://your-licensed-provider.example/tiles/{z}/{x}/{y}.jpg
+PUBLIC_MAP_IMAGERY_ATTRIBUTION=Your licensed imagery provider
+```
+
+The `.example` address above is a placeholder, not a working tile service. Use
+HTTPS XYZ tiles in the map's Web Mercator projection. Leave both values empty to
+use street maps only. For local frontend development, set them in
+`src/frontend/.env`; for Compose, set them in the root `.env` and recreate the
+frontend container. These values are public and read at runtime. Never put a
+server-only credential in the tile URL. Restrict browser-visible keys by origin
+and quota where supported. The map keeps attribution visible and returns to
+street maps if imagery fails.
+
+### Isolated publication smoke test
+
+```bash
+python3 scripts/geoserver/smoke_test.py
+```
+
+This opt-in test creates disposable PostGIS and GeoServer containers on a new
+Docker network. It checks empty-view publication, exposed UUID keys, stable
+feature IDs, a newly added grounds polygon, and repeat bootstrap with the
+existing store credentials. It uses fixture views to isolate publication from
+the application migration, which has separate backend integration tests. It
+removes only its own test containers, volumes, and network. It never bootstraps
+the running application stack. Docker may download the test images if absent.

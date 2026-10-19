@@ -23,7 +23,7 @@
 #   GEOSERVER_ADMIN_PASSWORD   default from container env, else from .env
 #   GEOSERVER_WORKSPACE        default matric
 #   GEOSERVER_DATASTORE        default schools
-#   GEOSERVER_LAYERS           default "school_locations provinces districts"
+#   GEOSERVER_LAYERS           default "school_locations school_locations_effective school_boundaries provinces districts"
 #   PG_CONTAINER               default auto-detected running postgis container
 #   PG_HOST                    default auto-detected network alias (compose: postgres, Aspire: db)
 #   PG_PORT                    default 5432
@@ -70,9 +70,21 @@ command -v curl >/dev/null || { echo "curl is required" >&2; exit 1; }
 
 WS="${GEOSERVER_WORKSPACE:-matric}"
 DS="${GEOSERVER_DATASTORE:-schools}"
-LAYERS="${GEOSERVER_LAYERS:-school_locations provinces districts}"
+LAYERS="${GEOSERVER_LAYERS:-school_locations school_locations_effective school_boundaries provinces districts}"
 PG_SCHEMA="${PG_SCHEMA:-geo}"
 PG_PORT="${PG_PORT:-5432}"
+
+# Identifiers are interpolated into maintenance SQL below, never user SQL.
+if [[ ! "$PG_SCHEMA" =~ ^[a-z_][a-z0-9_]*$ ]]; then
+    echo "PG_SCHEMA must be a lowercase PostgreSQL identifier" >&2
+    exit 1
+fi
+for LAYER in $LAYERS; do
+    if [[ ! "$LAYER" =~ ^[a-z_][a-z0-9_]*$ ]]; then
+        echo "Invalid layer identifier: $LAYER" >&2
+        exit 1
+    fi
+done
 
 # ── 1. Locate containers ─────────────────────────────────────────────────────
 PG_CONTAINER="${PG_CONTAINER:-$(find_container 'postgis')}"
@@ -122,6 +134,49 @@ docker exec -e PGPASSWORD="$PG_PASSWORD" -i "$PG_CONTAINER" \
     < "$SCRIPT_DIR/../postgis/init.sql" >/dev/null
 echo "  sample layer seeded"
 
+# The API migration owns correction tables/views. Never create a second copy of
+# those definitions here, and fail clearly if deployment skipped the migration.
+SPATIAL_VIEWS=""
+for LAYER in $LAYERS; do
+    case "$LAYER" in
+        school_locations_effective|school_boundaries)
+            exists="$(docker exec -e PGPASSWORD="$PG_PASSWORD" "$PG_CONTAINER" \
+                psql -v ON_ERROR_STOP=1 -U "$PG_USER" -d "$PG_DB" -tAc \
+                "SELECT to_regclass('$PG_SCHEMA.$LAYER') IS NOT NULL;")"
+            if [ "$(echo "$exists" | tr -d '[:space:]')" != "t" ]; then
+                echo "Missing $PG_SCHEMA.$LAYER. Apply the API spatial migration before GeoServer bootstrap." >&2
+                exit 1
+            fi
+            SPATIAL_VIEWS="$SPATIAL_VIEWS $LAYER"
+            ;;
+    esac
+done
+
+# GeoServer cannot infer a primary key for a PostgreSQL view. Register the
+# school UUID as an assigned key so feature IDs remain stable between reads.
+if [ -n "$SPATIAL_VIEWS" ]; then
+    docker exec -e PGPASSWORD="$PG_PASSWORD" -i "$PG_CONTAINER" \
+        psql -v ON_ERROR_STOP=1 -U "$PG_USER" -d "$PG_DB" <<SQL >/dev/null
+CREATE TABLE IF NOT EXISTS $PG_SCHEMA.gt_pk_metadata (
+    table_schema varchar(32) NOT NULL,
+    table_name varchar(64) NOT NULL,
+    pk_column varchar(64) NOT NULL,
+    pk_column_idx integer NOT NULL,
+    pk_policy varchar(32),
+    pk_sequence varchar(64),
+    UNIQUE (table_schema, table_name, pk_column)
+);
+SQL
+    for LAYER in $SPATIAL_VIEWS; do
+        docker exec -e PGPASSWORD="$PG_PASSWORD" "$PG_CONTAINER" \
+            psql -v ON_ERROR_STOP=1 -U "$PG_USER" -d "$PG_DB" -c \
+            "INSERT INTO $PG_SCHEMA.gt_pk_metadata (table_schema,table_name,pk_column,pk_column_idx,pk_policy)
+             VALUES ('$PG_SCHEMA','$LAYER','id',1,'assigned')
+             ON CONFLICT (table_schema,table_name,pk_column) DO UPDATE
+             SET pk_column_idx=EXCLUDED.pk_column_idx,pk_policy=EXCLUDED.pk_policy;" >/dev/null
+    done
+fi
+
 # ── 4. Wait for GeoServer REST ───────────────────────────────────────────────
 echo "Waiting for GeoServer at $GS_URL ..."
 ready=""
@@ -157,7 +212,7 @@ if [ "$(rest_status "$GS_URL/rest/workspaces/$WS/datastores/$DS")" = "404" ]; th
     payload="$(jq -n \
         --arg name "$DS" --arg host "$PG_HOST" --arg port "$PG_PORT" \
         --arg db "$PG_DB" --arg schema "$PG_SCHEMA" \
-        --arg user "$PG_USER" --arg pass "$PG_PASSWORD" \
+        --arg user "$PG_USER" --arg pass "$PG_PASSWORD" --arg spatial "$SPATIAL_VIEWS" \
         '{dataStore:{name:$name,connectionParameters:{entry:[
             {"@key":"dbtype","$":"postgis"},
             {"@key":"host","$":$host},
@@ -165,25 +220,58 @@ if [ "$(rest_status "$GS_URL/rest/workspaces/$WS/datastores/$DS")" = "404" ]; th
             {"@key":"database","$":$db},
             {"@key":"schema","$":$schema},
             {"@key":"user","$":$user},
-            {"@key":"passwd","$":$pass},
-            {"@key":"Expose primary keys","$":"true"}
-        ]}}}')"
+             {"@key":"passwd","$":$pass},
+             {"@key":"Expose primary keys","$":"true"}
+        ] + (if $spatial != "" then
+             [{"@key":"Primary key metadata table","$":($schema + ".gt_pk_metadata")}]
+             else [] end)}}}')"
     echo "Creating data store '$DS': HTTP $(rest_post "$GS_URL/rest/workspaces/$WS/datastores" "$payload")"
 else
     echo "Data store '$DS' already exists"
+    if [ -n "$SPATIAL_VIEWS" ]; then
+        # Preserve all existing store settings, including its credentials.
+        store="$(curl -sf -u "$GS_USER:$GS_PASS" \
+            "$GS_URL/rest/workspaces/$WS/datastores/$DS.json")"
+        metadata_table="$(jq -r '[.dataStore.connectionParameters.entry[]
+            | select(."@key" == "Primary key metadata table") | ."$"][0] // ""' <<< "$store")"
+        case "$metadata_table" in
+            ""|gt_pk_metadata|"$PG_SCHEMA.gt_pk_metadata") ;;
+            *) echo "Store '$DS' uses another primary-key metadata table. Preserve its existing keys in $PG_SCHEMA.gt_pk_metadata and explicitly configure the store before continuing." >&2; exit 1 ;;
+        esac
+        payload="$(jq --arg table "$PG_SCHEMA.gt_pk_metadata" '
+            .dataStore.connectionParameters.entry |=
+                (map(select(."@key" != "Primary key metadata table" and ."@key" != "Expose primary keys"))
+                 + [{"@key":"Primary key metadata table","$":$table},
+                    {"@key":"Expose primary keys","$":"true"}])
+            | {dataStore: .dataStore}' <<< "$store")"
+        code="$(curl -sS -o /dev/null -w '%{http_code}' -u "$GS_USER:$GS_PASS" \
+            -H 'Content-Type: application/json' -X PUT \
+            "$GS_URL/rest/workspaces/$WS/datastores/$DS" -d "$payload")"
+        case "$code" in
+            2??) echo "  view primary-key metadata configured" ;;
+            *) echo "Could not configure view primary keys: HTTP $code" >&2; exit 1 ;;
+        esac
+    fi
 fi
 
 # ── 7. Feature types ─────────────────────────────────────────────────────────
-# Public tables in the geo schema that the map reads over WFS.
-LAYERS="${GEOSERVER_LAYERS:-school_locations provinces districts}"
+# Public tables and views in the geo schema that the map reads over WFS.
 for LAYER in $LAYERS; do
     if [ "$(rest_status "$GS_URL/rest/workspaces/$WS/datastores/$DS/featuretypes/$LAYER")" = "404" ]; then
+        # Grounds may be empty until the first editor save. Explicit initial
+        # bounds allow GeoServer to publish an empty view without guessing.
         payload="$(jq -n --arg name "$LAYER" \
-            '{featureType:{name:$name,nativeName:$name,srs:"EPSG:4326"}}')"
+            '{featureType:{name:$name,nativeName:$name,srs:"EPSG:4326",
+              nativeBoundingBox:{minx:-180,miny:-90,maxx:180,maxy:90,crs:"EPSG:4326"},
+              latLonBoundingBox:{minx:-180,miny:-90,maxx:180,maxy:90,crs:"EPSG:4326"}}}')"
         code="$(rest_post \
-            "$GS_URL/rest/workspaces/$WS/datastores/$DS/featuretypes?recalculate=nativebbox,latlonbbox" \
+            "$GS_URL/rest/workspaces/$WS/datastores/$DS/featuretypes" \
             "$payload")"
         echo "Publishing layer '$WS:$LAYER': HTTP $code"
+        case "$code" in
+            2??) ;;
+            *) echo "Could not publish $WS:$LAYER: HTTP $code" >&2; exit 1 ;;
+        esac
     else
         echo "Layer '$WS:$LAYER' already published"
     fi
@@ -237,9 +325,23 @@ fi
 echo "Recalculating layer bounds ..."
 for LAYER in $LAYERS; do
     payload="$(jq -n --arg name "$LAYER" '{featureType:{name:$name}}')"
+    recalculate="nativebbox,latlonbbox"
+    case "$LAYER" in
+        school_locations_effective|school_boundaries)
+            has_geometry="$(docker exec -e PGPASSWORD="$PG_PASSWORD" "$PG_CONTAINER" \
+                psql -v ON_ERROR_STOP=1 -U "$PG_USER" -d "$PG_DB" -tAc \
+                "SELECT EXISTS (SELECT 1 FROM $PG_SCHEMA.$LAYER WHERE geom IS NOT NULL);")"
+            if [ "$(echo "$has_geometry" | tr -d '[:space:]')" = "f" ]; then
+                payload="$(jq -n --arg name "$LAYER" '{featureType:{name:$name,
+                    nativeBoundingBox:{minx:-180,miny:-90,maxx:180,maxy:90,crs:"EPSG:4326"},
+                    latLonBoundingBox:{minx:-180,miny:-90,maxx:180,maxy:90,crs:"EPSG:4326"}}}')"
+                recalculate=""
+            fi
+            ;;
+    esac
     code="$(curl -sS -o /dev/null -w '%{http_code}' -u "$GS_USER:$GS_PASS" \
         -H 'Content-Type: application/json' -X PUT \
-        "$GS_URL/rest/workspaces/$WS/datastores/$DS/featuretypes/$LAYER?recalculate=nativebbox,latlonbbox" \
+        "$GS_URL/rest/workspaces/$WS/datastores/$DS/featuretypes/$LAYER?recalculate=$recalculate" \
         -d "$payload")"
     case "$code" in
         2??) echo "  $LAYER bounds refreshed" ;;
@@ -252,7 +354,7 @@ echo "Verifying WFS GetFeature ..."
 for LAYER in $LAYERS; do
     feature_count="$(curl -sf \
         "$GS_URL/$WS/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=$WS:$LAYER&outputFormat=application/json" \
-        | jq '.features | length')"
+        | jq -e '.features | if type == "array" then length else error("Expected a WFS feature collection") end')"
     echo "  $WS:$LAYER returned $feature_count feature(s)"
 done
 

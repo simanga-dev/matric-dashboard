@@ -110,6 +110,11 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 | **`api/geo/[...path]`** (frontend proxy route) | Backend `GeoServerOptions.RoutePrefix`, `SchoolGeoMap.svelte` WFS URL |
 | **`scripts/import_school_locations.py`** (coordinate source/normalization) | `scripts/import_school_locations.sh`, `scripts/geoserver/bootstrap.sh` (optional step), `justfile` `geo-locations`, `geo.school_locations` columns, `scripts/tests/test_spatial_operations.py`, `docs/spatial-operations.md`; masterlist headers `GIS_Long`/`GIS_Lat` vs `GIS_Longitude`/`GIS_Latitude` |
 | **`scripts/import_school_locations.sh`** (DBE env vars/psql call) | `scripts/import_school_locations.py`, `docs/spatial-operations.md` |
+| **School spatial profile/history schema or public views** | SchoolSpatial service/controller/DTOs/tests, EF migration/snapshot, `scripts/geoserver/bootstrap.sh` view publication and assigned feature IDs, `SchoolGeoMap.svelte`, `docs/spatial-operations.md`; never move editor corrections into the imported source table |
+| **`schools.spatial.edit` permission** | Backend `AppPermissions`, protected save/history endpoints, frontend `Permissions`, role tools/tests; never grant to default User |
+| **`PUBLIC_MAP_IMAGERY_URL` / `PUBLIC_MAP_IMAGERY_ATTRIBUTION`** | `src/frontend/.env.example`, `.env.test`, root `.env.example`, Compose frontend runtime environment, imagery config validation/tests, `docs/spatial-operations.md`; no provider or server secret by default |
+| **Spatial save or WFS cache behavior** | Canonical point/boundary updates, targeted geo cache invalidation, draft selection/navigation safety, editor API/helper/browser tests |
+| **GeoServer view feature IDs or empty-layer publication** | `scripts/geoserver/bootstrap.sh`, fake bootstrap regressions in `scripts/tests/test_spatial_operations.py`, opt-in real-container `scripts/geoserver/smoke_test.py` |
 | **DBE masterlist columns** (`NatEmis`, `Official_Institution_Name`, `GIS_*`) | `scripts/import_school_locations.py` header lookup, `scripts/tests/test_spatial_operations.py` workbook fixture |
 
 ### School Data (Postgres `marks` schema)

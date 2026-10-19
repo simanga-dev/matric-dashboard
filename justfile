@@ -21,7 +21,7 @@ test:
 geo-up:
     docker compose up -d postgres geoserver
 
-# Seed the sample school layer and configure GeoServer (run after geo-up)
+# Seed/publish school layers (run after geo-up and API database migrations)
 geo-bootstrap:
     ./scripts/geoserver/bootstrap.sh
 
