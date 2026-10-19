@@ -155,6 +155,18 @@ describe('explicit editor save and cancel', () => {
 			})
 		);
 	});
+	it('treats Escape like Cancel, including the unsaved-change confirmation', async () => {
+		await evidence();
+		const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		await tick();
+		expect(confirm).toHaveBeenCalled();
+		expect(close).not.toHaveBeenCalled();
+		confirm.mockReturnValue(true);
+		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		await tick();
+		expect(close).toHaveBeenCalled();
+	});
 	it('warns on browser unload, cancels in-app navigation, and does not discard on declined Cancel', async () => {
 		await evidence();
 		const event = new Event('beforeunload', { cancelable: true });

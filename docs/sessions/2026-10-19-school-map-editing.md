@@ -48,6 +48,8 @@ school markers. Imagery is configurable, with no provider selected by default.
 - Reason and evidence fields start with editable defaults so a correction can be
   saved immediately after changing geometry. Editors can replace the text with
   more specific evidence.
+- Escape acts like Cancel. It closes a clean editor immediately and asks before
+  discarding unsaved geometry changes.
 - If the corrected footprint layer is unavailable or empty, the map converts
   imported `school_locations` points into the same small polygon shape and says
   so. The fallback disappears once the corrected layer is published.
@@ -64,7 +66,7 @@ school markers. Imagery is configurable, with no provider selected by default.
 
 - Backend build passed. Release tests passed, 1,231 tests and 15 existing skips,
   including PostGIS integration tests in disposable containers.
-- Frontend tests passed, 546 tests. Lint and type checks passed; the 11 reported
+- Frontend tests passed, 547 tests. Lint and type checks passed; the 11 reported
   Svelte warnings already existed in unrelated components. Production build passed.
 - Browser editing and imagery regressions passed against a production build with
   fixture API routes. Editing coverage includes missing markers, drawing grounds,

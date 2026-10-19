@@ -82,6 +82,18 @@
 			event.returnValue = '';
 		}
 	}
+	function handleEscape(event: KeyboardEvent) {
+		if (event.key !== 'Escape' || event.repeat || event.defaultPrevented || saving) return;
+		// Let a focused select close its own dropdown before leaving the editor.
+		if (event.target instanceof HTMLSelectElement) return;
+		if (
+			event.target instanceof Element &&
+			event.target.closest('[role="dialog"], [role="menu"], [role="listbox"]')
+		)
+			return;
+		event.preventDefault();
+		if (canLeave()) onclose();
+	}
 	async function load() {
 		loading = true;
 		error = '';
@@ -166,12 +178,16 @@
 	}
 	onMount(() => {
 		window.addEventListener('beforeunload', beforeUnload);
+		window.addEventListener('keydown', handleEscape);
 		void load();
 	});
 	onDestroy(() => {
 		disposed = true;
 		interactions?.destroy();
-		if (typeof window !== 'undefined') window.removeEventListener('beforeunload', beforeUnload);
+		if (typeof window !== 'undefined') {
+			window.removeEventListener('beforeunload', beforeUnload);
+			window.removeEventListener('keydown', handleEscape);
+		}
 	});
 </script>
 
