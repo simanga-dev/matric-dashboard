@@ -1,10 +1,9 @@
 <script lang="ts">
 	import InfoTooltip from '$lib/components/common/InfoTooltip.svelte';
 	import { metricHelp } from '$lib/components/common/metric-help';
-	import { onMount } from 'svelte';
+	import { untrack } from 'svelte';
 	import { page } from '$app/state';
-	import { browser } from '$app/environment';
-	import { replaceState } from '$app/navigation';
+	import { afterNavigate, replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { EmptyState } from '$lib/components/common';
@@ -34,7 +33,6 @@
 	const ALL = '__all__';
 	const searchParams = page.url.searchParams;
 	const initialSchoolId = searchParams.get('school');
-	const initialYear = Number(searchParams.get('year')) || null;
 
 	// A school selection takes precedence over any province/district in the URL.
 	let schoolId = $state<string | null>(initialSchoolId);
@@ -134,9 +132,22 @@
 
 	let totalWrote = $derived(rows.reduce((sum, row) => sum + row.totalWrote, 0));
 
-	onMount(() => {
-		if (schoolId) void loadSchool(schoolId, initialYear);
-		else void loadRegion(initialYear);
+	// Query-only navigation reuses this page, so adopt the URL on every
+	// navigation, including the first one after hydration.
+	afterNavigate(() => {
+		const params = page.url.searchParams;
+		schoolId = params.get('school');
+		schoolName = null;
+		province = schoolId ? null : params.get('province');
+		district = schoolId ? null : params.get('district');
+		year = Number(params.get('year')) || null;
+		region = null;
+		schoolSubjects = null;
+		searchQuery = '';
+		results = [];
+		searched = false;
+		searchError = null;
+		reload(year);
 		ready = true;
 	});
 
@@ -144,7 +155,7 @@
 
 	// Keep the scope in the URL so the view can be shared or bookmarked.
 	$effect(() => {
-		if (!browser || !ready) return;
+		if (!ready) return;
 		const params = new SvelteURLSearchParams();
 		if (schoolId) params.set('school', schoolId);
 		else {
@@ -153,7 +164,9 @@
 		}
 		if (year) params.set('year', String(year));
 		const query = params.toString();
-		replaceState(resolve(query ? `/subjects?${query}` : '/subjects'), page.state);
+		// Do not subscribe to router state here. Navigation is adopted above;
+		// our own shallow URL writes must not reload results or replay old scope.
+		untrack(() => replaceState(resolve(query ? `/subjects?${query}` : '/subjects'), page.state));
 	});
 
 	function reload(requestedYear?: number | null) {

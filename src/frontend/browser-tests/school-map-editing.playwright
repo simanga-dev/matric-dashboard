@@ -7,6 +7,7 @@ async (page) => {
 	});
 	const browser = await context.newPage();
 	const origin = new URL(page.url()).origin;
+	await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin });
 	const school = { id: '00123', name: 'SPATIAL TEST SCHOOL', province: 'GAUTENG', circuit: 'TEST CIRCUIT', totalWrote: 10, totalPassed: 9, passRate: 90, totalAchieved: null };
 	const footprintAt = (longitude, latitude, radius = 0.0003) => ({ type: 'MultiPolygon', coordinates: [[[[longitude - radius, latitude - radius], [longitude + radius, latitude - radius], [longitude + radius, latitude + radius], [longitude - radius, latitude + radius], [longitude - radius, latitude - radius]]]] });
 	let canonical = { emisNumber: school.id, revision: 0, boundary: null, footprint: null, footprintSource: 'missing', location: null, hasLocationOverride: false, locationSource: 'missing', areaSquareMetres: null, warnings: [] };
@@ -120,6 +121,19 @@ async (page) => {
 		await browser.getByRole('button', { name: 'Other School', exact: true }).click();
 		await browser.getByRole('button', { name: 'Spatial Test School', exact: true }).click();
 		await assertPublishedGeometry();
-		return { missingMarkerAdded: true, groundsDrawn: true, treeSelectionFrozen: true, conflictRetainedDraft: true, canonicalSaveDisplayed: true, cancelConfirmed: true, newerGetCancelPublishedGeometry: true, remountRevalidatedPublishedPoint: true };
+		await browser.getByText('Loading school map…').waitFor({ state: 'hidden' });
+		const map = browser.locator('.school-map');
+		const box = await map.boundingBox();
+		await map.click({ position: { x: box.width / 2, y: box.height / 2 } });
+		const popup = browser.locator('.pointer-events-none.w-60');
+		await popup.waitFor({ state: 'visible' });
+		await popup.getByRole('button', { name: 'Copy school name', exact: true }).click();
+		const copied = await browser.evaluate(() => navigator.clipboard.readText());
+		check(copied === 'Spatial Test School', 'Copy button did not copy the school name');
+		check(
+			(await popup.getByRole('button', { name: 'School name copied', exact: true }).count()) === 1,
+			'Copy button did not show copied feedback'
+		);
+		return { missingMarkerAdded: true, groundsDrawn: true, treeSelectionFrozen: true, conflictRetainedDraft: true, canonicalSaveDisplayed: true, cancelConfirmed: true, newerGetCancelPublishedGeometry: true, remountRevalidatedPublishedPoint: true, schoolNameCopied: true };
 	} finally { await context.close(); }
 }

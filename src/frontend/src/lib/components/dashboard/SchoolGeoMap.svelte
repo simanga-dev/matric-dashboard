@@ -30,6 +30,8 @@
 		PenLine,
 		Spline,
 		Save,
+		Copy,
+		Check,
 		X
 	} from '@lucide/svelte';
 	import type { EditTool, SpatialEditorHandle, SpatialEditorStatus } from './school-map-editing';
@@ -99,6 +101,8 @@
 	let featureCount = $state(0);
 	let usingImportedLocations = $state(false);
 	let popup = $state<SchoolPopup | null>(null);
+	let copiedPopupId = $state<string | null>(null);
+	let copyTimer: ReturnType<typeof setTimeout> | null = null;
 	let selectedLocationMissing = $state(false);
 
 	// OpenLayers objects are held outside $state to avoid Svelte's deep proxy
@@ -211,6 +215,32 @@
 		return color;
 	}
 
+	async function copySchoolName() {
+		if (!popup) return;
+		const name = toTitleCase(popup.name);
+		try {
+			if (navigator.clipboard?.writeText) {
+				await navigator.clipboard.writeText(name);
+			} else {
+				const area = document.createElement('textarea');
+				area.value = name;
+				area.setAttribute('readonly', '');
+				area.style.position = 'fixed';
+				area.style.opacity = '0';
+				document.body.appendChild(area);
+				area.select();
+				const copied = document.execCommand('copy');
+				area.remove();
+				if (!copied) throw new Error('Copy failed');
+			}
+			copiedPopupId = popup.id;
+			if (copyTimer) clearTimeout(copyTimer);
+			copyTimer = setTimeout(() => (copiedPopupId = null), 1500);
+		} catch {
+			copiedPopupId = null;
+		}
+	}
+
 	function findFeature(emis: string): FeatureLike | null {
 		const source = vecLayer?.getSource();
 		if (!source) return null;
@@ -262,6 +292,7 @@
 
 	onDestroy(() => {
 		disposed = true;
+		if (copyTimer) clearTimeout(copyTimer);
 		resizeObserver?.disconnect();
 		themeObserver?.disconnect();
 		olMap?.setTarget(undefined);
@@ -791,13 +822,33 @@
 							: 'hidden'}"
 					>
 						{#if popup}
-							<div class="min-w-0">
-								<div class="truncate text-sm font-semibold">{toTitleCase(popup.name)}</div>
-								<div class="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-									<MapPin class="size-3 shrink-0" />
-									<span class="truncate">{toTitleCase(popup.province)}</span>
+							<div class="flex items-start gap-2">
+								<div class="min-w-0 flex-1">
+									<div class="truncate text-sm font-semibold">{toTitleCase(popup.name)}</div>
+									<div class="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+										<MapPin class="size-3 shrink-0" />
+										<span class="truncate">{toTitleCase(popup.province)}</span>
+									</div>
 								</div>
+								<button
+									type="button"
+									aria-label={copiedPopupId === popup.id
+										? 'School name copied'
+										: 'Copy school name'}
+									title="Copy school name"
+									onclick={copySchoolName}
+									class="pointer-events-auto -me-2 -mt-2 flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+								>
+									{#if copiedPopupId === popup.id}
+										<Check class="size-4" aria-hidden="true" />
+									{:else}
+										<Copy class="size-4" aria-hidden="true" />
+									{/if}
+								</button>
 							</div>
+							<span class="sr-only" aria-live="polite"
+								>{copiedPopupId === popup.id ? 'School name copied' : ''}</span
+							>
 
 							<div class="mt-3 flex items-end justify-between gap-3">
 								<span class="text-xs text-muted-foreground">Pass rate</span>

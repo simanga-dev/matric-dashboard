@@ -31,6 +31,16 @@ class HistoryImportTests(unittest.TestCase):
         self.assertEqual(history.complete_result(10, 7, None), (7, 70.0))
         self.assertEqual(history.complete_result(0, None, None), (0, 0.0))
 
+    def test_complete_counts_override_inconsistent_reported_percentages(self):
+        self.assertEqual(history.complete_result(15, 7, 0.0), (7, 46.7))
+        self.assertEqual(history.complete_result(20, 12, 0.0), (12, 60.0))
+        self.assertEqual(history.complete_result(10, 0, 80.0), (0, 0.0))
+        self.assertEqual(history.complete_result(0, 0, 80.0), (0, 0.0))
+
+    def test_percentages_use_half_up_rounding(self):
+        self.assertEqual(history.complete_result(16, 1, None), (1, 6.3))
+        self.assertEqual(history.complete_result(16, None, 6.3), (1, 6.3))
+
     def run_import(self, rows):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "history.db"
@@ -61,6 +71,11 @@ class HistoryImportTests(unittest.TestCase):
         result = self.run_import([("unknown", 2022, None, 10, None, None)])
         self.assertEqual(result.returncode, 1)
         self.assertEqual(result.stdout, "")
+
+    def test_emitted_sql_corrects_percentage_from_complete_counts(self):
+        result = self.run_import([("200300443", 2014, None, 15, 7, 0.0)])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("('200300443',2014,0,15,7,46.7)", result.stdout)
 
     def test_subject_import_wrapper_is_executable(self):
         self.assertTrue(os.access(ROOT / "scripts/import_subject_results.sh", os.X_OK))

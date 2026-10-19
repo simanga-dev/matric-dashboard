@@ -29,7 +29,7 @@ The gap could only be closed to **2010**. There is no per-school source for
 - No 2008 report is present anywhere under `data/`.
 - The one 2009-era document on disk (`Final NSC Annexure 20 Jan 2010 for web.pdf`,
   under `data/reports/National Senior Certificate Examination Reports/`) contains
-  **zero 9-digit EMIS tokens** — it is province/name-level, not per-school.
+  **zero 9-digit EMIS tokens**. It is province/name-level, not per-school.
 
 The legacy School Performance Reports begin with the 2012 publication (which
 carries 2010-2012).
@@ -41,7 +41,7 @@ carries 2010-2012).
 Now handles two report generations that share the same wide per-province table
 but differ in columns:
 
-- **Modern (2020-2025 reports):** unchanged — each year prints
+- **Modern (2020-2025 reports):** unchanged. Each year prints
   Progressed / Total Wrote / Total Achieved / % Achieved.
 - **Legacy (2012-2019 reports):** new header-driven parser. Older years print
   only Total Wrote / Achieved / %, gaining a Progressed column from 2015 on, and
@@ -79,17 +79,17 @@ Compared against a backup of the previous `matric.db`:
 
 - **0 rows removed.**
 - **0 non-null values overwritten** (by metric field, for 2018-2025).
-- 480 NULL→value fills and 427 added rows, all in 2018/2019 (267 + 160) — these
+- 480 NULL→value fills and 427 added rows, all in 2018/2019 (267 + 160). These
   are school-years the modern 2020 report window does not carry.
 - `schools`: 1,033 added, 74 fields filled, **0 identities overwritten**.
 - Subject tables byte-for-byte unchanged (`subject_results` 810,010 rows);
   `PRAGMA integrity_check` = ok.
 
 Data-quality checks (achieved ≤ wrote, percent in 0-100, no negatives, valid
-9-digit EMIS) all pass. The two source quirks that remain —
-`progressed > wrote` (1,620 rows) and `wrote > 0` with a null achieved (38 rows) —
-already exist in the modern data and are inherent to the reports, not extraction
-artefacts.
+9-digit EMIS) all pass. Two source quirks remain:
+`progressed > wrote` (1,620 rows) and `wrote > 0` with a null achieved (38 rows).
+Both already exist in the modern data and are inherent to the reports, not
+extraction artefacts.
 
 Incidental fix: because `COALESCE` was introduced, 8 modern (2020-2024) rows that
 had previously been blanked by a later report's empty cell are now populated.

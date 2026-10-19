@@ -8,6 +8,8 @@ counted, because the extracted history carries no province/district/quintile.
 Missing pass counts are recovered only when the reported rounded percentage
 identifies exactly one count. Other incomplete rows are skipped with a diagnostic
 so they cannot overwrite known results in the serving store.
+Complete counts determine the pass percentage, overriding contradictory report
+percentages with a value rounded half up to one decimal place.
 
 SQL is written to stdout - pipe it into psql:
     python3 scripts/import_nsc_history.py | psql ...
@@ -53,8 +55,11 @@ def complete_result(wrote: int, achieved: int | None, percent: float | None) -> 
             achieved = candidates[0]
     if not 0 <= achieved <= wrote:
         return None
-    if percent is None:
-        percent = round(achieved / wrote * 100, 1) if wrote else 0.0
+    # Complete counts are authoritative, even when the report prints a stale
+    # percentage. Use the same rounding as the missing-count recovery above.
+    percent = float((Decimal(achieved) * 100 / wrote).quantize(
+        Decimal("0.1"), rounding=ROUND_HALF_UP
+    )) if wrote else 0.0
     return achieved, percent
 
 
