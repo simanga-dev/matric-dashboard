@@ -227,10 +227,7 @@
 	});
 </script>
 
-<section
-	aria-label="School map editor"
-	class="max-h-80 space-y-3 overflow-auto border-t bg-card p-3 text-sm"
->
+<section aria-label="School map editor" class="space-y-3 p-3 text-sm">
 	<div>
 		<h3 class="font-semibold">Edit school map</h3>
 		<p>{school.name} <span class="text-muted-foreground">EMIS {school.emis}</span></p>
@@ -246,7 +243,7 @@
 		<label for="coordinate-input" class="block text-xs font-medium"
 			>Paste coordinates or a Google Maps link</label
 		>
-		<div class="flex flex-col gap-2 sm:flex-row">
+		<div class="flex flex-col gap-2">
 			<input
 				id="coordinate-input"
 				aria-label="Paste coordinates or Google Maps link"

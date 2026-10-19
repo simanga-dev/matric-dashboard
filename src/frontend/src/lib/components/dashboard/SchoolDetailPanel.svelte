@@ -23,7 +23,9 @@
 		GraduationCap,
 		XCircle,
 		ExternalLink,
-		Network
+		Network,
+		Copy,
+		Check
 	} from '@lucide/svelte';
 
 	let {
@@ -205,6 +207,35 @@
 
 	function formatRate(rate: number): string {
 		return `${rate.toFixed(1)}%`;
+	}
+
+	let copiedSchoolName = $state(false);
+	let copyTimer: ReturnType<typeof setTimeout> | undefined;
+
+	async function copySchoolName() {
+		if (!school) return;
+		const name = toTitleCase(school.name);
+		try {
+			if (navigator.clipboard?.writeText) {
+				await navigator.clipboard.writeText(name);
+			} else {
+				const area = document.createElement('textarea');
+				area.value = name;
+				area.setAttribute('readonly', '');
+				area.style.position = 'fixed';
+				area.style.opacity = '0';
+				document.body.appendChild(area);
+				area.select();
+				const copied = document.execCommand('copy');
+				area.remove();
+				if (!copied) throw new Error('Copy failed');
+			}
+			copiedSchoolName = true;
+			if (copyTimer) clearTimeout(copyTimer);
+			copyTimer = setTimeout(() => (copiedSchoolName = false), 1500);
+		} catch {
+			copiedSchoolName = false;
+		}
 	}
 </script>
 
@@ -447,16 +478,32 @@
 			{@const offered = school.subjectsOffered ?? []}
 			{#key school.id}
 				<div class="detail-content space-y-4" class:updating={loading} inert={loading}>
-					<div class="flex items-start justify-between gap-3 px-1">
-						<div class="min-w-0">
+					<div class="min-w-0 px-1">
+						<div class="flex items-start gap-1.5">
 							<h3 class="text-base leading-snug font-semibold tracking-tight">
 								{toTitleCase(school.name)}
 							</h3>
-							<p class="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
-								<MapPin class="size-3" />
-								{toTitleCase(school.province)}
-							</p>
+							<button
+								type="button"
+								aria-label={copiedSchoolName ? 'School name copied' : 'Copy school name'}
+								title="Copy school name"
+								onclick={copySchoolName}
+								class="-my-1 flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+							>
+								{#if copiedSchoolName}
+									<Check class="size-3.5" aria-hidden="true" />
+								{:else}
+									<Copy class="size-3.5" aria-hidden="true" />
+								{/if}
+							</button>
+							<span class="sr-only" aria-live="polite"
+								>{copiedSchoolName ? 'School name copied' : ''}</span
+							>
 						</div>
+						<p class="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+							<MapPin class="size-3" />
+							{toTitleCase(school.province)}
+						</p>
 					</div>
 
 					<Card.Root

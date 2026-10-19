@@ -11,7 +11,9 @@
 		Globe,
 		Search,
 		X,
-		ExternalLink
+		ExternalLink,
+		ChevronsDownUp,
+		ChevronsUpDown
 	} from '@lucide/svelte';
 	import { onDestroy, tick, untrack, type Snippet } from 'svelte';
 	import type { School, SchoolList } from '$lib/types/dashboard';
@@ -380,30 +382,6 @@
 					><X class="size-4" /></button
 				>{/if}
 		</div>
-		<div class="flex flex-wrap items-center justify-between gap-1 text-xs">
-			<span class="text-muted-foreground">Browse hierarchy</span>
-			<div class="flex gap-1">
-				<button
-					type="button"
-					disabled={!matchCount || !!query}
-					onclick={expandAll}
-					class="min-h-11 rounded-md px-2 py-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-					>Expand all</button
-				>
-				<button
-					type="button"
-					disabled={!matchCount || !!query}
-					onclick={() => {
-						expandedProvinces = new Set();
-						expandedCircuits = new Set();
-						scrollTop = 0;
-						if (scrollArea) scrollArea.scrollTop = 0;
-					}}
-					class="min-h-11 rounded-md px-2 py-1 text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
-					>Collapse all</button
-				>
-			</div>
-		</div>
 		{#if query && !searchError}
 			<p role="status" class="text-xs text-muted-foreground">
 				{searchLoading
@@ -445,6 +423,31 @@
 				>{titleCase(currentCircuit)}</button
 			>
 		{/if}
+		<div class="ms-auto flex shrink-0 gap-0.5">
+			<button
+				type="button"
+				aria-label="Expand all"
+				title="Expand all"
+				disabled={!matchCount || !!query}
+				onclick={expandAll}
+				class="flex size-8 shrink-0 items-center justify-center rounded-md hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 pointer-coarse:size-11"
+				><ChevronsUpDown class="size-4" /></button
+			>
+			<button
+				type="button"
+				aria-label="Collapse all"
+				title="Collapse all"
+				disabled={!matchCount || !!query}
+				onclick={() => {
+					expandedProvinces = new Set();
+					expandedCircuits = new Set();
+					scrollTop = 0;
+					if (scrollArea) scrollArea.scrollTop = 0;
+				}}
+				class="flex size-8 shrink-0 items-center justify-center rounded-md hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 pointer-coarse:size-11"
+				><ChevronsDownUp class="size-4" /></button
+			>
+		</div>
 	</nav>
 	<div
 		bind:this={scrollArea}

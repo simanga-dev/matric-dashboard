@@ -103,6 +103,18 @@ async (page) => {
 		await browser.getByRole('button', { name: 'Other School', exact: true }).click();
 		await browser.getByRole('button', { name: 'Spatial Test School', exact: true }).click();
 		await assertPublishedGeometry();
+		const map = browser.locator('.school-map');
+		const box = await map.boundingBox();
+		await map.click({ position: { x: box.width / 2, y: box.height / 2 } });
+		const popup = browser.locator('.pointer-events-none.w-60');
+		await popup.waitFor({ state: 'visible' });
+		await popup.getByRole('button', { name: 'Copy school name', exact: true }).click();
+		const copied = await browser.evaluate(() => navigator.clipboard.readText());
+		check(copied === 'Spatial Test School', 'Copy button did not copy the school name');
+		check(
+			(await popup.getByRole('button', { name: 'School name copied', exact: true }).count()) === 1,
+			'Copy button did not show copied feedback'
+		);
 		// A later publication may be newer again, without reopening the editor.
 		canonical = newer(3, 18, -33);
 		const tileAtLatestMarker = browser.waitForRequest((request) => {
@@ -121,19 +133,6 @@ async (page) => {
 		await browser.getByRole('button', { name: 'Other School', exact: true }).click();
 		await browser.getByRole('button', { name: 'Spatial Test School', exact: true }).click();
 		await assertPublishedGeometry();
-		await browser.getByText('Loading school map…').waitFor({ state: 'hidden' });
-		const map = browser.locator('.school-map');
-		const box = await map.boundingBox();
-		await map.click({ position: { x: box.width / 2, y: box.height / 2 } });
-		const popup = browser.locator('.pointer-events-none.w-60');
-		await popup.waitFor({ state: 'visible' });
-		await popup.getByRole('button', { name: 'Copy school name', exact: true }).click();
-		const copied = await browser.evaluate(() => navigator.clipboard.readText());
-		check(copied === 'Spatial Test School', 'Copy button did not copy the school name');
-		check(
-			(await popup.getByRole('button', { name: 'School name copied', exact: true }).count()) === 1,
-			'Copy button did not show copied feedback'
-		);
 		return { missingMarkerAdded: true, groundsDrawn: true, treeSelectionFrozen: true, conflictRetainedDraft: true, canonicalSaveDisplayed: true, cancelConfirmed: true, newerGetCancelPublishedGeometry: true, remountRevalidatedPublishedPoint: true, schoolNameCopied: true };
 	} finally { await context.close(); }
 }
