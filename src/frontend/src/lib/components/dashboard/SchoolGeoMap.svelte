@@ -200,6 +200,17 @@
 		return color;
 	}
 
+	/** Canvas colours need an explicit alpha channel for translucent footprints. */
+	function withAlpha(color: string, alpha: number): string {
+		const hsl = color.match(/^hsl\(\s*([\d.]+)\s+([\d.]+%)\s+([\d.]+%)\s*\)$/);
+		if (hsl) return `hsla(${hsl[1]}, ${hsl[2]}, ${hsl[3]}, ${alpha})`;
+		if (/^#[0-9a-f]{6}$/i.test(color)) {
+			const value = Number.parseInt(color.slice(1), 16);
+			return `rgba(${(value >> 16) & 255}, ${(value >> 8) & 255}, ${value & 255}, ${alpha})`;
+		}
+		return color;
+	}
+
 	function findFeature(emis: string): FeatureLike | null {
 		const source = vecLayer?.getSource();
 		if (!source) return null;
@@ -408,7 +419,9 @@
 
 				return new Style({
 					zIndex: isSelected ? 2 : 1,
-					fill: new Fill({ color: markerColor(rate) }),
+					fill: new Fill({
+						color: withAlpha(markerColor(rate), isSelected ? 0.35 : 0.22)
+					}),
 					stroke: new Stroke({
 						color: isSelected ? '#111827' : '#ffffff',
 						width: isSelected ? 3 : 2
