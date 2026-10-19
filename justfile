@@ -29,6 +29,14 @@ geo-bootstrap:
 geo-locations:
     ./scripts/import_school_locations.sh
 
+# Build a cleaned school-name list from the DBE EMIS masterlist
+clean-school-names:
+    python3 scripts/clean_school_names.py
+
+# Apply cleaned names to SQLite and Postgres
+clean-school-names-apply:
+    ./scripts/apply_clean_school_names.sh
+
 # Add a new EF Core migration
 migrate name:
     dotnet ef migrations add {{name}} \

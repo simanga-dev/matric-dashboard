@@ -12,24 +12,38 @@ The CSV is transformed into search-friendly documents with one document per scho
 Each document uses the EMIS number as its unique ID.
 """
 
+import argparse
 import csv
 import json
 import os
 import sys
-import argparse
 import time
 
 import requests
-
 
 MEILI_URL = os.environ.get("MEILI_URL", "https://search.matrictrend.app")
 INDEX_NAME = "schools"
 BATCH_SIZE = 500
 
 
-def load_csv(path: str) -> list[dict]:
+def load_clean_names(path: str) -> dict[str, str]:
+    """Read EMIS -> cleaned school name from the name-cleaning export."""
+    if not os.path.exists(path):
+        return {}
+    with open(path, newline="", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f)
+        return {
+            row["emis_number"].strip(): row["clean_school_name"].strip()
+            for row in reader
+            if row.get("emis_number", "").strip()
+            and row.get("clean_school_name", "").strip()
+        }
+
+
+def load_csv(path: str, clean_names: dict[str, str] | None = None) -> list[dict]:
     """Load CSV and transform into MeiliSearch documents."""
     documents = []
+    clean_names = clean_names or {}
 
     with open(path, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
@@ -45,7 +59,9 @@ def load_csv(path: str) -> list[dict]:
                 "district_name": row.get("district_name", "").strip(),
                 "emis_number": emis,
                 "centre_number": row.get("centre_number", "").strip(),
-                "centre_name": row.get("centre_name", "").strip(),
+                "centre_name": clean_names.get(
+                    emis, row.get("centre_name", "").strip()
+                ),
                 "quintile": _int_or_none(row.get("quintile")),
                 # Yearly performance data
                 "progressed_number_2022": _int_or_none(row.get("progressed_number_2022")),
@@ -190,6 +206,11 @@ def main():
         default="2024_nsc_school_performance_report.csv",
         help="Path to the CSV file (default: 2024_nsc_school_performance_report.csv)",
     )
+    parser.add_argument(
+        "--clean-csv",
+        default="data/nsc/school_names_clean.csv",
+        help="Cleaned name export used to replace centre_name when present",
+    )
     args = parser.parse_args()
 
     api_key = os.environ.get("MEILI_MASTER_KEY")
@@ -203,7 +224,10 @@ def main():
         sys.exit(1)
 
     print(f"Loading CSV: {csv_path}")
-    documents = load_csv(csv_path)
+    clean_names = load_clean_names(args.clean_csv)
+    if clean_names:
+        print(f"Using cleaned names: {args.clean_csv} ({len(clean_names)} EMIS records)")
+    documents = load_csv(csv_path, clean_names)
     print(f"Loaded {len(documents)} school records")
 
     print(f"Configuring index '{INDEX_NAME}' on {MEILI_URL}...")
