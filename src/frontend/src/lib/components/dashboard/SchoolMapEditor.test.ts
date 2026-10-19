@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mount, tick, unmount } from 'svelte';
 import type OlMap from 'ol/Map';
+import { fromLonLat } from 'ol/proj';
 import type { SpatialBoundary, SpatialPoint, SpatialState } from '$lib/api/school-spatial-contract';
 import SchoolMapEditor from './SchoolMapEditor.svelte';
 
@@ -56,11 +57,14 @@ let component: ReturnType<typeof mount> & EditorCommands;
 const close = vi.fn();
 const saved = vi.fn();
 const loaded = vi.fn();
+const animate = vi.fn();
 async function evidence() {
 	const reason = document.querySelector('textarea')!;
 	reason.value = 'Verified school grounds';
 	reason.dispatchEvent(new Event('input', { bubbles: true }));
-	const source = document.querySelector('input')!;
+	const source = document.querySelector<HTMLInputElement>(
+		'input[placeholder="Imagery provider and date, or field evidence"]'
+	)!;
 	source.value = 'Field observation';
 	source.dispatchEvent(new Event('input', { bubbles: true }));
 	await tick();
@@ -74,7 +78,7 @@ beforeEach(async () => {
 	component = mount(SchoolMapEditor, {
 		target,
 		props: {
-			map: {} as OlMap,
+			map: { getView: () => ({ animate }) } as unknown as OlMap,
 			emis: '00123',
 			name: 'Original school',
 			onsaved: saved,
@@ -154,6 +158,19 @@ describe('explicit editor save and cancel', () => {
 				location: { type: 'Point', coordinates: [28, -26] }
 			})
 		);
+	});
+	it('centers the map from a pasted Google coordinate or URL', async () => {
+		const input = document.querySelector(
+			'input[aria-label="Paste coordinates or Google Maps link"]'
+		) as HTMLInputElement;
+		input.value = 'https://www.google.com/maps/@-26.2041,28.0473,17z';
+		input.dispatchEvent(new Event('input', { bubbles: true }));
+		input.closest('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+		await tick();
+		expect(animate).toHaveBeenCalledWith(
+			expect.objectContaining({ center: fromLonLat([28.0473, -26.2041]), zoom: 18 })
+		);
+		expect(document.querySelector('[role="status"]')?.textContent).toContain('Centered on');
 	});
 	it('treats Escape like Cancel, including the unsaved-change confirmation', async () => {
 		await evidence();

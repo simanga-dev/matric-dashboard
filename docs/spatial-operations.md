@@ -252,6 +252,36 @@ server-only credential in the tile URL. Restrict browser-visible keys by origin
 and quota where supported. The map keeps attribution visible and returns to
 street maps if imagery fails.
 
+### Bulk data cleanup and validation
+
+Do not scrape Google Maps or bulk-copy coordinates from its pages. Google Maps
+Platform terms restrict scraping, caching, and redistributing results, including
+displaying Google-derived coordinates on a non-Google map. Use the DBE EMIS
+master data as the source of truth. Use Google Maps manually for spot checks, or
+use a licensed geocoding/imagery API after checking quota, storage, and display
+rights.
+
+A practical cleanup order:
+
+1. Reject or quarantine missing, zero, duplicate, and malformed EMIS identifiers
+   before importing locations.
+2. Flag coordinates outside South Africa, outside the school's province, still
+   marked `is_sample`, or missing entirely.
+3. Flag duplicate and near-duplicate coordinates, large differences from the DBE
+   masterlist, and schools whose point is far from their district.
+4. Sort the review queue by risk, not alphabetically. Review sample points,
+   missing points, and confirmed import mismatches first.
+5. Validate one school at a time with approved imagery. Paste the full Google
+   Maps URL or `latitude, longitude` into the editor, locate, draw the grounds,
+   and save a reason and evidence source.
+6. Keep manual profiles separate from imports and preserve revision history. Never
+   overwrite a manual correction with a later bulk import.
+
+The editor accepts decimal coordinates (`-30.86536, 29.85241`) and full Google
+Maps URLs containing `@latitude,longitude` or `!3d...!4d...`. Short
+`maps.app.goo.gl` links contain no coordinates and must be opened before copying
+the full URL.
+
 ### Isolated publication smoke test
 
 ```bash

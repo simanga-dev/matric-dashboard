@@ -3,6 +3,7 @@
 	import { beforeNavigate } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
 	import type OlMap from 'ol/Map';
+	import { fromLonLat } from 'ol/proj';
 	import {
 		fetchSchoolSpatial,
 		fetchSchoolSpatialHistory,
@@ -17,6 +18,7 @@
 		type EditTool,
 		type SpatialEditorStatus
 	} from './school-map-editing';
+	import { parseMapCoordinates } from './school-map-coordinates';
 
 	let {
 		map,
@@ -50,6 +52,9 @@
 	let history = $state<SpatialHistory[]>([]);
 	let area = $state<number | null>(null);
 	let activeTool = $state<EditTool | null>(null);
+	let coordinateInput = $state('');
+	let coordinateError = $state('');
+	let coordinateStatus = $state('');
 	let disposed = false;
 	let interactions: ReturnType<typeof createSpatialInteractions> | null = null;
 	let validation = $derived(draft ? validateSpatialDraft(draft) : []);
@@ -103,6 +108,13 @@
 			onloaded?.(state);
 			original = state;
 			draft = spatialDraft(state);
+			if (!coordinateInput) {
+				const [longitude, latitude] = state.location?.coordinates ?? [];
+				coordinateInput =
+					typeof longitude === 'number' && typeof latitude === 'number'
+						? `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`
+						: '';
+			}
 			interactions = createSpatialInteractions(
 				map,
 				state,
@@ -138,6 +150,30 @@
 	function chooseTool(next: EditTool) {
 		activeTool = next;
 		interactions?.tool(next);
+	}
+	function locate(): boolean {
+		const coordinate = parseMapCoordinates(coordinateInput);
+		if (!coordinate) {
+			coordinateError =
+				'Could not read coordinates. Paste latitude, longitude or a full Google Maps URL.';
+			coordinateStatus = '';
+			return false;
+		}
+		coordinateError = '';
+		coordinateStatus = `Centered on ${coordinate.latitude.toFixed(6)}, ${coordinate.longitude.toFixed(6)}.`;
+		map.getView().animate({
+			center: fromLonLat([coordinate.longitude, coordinate.latitude]),
+			zoom: 18,
+			duration: 300
+		});
+		return true;
+	}
+	function submitCoordinates(event: SubmitEvent) {
+		event.preventDefault();
+		locate();
+	}
+	function locateAndDraw() {
+		if (locate()) chooseTool('draw-footprint');
 	}
 	/** Selects a drawing or marker tool from the map toolbar. */
 	export function selectTool(next: EditTool) {
@@ -206,6 +242,32 @@
 		pointer in this version. Keyboard users can pan and zoom the map, edit evidence, and use the
 		toolbar Save and Cancel, but cannot edit vertices.
 	</p>
+	<form class="space-y-2" onsubmit={submitCoordinates}>
+		<label for="coordinate-input" class="block text-xs font-medium"
+			>Paste coordinates or a Google Maps link</label
+		>
+		<div class="flex flex-col gap-2 sm:flex-row">
+			<input
+				id="coordinate-input"
+				aria-label="Paste coordinates or Google Maps link"
+				autocomplete="off"
+				spellcheck="false"
+				bind:value={coordinateInput}
+				placeholder="-30.86536, 29.85241"
+				class="min-h-11 min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+			/>
+			<div class="flex gap-2">
+				<Button type="submit" variant="outline" class="min-h-11">Locate</Button>
+				<Button type="button" class="min-h-11" disabled={loading || !draft} onclick={locateAndDraw}
+					>Locate and draw</Button
+				>
+			</div>
+		</div>
+	</form>
+	{#if coordinateError}<p role="alert" class="text-xs text-destructive">{coordinateError}</p>{/if}
+	{#if coordinateStatus}<p role="status" class="text-xs text-muted-foreground">
+			{coordinateStatus}
+		</p>{/if}
 	{#if loading}<p role="status">Loading current geometry…</p>{/if}
 	{#if error}<p role="alert" class="text-destructive">{error}</p>
 		{#if !draft && !loading}<Button
