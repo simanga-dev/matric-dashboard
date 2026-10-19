@@ -5034,8 +5034,11 @@ export interface components {
 			afterBoundary: null | components['schemas']['JsonElement'];
 			beforeLocationOverride: null | components['schemas']['JsonElement'];
 			afterLocationOverride: null | components['schemas']['JsonElement'];
-			beforeFootprint?: unknown;
-			afterFootprint?: unknown;
+			beforeFootprint: null | components['schemas']['JsonElement'];
+			afterFootprint: null | components['schemas']['JsonElement'];
+			/** Format: uuid */
+			actorId: string;
+			actorName: string;
 		};
 		SpatialStateOutput: {
 			emisNumber: string;

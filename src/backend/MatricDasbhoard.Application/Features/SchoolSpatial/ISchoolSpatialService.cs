@@ -23,8 +23,9 @@ public sealed record SpatialStateOutput(string EmisNumber, JsonElement? Boundary
     bool HasLocationOverride, string LocationSource, long Revision, double? AreaSquareMetres,
     IReadOnlyList<string> Warnings, JsonElement? Footprint = null, string FootprintSource = "missing");
 
-/// <summary>Editor-only geometry history. Actor identifiers are deliberately omitted.</summary>
+/// <summary>Editor-only geometry history with the editor identity and timestamp.</summary>
 public sealed record SpatialHistoryOutput(long Revision, DateTimeOffset ChangedAt, string Reason,
     string SourceDescription, JsonElement? BeforeBoundary, JsonElement? AfterBoundary,
     JsonElement? BeforeLocationOverride, JsonElement? AfterLocationOverride,
-    JsonElement? BeforeFootprint = null, JsonElement? AfterFootprint = null);
+    JsonElement? BeforeFootprint, JsonElement? AfterFootprint,
+    Guid ActorId, string ActorName);

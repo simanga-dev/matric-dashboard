@@ -133,18 +133,21 @@ internal sealed class SchoolSpatialService(MatricDasbhoardDbContext context, IUs
             return Result<IReadOnlyList<SpatialHistoryOutput>>.Failure(SpatialErrors.NotFound, ErrorType.NotFound);
         await using var command = Command(connection, null,
             """
-            SELECT revision, changed_at, reason, source_description,
-              (before_profile->'boundary')::text, (after_profile->'boundary')::text,
-              (before_profile->'locationOverride')::text, (after_profile->'locationOverride')::text,
-              (before_profile->'locationFootprint')::text, (after_profile->'locationFootprint')::text
-            FROM geo.school_spatial_history WHERE school_id=@school ORDER BY revision DESC LIMIT 100
+            SELECT h.revision, h.changed_at, h.reason, h.source_description,
+              (h.before_profile->'boundary')::text, (h.after_profile->'boundary')::text,
+              (h.before_profile->'locationOverride')::text, (h.after_profile->'locationOverride')::text,
+              (h.before_profile->'locationFootprint')::text, (h.after_profile->'locationFootprint')::text,
+              h.actor_id, u."FirstName", u."LastName", u."UserName"
+            FROM geo.school_spatial_history h
+            LEFT JOIN auth."Users" u ON u."Id"=h.actor_id
+            WHERE h.school_id=@school ORDER BY h.revision DESC LIMIT 100
             """, ("school", school));
         await using var reader = await command.ExecuteReaderAsync(cancellationToken);
         var history = new List<SpatialHistoryOutput>();
         while (await reader.ReadAsync(cancellationToken))
             history.Add(new(reader.GetInt64(0), reader.GetFieldValue<DateTimeOffset>(1), reader.GetString(2), reader.GetString(3),
                 Geometry(reader, 4), Geometry(reader, 5), Geometry(reader, 6), Geometry(reader, 7),
-                Geometry(reader, 8), Geometry(reader, 9)));
+                Geometry(reader, 8), Geometry(reader, 9), reader.GetGuid(10), ActorName(reader, 11, 12, 13)));
         return Result<IReadOnlyList<SpatialHistoryOutput>>.Success(history);
     }
 
@@ -214,6 +217,17 @@ internal sealed class SchoolSpatialService(MatricDasbhoardDbContext context, IUs
                 state = state with { Warnings = [.. state.Warnings, "The marker is outside the school's recorded province."] };
         }
         return Result<SpatialStateOutput>.Success(state);
+    }
+
+    private static string ActorName(NpgsqlDataReader reader, int firstName, int lastName, int userName)
+    {
+        var name = string.Join(' ', new[]
+        {
+            reader.IsDBNull(firstName) ? null : reader.GetString(firstName),
+            reader.IsDBNull(lastName) ? null : reader.GetString(lastName)
+        }.Where(part => !string.IsNullOrWhiteSpace(part)));
+        if (!string.IsNullOrWhiteSpace(name)) return name;
+        return reader.IsDBNull(userName) ? "Unknown user" : reader.GetString(userName);
     }
 
     private static JsonElement? Geometry(NpgsqlDataReader reader, int ordinal)

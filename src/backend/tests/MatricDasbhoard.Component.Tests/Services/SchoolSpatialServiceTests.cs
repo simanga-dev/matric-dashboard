@@ -53,6 +53,14 @@ public sealed class SchoolSpatialServiceTests(PostgisFixture fixture) : IClassFi
     {
         var school = await SchoolAsync(true);
         await using var db = fixture.Context();
+        await db.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO auth."Users" ("Id","FirstName","LastName","UserName","NormalizedUserName",
+              "Email","NormalizedEmail","EmailConfirmed","HasAvatar","PhoneNumberConfirmed",
+              "TwoFactorEnabled","LockoutEnabled","AccessFailedCount","ConcurrencyStamp")
+            VALUES ({Actor},'Test','Editor','editor@test.com','EDITOR@TEST.COM','editor@test.com',
+              'EDITOR@TEST.COM',true,false,false,false,false,0,'test')
+            ON CONFLICT ("Id") DO NOTHING
+            """);
         Assert.False(db.Database.HasPendingModelChanges());
         var service = new SchoolSpatialService(db, Editor(), new FakeTimeProvider(Now));
         var initial = await service.GetAsync(school.EmisNumber, default);
@@ -79,6 +87,8 @@ public sealed class SchoolSpatialServiceTests(PostgisFixture fixture) : IClassFi
         Assert.NotNull(history.Value[0].BeforeFootprint);
         Assert.Null(history.Value[1].BeforeFootprint);
         Assert.NotNull(history.Value[1].AfterFootprint);
+        Assert.Equal(Actor, history.Value[0].ActorId);
+        Assert.Equal("Test Editor", history.Value[0].ActorName);
         // Real imports and sample bootstrap touch source rows only, not corrections.
         await db.Database.ExecuteSqlInterpolatedAsync($"""
             UPDATE geo.school_locations SET geom=ST_SetSRID(ST_MakePoint(29,-27),4326),is_sample=false

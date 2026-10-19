@@ -289,6 +289,10 @@
 				Revision {original?.revision} · Point source: {original?.locationSource} · Approximate grounds
 				area: {area === null ? 'not drawn' : `${Math.round(area).toLocaleString()} m²`}
 			</p>
+			{#if history[0]}<p class="text-xs text-muted-foreground">
+					Last updated by {history[0].actorName} on
+					{new Date(history[0].changedAt).toLocaleString()}.
+				</p>{/if}
 			{#if area !== null && (area < 100 || area > 2_000_000)}<p role="status" class="text-xs">
 					Check this unusually small or large grounds area.
 				</p>{/if}
@@ -331,7 +335,9 @@
 							entry.changedAt
 						).toLocaleString()}
 						<p>{entry.reason}</p>
-						<p class="text-xs text-muted-foreground">{entry.sourceDescription}</p>
+						<p class="text-xs text-muted-foreground">
+							by {entry.actorName} · {entry.sourceDescription}
+						</p>
 					</li>{/each}
 			</ol>
 		</details>

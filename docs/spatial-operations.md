@@ -212,9 +212,11 @@ Sample seeds also leave editor profiles alone. A school with no imported point
 can still receive an editor marker.
 
 Each successful save creates a revision and a complete before/after history
-entry in the same transaction. Actor and time come from the server. History is
-editor-only; the public GeoServer views omit actor identities, reasons, source
-notes, and revision history. GeoServer proxy requests remain read-only.
+entry in the same transaction. Actor and time come from the server. The protected
+history API returns the editor's name and timestamp, resolved from the identity
+store. History is editor-only; the public GeoServer views omit actor identities,
+reasons, source notes, and revision history. GeoServer proxy requests remain
+read-only.
 The history API returns the latest 100 revisions; the database retains all
 revisions. Initial request limits are 1 MiB, 10,000 boundary positions, 100 polygon
 components, and 100 total rings. Reasons are limited to 2,000 characters and

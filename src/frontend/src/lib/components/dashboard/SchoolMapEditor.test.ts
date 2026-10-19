@@ -72,7 +72,22 @@ async function evidence() {
 beforeEach(async () => {
 	vi.clearAllMocks();
 	mocks.read.mockResolvedValue(structuredClone(state));
-	mocks.history.mockResolvedValue([]);
+	mocks.history.mockResolvedValue([
+		{
+			revision: 2,
+			changedAt: '2026-10-19T12:00:00Z',
+			reason: 'Verified school grounds',
+			sourceDescription: 'Aerial imagery',
+			beforeBoundary: null,
+			afterBoundary: null,
+			beforeFootprint: null,
+			afterFootprint: null,
+			beforeLocationOverride: null,
+			afterLocationOverride: null,
+			actorId: '11111111-1111-1111-1111-111111111111',
+			actorName: 'Test Editor'
+		}
+	]);
 	const target = document.createElement('div');
 	document.body.append(target);
 	component = mount(SchoolMapEditor, {
@@ -158,6 +173,12 @@ describe('explicit editor save and cancel', () => {
 				location: { type: 'Point', coordinates: [28, -26] }
 			})
 		);
+	});
+	it('shows the editor name and timestamp for the latest revision', async () => {
+		await vi.waitFor(() =>
+			expect(document.body.textContent).toContain('Last updated by Test Editor')
+		);
+		expect(document.body.textContent).toContain('by Test Editor');
 	});
 	it('centers the map from a pasted Google coordinate or URL', async () => {
 		const input = document.querySelector(
