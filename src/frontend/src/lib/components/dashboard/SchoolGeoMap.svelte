@@ -1,5 +1,14 @@
 <script lang="ts">
 	import { onMount, onDestroy, tick } from 'svelte';
+	import { page } from '$app/state';
+	import { hasPermission, Permissions } from '$lib/utils/permissions';
+	import { mapImagery, attributionHtml } from './school-map-imagery';
+	import { selectionWhileEditing } from './school-map-selection';
+	import { applyCanonicalSpatial } from './school-map-publication';
+	import { spatialMapStyle } from './school-map-style';
+	import type { SpatialState } from '$lib/api/school-spatial-contract';
+	import { refreshAuthoritativeSpatialStates } from '$lib/api/school-spatial';
+	import { invalidateGeoLayer } from '$lib/state/geo-data';
 	import 'ol/ol.css';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
@@ -24,7 +33,7 @@
 	import { loadGeoJson, GeoLayerUnavailableError } from '$lib/state';
 	/**
 	 * School points served by GeoServer over WFS, proxied through the API.
-	 * The GeoServer layer is a PostGIS table (geo.school_locations).
+	 * Effective coordinates include application-owned editor overrides.
 	 *
 	 * Selection is keyed on the EMIS number, which is the same identifier the
 	 * school tree uses (SchoolOutput.Id), so selecting a school in the tree
@@ -33,7 +42,20 @@
 	const WFS_BASE =
 		'/api/geo/wfs?service=WFS&version=1.0.0&request=GetFeature&outputFormat=application/json';
 	const wfsUrl = (typeName: string) => `${WFS_BASE}&typeName=${typeName}`;
-	const WFS_URL = wfsUrl('matric:school_locations');
+	const WFS_URL = wfsUrl('matric:school_locations_effective');
+	const GROUNDS_URL = wfsUrl('matric:school_boundaries');
+	let canEdit = $derived(hasPermission(page.data.user, Permissions.Schools.SpatialEdit));
+	let imageryConfig = $derived(
+		mapImagery(page.data.mapImageryUrl, page.data.mapImageryAttribution)
+	);
+	let imagerySelected = $state(false);
+	let imageryMessage = $state('');
+	let editing = $state<{ emis: string; name: string } | null>(null);
+	let selectionMessage = $state('');
+	let mapReady = $state(false);
+	let switchBackground: ((imagery: boolean) => void) | null = null;
+	let updateCanonical: ((state: SpatialState) => void) | null = null;
+	let refreshSpatialLayers: (() => Promise<void>) | null = null;
 
 	interface SchoolPopup {
 		id: string;
@@ -66,7 +88,7 @@
 
 	// OpenLayers objects are held outside $state to avoid Svelte's deep proxy
 	// wrapping them (which breaks OpenLayers internals).
-	let olMap: OlMap | null = null;
+	let olMap = $state.raw<OlMap | null>(null);
 	let vecLayer: VectorLayer | null = null;
 	let boundaryLayers: VectorLayer[] = [];
 	let provinceFeatures: Feature[] = [];
@@ -119,6 +141,7 @@
 	 * when nothing narrower is selected, otherwise a province or district.
 	 */
 	function applyRegionFocus() {
+		if (editing) return;
 		highlightProvince = selectedProvince;
 		highlightDistrict = selectedDistrict;
 		highlightCountry = !selectedSchoolId && !selectedProvince && !selectedDistrict;
@@ -224,6 +247,12 @@
 	}
 
 	$effect(() => {
+		const allowed = selectionWhileEditing(editing?.emis ?? null, selectedSchoolId);
+		if (allowed !== selectedSchoolId) {
+			selectedSchoolId = allowed;
+			selectionMessage = 'School selection is locked. Save or Cancel the current school map first.';
+			return;
+		}
 		applySelection(selectedSchoolId);
 	});
 
@@ -239,6 +268,7 @@
 	});
 
 	async function loadMap() {
+		mapReady = false;
 		resizeObserver?.disconnect();
 		themeObserver?.disconnect();
 		themeObserver = null;
@@ -255,7 +285,11 @@
 		loading = true;
 		error = null;
 		try {
-			const geojson = await loadGeoJson(WFS_URL);
+			// A missing published point layer must not prevent adding a missing marker.
+			const geojson = await loadGeoJson(WFS_URL).catch(() => ({
+				type: 'FeatureCollection',
+				features: []
+			}));
 			if (disposed) return;
 
 			const [
@@ -292,12 +326,55 @@
 
 			const reader = new GeoJSON();
 			const source = new VectorSource();
+			const groundsSource = new VectorSource();
 			const features = reader.readFeatures(schoolMapGeoJson(geojson, schools), {
 				dataProjection: 'EPSG:4326',
 				featureProjection: 'EPSG:3857'
 			});
 			source.addFeatures(features);
 			featureCount = features.length;
+			const groundsGeo = await loadGeoJson(GROUNDS_URL).catch(() => null);
+			if (groundsGeo)
+				groundsSource.addFeatures(
+					reader.readFeatures(groundsGeo, {
+						dataProjection: 'EPSG:4326',
+						featureProjection: 'EPSG:3857'
+					})
+				);
+			updateCanonical = (state) => {
+				applyCanonicalSpatial(reader, source, groundsSource, state, schools);
+				featureCount = source.getFeatures().length;
+				if (selectedSchoolId === state.emisNumber) selectedLocationMissing = !state.location;
+			};
+			for (const state of await refreshAuthoritativeSpatialStates()) updateCanonical(state);
+			refreshSpatialLayers = async () => {
+				const [points, grounds] = await Promise.all([
+					loadGeoJson(WFS_URL).catch(() => null),
+					loadGeoJson(GROUNDS_URL).catch(() => null)
+				]);
+				if (disposed) return;
+				if (points) {
+					source.clear();
+					source.addFeatures(
+						reader.readFeatures(schoolMapGeoJson(points, schools), {
+							dataProjection: 'EPSG:4326',
+							featureProjection: 'EPSG:3857'
+						})
+					);
+				}
+				if (grounds) {
+					groundsSource.clear();
+					groundsSource.addFeatures(
+						reader.readFeatures(grounds, {
+							dataProjection: 'EPSG:4326',
+							featureProjection: 'EPSG:3857'
+						})
+					);
+				}
+				for (const state of await refreshAuthoritativeSpatialStates()) {
+					if (!disposed) updateCanonical?.(state);
+				}
+			};
 
 			// Administrative boundaries are optional: if the layer is missing the
 			// school map still renders, just without region highlighting.
@@ -381,31 +458,62 @@
 			boundaryLayers = [provinceLayer, districtLayer];
 
 			const view = new View({ center: fromLonLat([24.7, -29]), zoom: 5 });
+			const streetLayer = new TileLayer({ source: new OSM(), className: 'school-basemap' });
+			const imageryLayer = new TileLayer({ visible: false, className: 'school-imagery' });
+			if (imageryConfig) {
+				const { default: XYZ } = await import('ol/source/XYZ');
+				const imagerySource = new XYZ({
+					url: imageryConfig.url,
+					attributions: attributionHtml(imageryConfig.attribution)
+				});
+				imageryLayer.setSource(imagerySource);
+				imagerySource.on('tileloaderror', () => {
+					imagerySelected = false;
+					imageryMessage = 'Imagery tiles could not be loaded. Showing OpenStreetMap instead.';
+					streetLayer.setVisible(true);
+					imageryLayer.setVisible(false);
+				});
+			}
+			switchBackground = (imagery) => {
+				imagerySelected = imagery;
+				imageryMessage = '';
+				streetLayer.setVisible(!imagery);
+				imageryLayer.setVisible(imagery);
+			};
+			const pointsLayer = new VectorLayerCtor({ source, style: styleFor });
+			const groundsLayer = new VectorLayerCtor({
+				source: groundsSource,
+				style: spatialMapStyle(false)
+			});
 
 			olMap = new OlMapCtor({
 				target: mapHost,
-				controls: defaultControls({ rotate: false }),
+				controls: defaultControls({ rotate: false, attributionOptions: { collapsible: false } }),
 				// Accept wheel zoom over the map without requiring a click or stealing focus.
 				interactions: defaultInteractions({ onFocusOnly: false }),
 				layers: [
 					// Theme only the raster background, never the performance markers.
-					new TileLayer({ source: new OSM(), className: 'school-basemap' }),
+					streetLayer,
+					imageryLayer,
 					provinceLayer,
 					districtLayer,
-					new VectorLayerCtor({ source, style: styleFor })
+					groundsLayer,
+					pointsLayer
 				],
 				view
 			});
 			olMap.once('rendercomplete', () => {
 				if (!disposed) loading = false;
 			});
-			vecLayer = olMap.getLayers().getArray()[3] as VectorLayer;
+			vecLayer = pointsLayer;
+			mapReady = true;
 
 			// Marker colours are resolved from theme variables for the SVG data
 			// URL, so restyle when the palette, scheme or chart colour changes.
 			themeObserver = new MutationObserver(() => {
 				markerColorCache = {};
 				vecLayer?.changed();
+				groundsLayer.setStyle(spatialMapStyle(false));
 			});
 			themeObserver.observe(document.documentElement, {
 				attributes: true,
@@ -441,6 +549,7 @@
 			hidePopup = () => overlay.setPosition(undefined);
 
 			olMap.on('singleclick', (event) => {
+				if (editing) return;
 				const hit = olMap?.forEachFeatureAtPixel(event.pixel, (f) => f, {
 					layerFilter: (layer) => layer === vecLayer
 				});
@@ -477,12 +586,53 @@
 	onMount(() => {
 		void loadMap();
 	});
+
+	function openEditor() {
+		if (!selectedSchoolId || !canEdit) return;
+		const school = schools.find((school) => school.id === selectedSchoolId);
+		editing = { emis: selectedSchoolId, name: school?.name ?? selectedSchoolId };
+		popup = null;
+		hidePopup?.();
+		selectionMessage = '';
+	}
+	function saved(state: SpatialState) {
+		updateCanonical?.(state);
+		invalidateGeoLayer('matric:school_locations_effective');
+		invalidateGeoLayer('matric:school_boundaries');
+		void refreshSpatialLayers?.();
+	}
 </script>
 
 <section
 	aria-label="School locations"
 	class="flex h-full min-h-0 flex-col bg-card text-card-foreground"
 >
+	<div class="flex flex-wrap items-center gap-2 border-b p-2 text-xs">
+		<label
+			>Background <select
+				aria-label="Map background"
+				class="min-h-11 rounded-md border border-input bg-background px-3 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+				value={imagerySelected ? 'imagery' : 'street'}
+				onchange={(event) => switchBackground?.(event.currentTarget.value === 'imagery')}
+			>
+				<option value="street">OpenStreetMap</option><option
+					value="imagery"
+					disabled={!imageryConfig}
+					>Approved imagery{imageryConfig ? '' : ' (not configured)'}</option
+				>
+			</select></label
+		>
+		{#if imagerySelected && imageryConfig}<span>{imageryConfig.attribution}</span>{/if}
+		{#if canEdit}<Button
+				type="button"
+				variant="outline"
+				class="ms-auto min-h-11 min-w-11"
+				disabled={!selectedSchoolId || !mapReady || !!editing}
+				onclick={openEditor}>Edit school map</Button
+			>{/if}
+	</div>
+	{#if imageryMessage}<p role="status" class="p-2 text-xs">{imageryMessage}</p>{/if}
+	{#if selectionMessage && editing}<p role="status" class="p-2 text-xs">{selectionMessage}</p>{/if}
 	<div class="relative flex min-h-0 flex-1 flex-col" aria-busy={loading}>
 		{#if loading}
 			<div role="status" class="absolute inset-0 z-30 flex items-center justify-center bg-card">
@@ -607,6 +757,31 @@
 			</div>
 		{/if}
 	</div>
+	{#if editing && olMap && canEdit}
+		{#await import('./SchoolMapEditor.svelte')}
+			<p role="status" class="p-3 text-sm">Opening school map editor…</p>
+		{:then { default: SchoolMapEditor }}
+			<SchoolMapEditor
+				map={olMap}
+				emis={editing.emis}
+				name={editing.name}
+				onloaded={(state) => updateCanonical?.(state)}
+				onsaved={saved}
+				onclose={() => {
+					editing = null;
+					selectionMessage = '';
+				}}
+			/>
+		{:catch}
+			<p role="alert" class="p-3 text-sm">
+				The editor could not be loaded. <button
+					type="button"
+					class="underline"
+					onclick={() => (editing = null)}>Close editor</button
+				>
+			</p>
+		{/await}
+	{/if}
 </section>
 
 <style>

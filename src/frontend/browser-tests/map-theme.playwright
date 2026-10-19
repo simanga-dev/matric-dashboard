@@ -26,7 +26,7 @@ async (page) => {
 			localStorage.setItem('theme-preset', 'ocean');
 		});
 		await browser.route('**/api/geo/**', (route) => {
-			const schools = new URL(route.request().url()).searchParams.get('typeName') === 'matric:school_locations';
+			const schools = new URL(route.request().url()).searchParams.get('typeName') === 'matric:school_locations_effective';
 			return route.fulfill({ json: {
 				type: 'FeatureCollection',
 				features: schools ? [{

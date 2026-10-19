@@ -17,6 +17,15 @@ export class GeoLayerUnavailableError extends Error {
 
 const geoJsonCache = new Map<string, Promise<Record<string, unknown>>>();
 
+/** Evict only the affected published layer, leaving region caches untouched. */
+export function invalidateGeoLayer(typeName: string): void {
+	for (const url of geoJsonCache.keys()) {
+		if (new URL(url, 'http://localhost').searchParams.get('typeName') === typeName) {
+			geoJsonCache.delete(url);
+		}
+	}
+}
+
 /**
  * Fetches and caches a WFS layer's GeoJSON, deduplicating concurrent callers.
  * GeoServer returns an OGC XML exception with HTTP 200 when a layer is not
@@ -36,6 +45,8 @@ export function loadGeoJson(url: string): Promise<Record<string, unknown>> {
 	})();
 
 	geoJsonCache.set(url, pending);
-	pending.catch(() => geoJsonCache.delete(url));
+	pending.catch(() => {
+		if (geoJsonCache.get(url) === pending) geoJsonCache.delete(url);
+	});
 	return pending;
 }

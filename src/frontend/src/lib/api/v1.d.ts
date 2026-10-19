@@ -343,6 +343,502 @@ export interface paths {
 		patch?: never;
 		trace?: never;
 	};
+	'/api/v1/schools/{emis}/spatial': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Returns authoritative public school map state in EPSG:4326. */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					emis: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description OK */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['SpatialStateOutput'];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		/** Atomically replaces grounds and marker mode, with optimistic concurrency. */
+		put: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					emis: string;
+				};
+				cookie?: never;
+			};
+			requestBody: {
+				content: {
+					'application/json': components['schemas']['SaveSpatialRequest'];
+				};
+			};
+			responses: {
+				/** @description OK */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['SpatialStateOutput'];
+					};
+				};
+				/** @description Bad Request */
+				400: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Conflict */
+				409: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Payload Too Large */
+				413: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/v1/schools/{emis}/spatial/history': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Returns the latest 100 correction revisions, newest first, for editors only. */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					emis: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description OK */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['SpatialHistoryOutput'][];
+					};
+				};
+				/** @description Unauthorized */
+				401: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Forbidden */
+				403: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+				/** @description Not Found */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/v1/dashboard/stats': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Returns aggregated dashboard statistics. */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description OK */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['DashboardStatsResponse'];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/v1/dashboard/pass-rate-trends': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Returns NSC pass rate trends over multiple years. */
+		get: {
+			parameters: {
+				query?: {
+					/** @description Optional filter: "5" for last 5 years, "10" for last 10 years. Defaults to all. */
+					years?: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description OK */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['PassRateTrendResponse'][];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/v1/dashboard/regions/stats': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Returns aggregated NSC performance for the country, or narrowed to a
+		 *     province and/or education district.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					/** @description Optional province filter (exact name, e.g. "GAUTENG"). */
+					province?: string;
+					/** @description Optional district filter (exact name), typically with a province. */
+					district?: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description OK */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['RegionStatsResponse'];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/v1/dashboard/regions/subjects': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/**
+		 * Returns per-subject NSC performance aggregated across the country, or
+		 *     narrowed to a province and/or education district.
+		 */
+		get: {
+			parameters: {
+				query?: {
+					/** @description Optional province filter (exact name, e.g. "GAUTENG"). */
+					province?: string;
+					/** @description Optional district filter (exact name), typically with a province. */
+					district?: string;
+					/** @description Optional academic year; defaults to the latest year with subject data. */
+					year?: number;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description OK */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['RegionSubjectsResponse'];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/v1/dashboard/schools': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Returns a paginated list of schools with optional search. */
+		get: {
+			parameters: {
+				query?: {
+					pageNumber?: number;
+					pageSize?: number;
+					search?: string;
+				};
+				header?: never;
+				path?: never;
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description OK */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['SchoolListResponse'];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/v1/dashboard/schools/{id}': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Returns a single school by its stable identifier (EMIS number). */
+		get: {
+			parameters: {
+				query?: never;
+				header?: never;
+				path: {
+					/** @description The school's stable identifier from the search index. */
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Returns the school details. */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['SchoolDetailResponse'];
+					};
+				};
+				/** @description If no school matches the identifier. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/v1/dashboard/schools/{id}/subjects': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Returns per-subject NSC performance for a single school. */
+		get: {
+			parameters: {
+				query?: {
+					/** @description Optional academic year; defaults to the latest year with subject data. */
+					year?: number;
+				};
+				header?: never;
+				path: {
+					/** @description The school's stable identifier from the search index. */
+					id: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Returns the school's subject results. */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['SchoolSubjectsResponse'];
+					};
+				};
+				/** @description If no school matches the identifier. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
 	'/api/auth/login': {
 		parameters: {
 			query?: never;
@@ -3816,6 +4312,22 @@ export interface components {
 			/** @description An optional last name for the new user. */
 			lastName?: null | string;
 		};
+		/** @description Dashboard statistics response for the overview page. */
+		DashboardStatsResponse: {
+			/**
+			 * Format: int32
+			 * @description Latest academic year with performance data.
+			 */
+			year?: number;
+			/** @description Top-performing schools count with trend. */
+			topSchools?: components['schemas']['StatItemResponse'];
+			/** @description Exam centres count with trend. */
+			examCenters?: components['schemas']['StatItemResponse'];
+			/** @description Total matric learners with trend. */
+			totalLearners?: components['schemas']['StatItemResponse'];
+			/** @description Overall pass rate with trend. */
+			passRate?: components['schemas']['StatItemResponse'];
+		};
 		/** @description Represents a request to permanently delete the current user's account. */
 		DeleteAccountRequest: {
 			/** @description The user's current password for confirmation. */
@@ -3898,6 +4410,7 @@ export interface components {
 			/** @description The error message if the execution failed, or null on success. */
 			error?: null | string;
 		};
+		JsonElement: unknown;
 		/** @description Paginated response containing a list of audit events. */
 		ListAuditEventsResponse: {
 			/** @description The audit events for the current page. */
@@ -3993,6 +4506,46 @@ export interface components {
 			 */
 			updatedBy?: null | string;
 		};
+		/** @description A subject offered by a school, with the most recent year it was offered. */
+		OfferedSubjectResponse: {
+			/** @description Stable subject code (e.g. "accounting"). */
+			code?: string;
+			/** @description Display name of the subject. */
+			name?: string;
+			/**
+			 * Format: int32
+			 * @description Most recent academic year the subject was offered.
+			 */
+			year?: number;
+			/**
+			 * Format: int32
+			 * @description Learners who wrote the subject in that year.
+			 */
+			totalWrote?: number;
+			/**
+			 * Format: double
+			 * @description Pass percentage for the subject in that year, null when unavailable.
+			 */
+			percentAchieved?: null | number;
+		};
+		/** @description NSC pass rate data point for a single year. */
+		PassRateTrendResponse: {
+			/**
+			 * Format: int32
+			 * @description The academic year.
+			 */
+			year?: number;
+			/**
+			 * Format: double
+			 * @description Pass rate percentage.
+			 */
+			passRate?: number;
+			/**
+			 * Format: int32
+			 * @description Total number of learners who wrote.
+			 */
+			totalLearners?: number;
+		};
 		/** @description A group of permissions belonging to the same category. */
 		PermissionGroupResponse: {
 			/** @description The category name (e.g. "Users", "Roles"). */
@@ -4074,6 +4627,121 @@ export interface components {
 			 */
 			refreshToken?: null | string;
 		};
+		/** @description Aggregated NSC performance for a geographic scope (country, province, district). */
+		RegionStatsResponse: {
+			/** @description One of "country", "province", or "district". */
+			scope?: string;
+			/** @description Display name of the scope. */
+			name?: string;
+			/** @description Province the scope belongs to, null for the country. */
+			province?: null | string;
+			/**
+			 * Format: int32
+			 * @description Academic year the aggregates cover.
+			 */
+			year?: number;
+			/**
+			 * Format: int32
+			 * @description Schools with performance data for the year.
+			 */
+			schoolCount?: number;
+			/**
+			 * Format: int32
+			 * @description Learners who wrote in the scope.
+			 */
+			totalWrote?: number;
+			/**
+			 * Format: int32
+			 * @description Learners who passed in the scope.
+			 */
+			totalPassed?: number;
+			/**
+			 * Format: double
+			 * @description Learner-weighted pass rate percentage for the scope.
+			 */
+			passRate?: number;
+			/** @description Learner-weighted pass rate trend by year, oldest first. */
+			years?: components['schemas']['RegionYearResponse'][];
+		};
+		/**
+		 * @description A single subject's performance aggregated across every school in a
+		 *     geographic scope for one academic year.
+		 */
+		RegionSubjectResponse: {
+			/** @description Stable subject code (e.g. "accounting"). */
+			code?: string;
+			/** @description Display name of the subject. */
+			name?: string;
+			/**
+			 * Format: int32
+			 * @description Learners who wrote the subject across the scope.
+			 */
+			totalWrote?: number;
+			/**
+			 * Format: int32
+			 * @description Learners who achieved (passed) the subject, null when unavailable.
+			 */
+			achieved?: null | number;
+			/**
+			 * Format: double
+			 * @description Learner-weighted pass percentage for the subject, null when unavailable.
+			 */
+			percentAchieved?: null | number;
+			/**
+			 * Format: int32
+			 * @description Number of schools in the scope offering the subject.
+			 */
+			schoolCount?: number;
+		};
+		/**
+		 * @description Aggregated per-subject NSC performance for a geographic scope (country,
+		 *     province, or district).
+		 */
+		RegionSubjectsResponse: {
+			/** @description One of "country", "province", or "district". */
+			scope?: string;
+			/** @description Display name of the scope. */
+			name?: string;
+			/** @description Province the scope belongs to, null for the country. */
+			province?: null | string;
+			/**
+			 * Format: int32
+			 * @description Academic year the aggregates cover, null when the scope has no subject data.
+			 */
+			year?: null | number;
+			/** @description Years with subject data for the scope, oldest first. */
+			availableYears?: number[];
+			/**
+			 * Format: int32
+			 * @description Schools in the scope with subject data for the selected year.
+			 */
+			schoolCount?: number;
+			/** @description Aggregated subject rows for the selected year, ordered by subject name. */
+			subjects?: components['schemas']['RegionSubjectResponse'][];
+		};
+		/** @description Aggregated NSC performance for a geographic scope in a single academic year. */
+		RegionYearResponse: {
+			/**
+			 * Format: int32
+			 * @description The academic year.
+			 */
+			year?: number;
+			/**
+			 * Format: int32
+			 * @description Learners who wrote in the scope.
+			 */
+			totalWrote?: number;
+			/**
+			 * Format: int32
+			 * @description Learners who passed in the scope.
+			 */
+			totalPassed?: number;
+			/**
+			 * Format: double
+			 * @description Learner-weighted pass rate percentage for the scope.
+			 */
+			passRate?: number;
+		};
 		/** @description Represents a request to register a new user account. */
 		RegisterRequest: {
 			/** @description The email address for the new account. */
@@ -4125,6 +4793,225 @@ export interface components {
 			 */
 			userCount?: number;
 		};
+		/** @description Full replacement. Null cannot remove an existing boundary or override. */
+		SaveSpatialRequest: {
+			/**
+			 * Format: int64
+			 * @description Revision loaded from GET, or zero before the first save.
+			 */
+			expectedRevision: number;
+			boundary: null | components['schemas']['JsonElement'];
+			/** @description Either imported or override. Imported requires a null location. */
+			locationMode: string;
+			location: null | components['schemas']['JsonElement'];
+			/** @description Required correction reason, at most 2000 characters. */
+			reason: string;
+			/** @description Required evidence description, at most 1000 characters. Never published. */
+			sourceDescription: string;
+		};
+		/** @description How a school compares to its province and the country for the selected year. */
+		SchoolComparisonResponse: {
+			/**
+			 * Format: int32
+			 * @description Academic year used for the comparison cohort.
+			 */
+			year?: number;
+			/**
+			 * Format: int32
+			 * @description Position within the province (1 is highest), or 0 when unknown.
+			 */
+			provinceRank?: number;
+			/**
+			 * Format: int32
+			 * @description Number of province schools with data for the selected year.
+			 */
+			provinceSchoolCount?: number;
+			/**
+			 * Format: double
+			 * @description Learner-weighted province pass rate, or null when unavailable.
+			 */
+			provinceAveragePassRate?: null | number;
+			/**
+			 * Format: double
+			 * @description Learner-weighted national pass rate, or null when unavailable.
+			 */
+			nationalAveragePassRate?: null | number;
+		};
+		/** @description Full school detail, including multi-year performance and local context. */
+		SchoolDetailResponse: {
+			/** @description Unique school identifier (EMIS number). */
+			id?: string;
+			/** @description School name. */
+			name?: string;
+			/** @description Province where the school is located. */
+			province?: string;
+			/** @description Education circuit or district. */
+			circuit?: string;
+			/** @description Examination centre number assigned by the DBE. */
+			centreNumber?: string;
+			/**
+			 * Format: int32
+			 * @description Socio-economic quintile (1 is poorest, 5 is wealthiest).
+			 */
+			quintile?: number;
+			/**
+			 * Format: int32
+			 * @description Learners who wrote in the latest available year.
+			 */
+			totalWrote?: number;
+			/**
+			 * Format: int32
+			 * @description Learners who passed in the latest available year.
+			 */
+			totalPassed?: number;
+			/**
+			 * Format: double
+			 * @description Pass rate percentage for the latest available year.
+			 */
+			passRate?: number;
+			/**
+			 * Format: int32
+			 * @description Learners who achieved bachelor passes, if available.
+			 */
+			totalAchieved?: null | number;
+			/** @description Yearly NSC performance records, oldest first. */
+			years?: components['schemas']['SchoolYearResponse'][];
+			/** @description How the school compares to its province and the country. */
+			comparison?: components['schemas']['SchoolComparisonResponse'];
+			/**
+			 * Format: int32
+			 * @description Latest year with subject data for the school, null when none.
+			 */
+			subjectsOfferedYear?: null | number;
+			/** @description Subjects written in int? SchoolDetailResponse.SubjectsOfferedYear, ordered by name. */
+			subjectsOffered?: components['schemas']['OfferedSubjectResponse'][];
+		};
+		/** @description Paginated list of schools. */
+		SchoolListResponse: {
+			/** @description The schools for the current page. */
+			items?: components['schemas']['SchoolResponse'][];
+			/**
+			 * Format: int32
+			 * @description Total number of schools matching the query.
+			 */
+			totalCount?: number;
+			/**
+			 * Format: int32
+			 * @description Current page number.
+			 */
+			pageNumber?: number;
+			/**
+			 * Format: int32
+			 * @description Number of items per page.
+			 */
+			pageSize?: number;
+			/**
+			 * Format: int32
+			 * @description Total number of pages.
+			 */
+			totalPages?: number;
+			/** @description Whether there is a previous page. */
+			hasPreviousPage?: boolean;
+			/** @description Whether there is a next page. */
+			hasNextPage?: boolean;
+		};
+		/** @description A school entry with performance data. */
+		SchoolResponse: {
+			/** @description Unique school identifier (EMIS number, stable across pages and searches). */
+			id?: string;
+			/** @description School name. */
+			name?: string;
+			/** @description Province where the school is located. */
+			province?: string;
+			/** @description Education circuit or district. */
+			circuit?: string;
+			/**
+			 * Format: int32
+			 * @description Total learners who wrote matric exams.
+			 */
+			totalWrote?: number;
+			/**
+			 * Format: int32
+			 * @description Total learners who passed matric exams.
+			 */
+			totalPassed?: number;
+			/**
+			 * Format: double
+			 * @description Pass rate percentage.
+			 */
+			passRate?: number;
+			/**
+			 * Format: int32
+			 * @description Learners who achieved bachelor passes, if available.
+			 */
+			totalAchieved?: null | number;
+		};
+		/** @description A school's NSC performance in a single subject for one academic year. */
+		SchoolSubjectResponse: {
+			/** @description Stable subject identifier. */
+			subjectId?: string;
+			/** @description Stable subject code (e.g. "accounting"). */
+			code?: string;
+			/** @description Display name of the subject. */
+			name?: string;
+			/**
+			 * Format: int32
+			 * @description Learners who wrote the subject; zero means the school did not offer it.
+			 */
+			totalWrote?: number;
+			/**
+			 * Format: int32
+			 * @description Learners who achieved (passed) the subject, null when unavailable.
+			 */
+			achieved?: null | number;
+			/**
+			 * Format: double
+			 * @description Pass percentage for the subject, null when unavailable.
+			 */
+			percentAchieved?: null | number;
+		};
+		/** @description Per-subject NSC performance for a school in a selected academic year. */
+		SchoolSubjectsResponse: {
+			/** @description Stable school identifier (EMIS number). */
+			schoolId?: string;
+			/**
+			 * Format: int32
+			 * @description Academic year the subject rows cover, null when the school has no subject data.
+			 */
+			year?: null | number;
+			/** @description Years with subject data for the school, oldest first. */
+			availableYears?: number[];
+			/** @description Subject rows for the selected year, ordered by subject name. */
+			subjects?: components['schemas']['SchoolSubjectResponse'][];
+		};
+		/** @description NSC performance for a single academic year. */
+		SchoolYearResponse: {
+			/**
+			 * Format: int32
+			 * @description The academic year.
+			 */
+			year?: number;
+			/**
+			 * Format: int32
+			 * @description Progressed learners who wrote the exams.
+			 */
+			progressed?: number;
+			/**
+			 * Format: int32
+			 * @description Total learners who wrote the exams.
+			 */
+			totalWrote?: number;
+			/**
+			 * Format: int32
+			 * @description Total learners who passed the exams.
+			 */
+			totalPassed?: number;
+			/**
+			 * Format: double
+			 * @description Pass rate percentage.
+			 */
+			passRate?: number;
+		};
 		/** @description Request to set an initial password on a passwordless OAuth-created account. */
 		SetPasswordRequest: {
 			/** @description The new password to set. */
@@ -4134,6 +5021,43 @@ export interface components {
 		SetPermissionsRequest: {
 			/** @description The full set of permission values to assign to the role. */
 			permissions: string[];
+		};
+		SpatialHistoryOutput: {
+			/** Format: int64 */
+			revision: number;
+			/** Format: date-time */
+			changedAt: string;
+			reason: string;
+			sourceDescription: string;
+			beforeBoundary: null | components['schemas']['JsonElement'];
+			afterBoundary: null | components['schemas']['JsonElement'];
+			beforeLocationOverride: null | components['schemas']['JsonElement'];
+			afterLocationOverride: null | components['schemas']['JsonElement'];
+		};
+		SpatialStateOutput: {
+			emisNumber: string;
+			boundary: null | components['schemas']['JsonElement'];
+			location: null | components['schemas']['JsonElement'];
+			hasLocationOverride: boolean;
+			locationSource: string;
+			/** Format: int64 */
+			revision: number;
+			/** Format: double */
+			areaSquareMetres: null | number;
+			warnings: string[];
+		};
+		/** @description A single stat item with a total and optional trend. */
+		StatItemResponse: {
+			/**
+			 * Format: int32
+			 * @description Current value.
+			 */
+			total?: number;
+			/**
+			 * Format: double
+			 * @description Percentage change trend, or null if not applicable.
+			 */
+			trend?: null | number;
 		};
 		/** @description Request to disable two-factor authentication for the current user. */
 		TwoFactorDisableRequest: {

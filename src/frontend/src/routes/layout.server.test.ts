@@ -10,6 +10,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { MOCK_USER, createMockLoadEvent, createMockCookies } from '../test-utils';
 
 vi.mock('$app/environment', () => ({ dev: false }));
+vi.mock('$env/dynamic/public', () => ({
+	env: {
+		PUBLIC_MAP_IMAGERY_URL: 'https://approved.test/{z}/{x}/{y}',
+		PUBLIC_MAP_IMAGERY_ATTRIBUTION: 'Approved provider'
+	}
+}));
 vi.mock('$lib/config/server', () => ({ SERVER_CONFIG: { API_URL: '' } }));
 
 /** Mock getUser - we test its behavior separately in auth.test.ts. */
@@ -44,6 +50,12 @@ async function loadResult(event: LoadEvent) {
 }
 
 describe('root layout server load', () => {
+	it('passes runtime public imagery configuration to the browser without build-time values', async () => {
+		mockGetUser.mockResolvedValueOnce({ user: null, error: null });
+		const result = await loadResult(mockLoadEvent());
+		expect(result.mapImageryUrl).toBe('https://approved.test/{z}/{x}/{y}');
+		expect(result.mapImageryAttribution).toBe('Approved provider');
+	});
 	it('no refresh cookie - hadSession is false', async () => {
 		mockGetUser.mockResolvedValueOnce({ user: null, error: null });
 

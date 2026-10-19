@@ -13,6 +13,9 @@ export const SystemRoles = {
 } as const;
 
 export const Permissions = {
+	Schools: {
+		SpatialEdit: 'schools.spatial.edit'
+	},
 	Users: {
 		View: 'users.view',
 		ViewPii: 'users.view_pii',
