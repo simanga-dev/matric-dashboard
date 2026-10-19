@@ -198,7 +198,7 @@ describe('school map drafts', () => {
 		);
 		missing.destroy();
 	});
-	it('exposes the location footprint as a movable and reshapeable polygon', () => {
+	it('exposes the location footprint as a drawable, movable and reshapeable polygon', async () => {
 		const interactions: (Draw | Modify | Snap | Translate)[] = [];
 		const map = {
 			addLayer: vi.fn(),
@@ -223,6 +223,28 @@ describe('school map drafts', () => {
 		interactions[1]!.dispatchEvent('translateend');
 		expect(draft.footprint?.type).toBe('MultiPolygon');
 		expect(draft.boundary).toEqual(state.boundary);
+		editing.tool('draw-footprint');
+		const draw = interactions[0];
+		if (!(draw instanceof Draw)) throw new Error('Footprint drawing must use Draw');
+		draw.dispatchEvent(
+			new DrawEvent(
+				'drawend',
+				new Feature(
+					new MultiPolygon([
+						[
+							[
+								[0, 0],
+								[1, 0],
+								[1, 1],
+								[0, 0]
+							]
+						]
+					])
+				)
+			)
+		);
+		await Promise.resolve();
+		expect(draft.footprint?.type).toBe('MultiPolygon');
 		editing.destroy();
 	});
 	it('round trips EPSG:4326 longitude first through EPSG:3857', () => {
@@ -257,6 +279,9 @@ describe('school map drafts', () => {
 	});
 	it('requires evidence and reason and rejects invalid rings and out of range positions', () => {
 		const draft = spatialDraft(state);
+		expect(validateSpatialDraft(draft)).toEqual([]);
+		draft.reason = '';
+		draft.sourceDescription = '';
 		expect(validateSpatialDraft(draft)).toHaveLength(2);
 		draft.reason = 'Correction';
 		draft.sourceDescription = 'Field survey';

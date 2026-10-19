@@ -17,7 +17,7 @@ import type {
 
 const format = new GeoJSON();
 const projections = { dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857' };
-export type EditTool = 'draw' | 'grounds' | 'footprint' | 'marker';
+export type EditTool = 'draw' | 'grounds' | 'draw-footprint' | 'footprint' | 'marker';
 
 /** State the map toolbar needs to render and disable editing actions. */
 export interface SpatialEditorStatus {
@@ -52,8 +52,8 @@ export function spatialDraft(state: SpatialState): SpatialSave {
 		footprint: state.footprintSource === 'editor' ? structuredClone(state.footprint) : null,
 		locationMode: state.hasLocationOverride ? 'override' : 'imported',
 		location: state.hasLocationOverride ? structuredClone(state.location) : null,
-		reason: '',
-		sourceDescription: ''
+		reason: 'School location footprint correction',
+		sourceDescription: 'Editor map correction'
 	};
 }
 
@@ -171,7 +171,7 @@ export function createSpatialInteractions(
 ) {
 	const source = new VectorSource<Feature<Geometry>>();
 	let boundary = state.boundary ? new Feature(readSpatialGeometry(state.boundary)) : null;
-	const footprint = state.footprint ? new Feature(readSpatialGeometry(state.footprint)) : null;
+	let footprint = state.footprint ? new Feature(readSpatialGeometry(state.footprint)) : null;
 	let marker = state.location ? new Feature(readSpatialGeometry(state.location)) : null;
 	boundary?.set('kind', 'grounds');
 	footprint?.set('kind', 'footprint');
@@ -227,14 +227,21 @@ export function createSpatialInteractions(
 				padding: [70, 70, 70, 70],
 				duration: 200
 			});
-		if (tool === 'draw' || (tool === 'marker' && !marker)) {
-			const draw = new Draw({ type: tool === 'draw' ? 'Polygon' : 'Point' });
+		if (tool === 'draw' || tool === 'draw-footprint' || (tool === 'marker' && !marker)) {
+			const draw = new Draw({
+				type: tool === 'draw' || tool === 'draw-footprint' ? 'Polygon' : 'Point'
+			});
 			draw.on('drawend', (event) => {
 				if (tool === 'draw') {
 					boundaryEdited = true;
 					if (boundary) source.removeFeature(boundary);
 					boundary = event.feature;
 					boundary.set('kind', 'grounds');
+				} else if (tool === 'draw-footprint') {
+					footprintEdited = true;
+					if (footprint) source.removeFeature(footprint);
+					footprint = event.feature;
+					footprint.set('kind', 'footprint');
 				} else {
 					marker = event.feature;
 					marker.set('kind', 'marker');
@@ -279,7 +286,10 @@ export function createSpatialInteractions(
 	return {
 		tool,
 		stop,
-		area: () => (boundary?.getGeometry() ? getArea(boundary.getGeometry()!) : null),
+		area: () => {
+			const geometry = boundary?.getGeometry() ?? footprint?.getGeometry();
+			return geometry ? getArea(geometry) : null;
+		},
 		destroy: () => {
 			observer?.disconnect();
 			stop();

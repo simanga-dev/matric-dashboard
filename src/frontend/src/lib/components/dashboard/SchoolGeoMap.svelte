@@ -29,7 +29,6 @@
 		Pencil,
 		PenLine,
 		Spline,
-		Circle,
 		Save,
 		X
 	} from '@lucide/svelte';
@@ -693,37 +692,29 @@
 							{#if editing}
 								<button
 									type="button"
-									aria-label={editorStatus?.hasBoundary ? 'Redraw grounds' : 'Draw grounds'}
-									title={editorStatus?.hasBoundary ? 'Redraw grounds' : 'Draw grounds'}
-									aria-pressed={editorStatus?.activeTool === 'draw'}
+									aria-label={editorStatus?.hasFootprint
+										? 'Redraw school grounds'
+										: 'Draw school grounds'}
+									title={editorStatus?.hasFootprint
+										? 'Redraw school grounds'
+										: 'Draw school grounds'}
+									aria-pressed={editorStatus?.activeTool === 'draw-footprint'}
 									disabled={!editorStatus?.hasDraft || editorStatus.saving}
-									onclick={() => chooseTool('draw')}
-									class={toolbarButtonClass(editorStatus?.activeTool === 'draw')}
+									onclick={() => chooseTool('draw-footprint')}
+									class={toolbarButtonClass(editorStatus?.activeTool === 'draw-footprint')}
 									><PenLine class="size-4" /></button
 								>
 								<button
 									type="button"
-									aria-label="Edit grounds"
-									title="Edit grounds"
-									aria-pressed={editorStatus?.activeTool === 'grounds'}
-									disabled={!editorStatus?.hasDraft ||
-										!editorStatus.hasBoundary ||
-										editorStatus.saving}
-									onclick={() => chooseTool('grounds')}
-									class={toolbarButtonClass(editorStatus?.activeTool === 'grounds')}
-									><Spline class="size-4" /></button
-								>
-								<button
-									type="button"
-									aria-label="Edit footprint"
-									title="Edit footprint"
+									aria-label="Edit school grounds"
+									title="Edit school grounds"
 									aria-pressed={editorStatus?.activeTool === 'footprint'}
 									disabled={!editorStatus?.hasDraft ||
 										!editorStatus.hasFootprint ||
 										editorStatus.saving}
 									onclick={() => chooseTool('footprint')}
 									class={toolbarButtonClass(editorStatus?.activeTool === 'footprint')}
-									><Circle class="size-4" /></button
+									><Spline class="size-4" /></button
 								>
 								<button
 									type="button"

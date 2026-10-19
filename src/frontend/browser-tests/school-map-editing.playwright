@@ -53,7 +53,7 @@ async (page) => {
 		);
 		await addMarker.click();
 		await browser.locator('.school-map').click({ position: { x: 200, y: 180 } });
-		await toolbar.getByRole('button', { name: 'Draw grounds', exact: true }).click();
+		await toolbar.getByRole('button', { name: 'Draw school grounds', exact: true }).click();
 		for (const position of [{ x: 160, y: 140 }, { x: 240, y: 140 }, { x: 240, y: 220 }]) await browser.locator('.school-map').click({ position });
 		await browser.locator('.school-map').dblclick({ position: { x: 160, y: 220 } });
 		await editor.getByLabel('Reason for correction').fill('Verified school position');
@@ -67,13 +67,13 @@ async (page) => {
 		check(await editor.getByLabel('Reason for correction').inputValue() === 'Verified school position', 'Conflict discarded draft evidence');
 		check(writes[0].url.endsWith(`/schools/${school.id}/spatial`), 'Draft attached to the wrong EMIS');
 		check(writes[0].body.locationMode === 'override' && writes[0].body.location.type === 'Point', 'Adding missing point did not create an override');
-		check(writes[0].body.boundary?.type === 'Polygon', 'Grounds drawing did not save a polygon');
+		check(writes[0].body.footprint?.type === 'Polygon', 'School grounds drawing did not save a footprint polygon');
 		conflict = false;
 		await toolbar.getByRole('button', { name: 'Save school map', exact: true }).click();
 		await editor.waitFor({ state: 'detached' });
 		await edit.click();
 		await toolbar.getByRole('button', { name: 'Move marker', exact: true }).waitFor();
-		const editFootprint = toolbar.getByRole('button', { name: 'Edit footprint', exact: true });
+		const editFootprint = toolbar.getByRole('button', { name: 'Edit school grounds', exact: true });
 		await editFootprint.waitFor();
 		await editFootprint.click();
 		check(await editFootprint.getAttribute('aria-pressed') === 'true', 'Footprint polygon tool was not activated');

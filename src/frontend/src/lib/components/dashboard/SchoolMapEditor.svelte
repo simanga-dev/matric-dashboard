@@ -184,11 +184,11 @@
 		<p>{school.name} <span class="text-muted-foreground">EMIS {school.emis}</span></p>
 	</div>
 	<p class="text-xs text-muted-foreground">
-		Use the map toolbar to draw or adjust the grounds and marker, then Save or Cancel. Editor-traced
-		grounds are not a surveyed cadastral boundary. School selection is locked while editing. Pan and
-		zoom to find a school with no marker. Drawing and moving geometry require a pointer in this
-		version. Keyboard users can pan and zoom the map, edit evidence, and use the toolbar Save and
-		Cancel, but cannot edit vertices.
+		Use the map toolbar to draw or adjust the school grounds and marker, then Save or Cancel.
+		Editor-traced grounds are not a surveyed cadastral boundary. School selection is locked while
+		editing. Pan and zoom to find a school with no marker. Drawing and moving geometry require a
+		pointer in this version. Keyboard users can pan and zoom the map, edit evidence, and use the
+		toolbar Save and Cancel, but cannot edit vertices.
 	</p>
 	{#if loading}<p role="status">Loading current geometry…</p>{/if}
 	{#if error}<p role="alert" class="text-destructive">{error}</p>
@@ -201,13 +201,11 @@
 	{#if draft}
 		<fieldset disabled={saving} class="space-y-3">
 			{#if activeTool}<p role="status" class="text-xs">
-					{activeTool === 'draw'
-						? 'Click vertices, then double-click to finish the grounds. A new drawing replaces the draft grounds only.'
-						: activeTool === 'grounds'
-							? 'Drag grounds vertices. Alt-click a vertex to remove it.'
-							: activeTool === 'footprint'
-								? 'Drag the footprint circle to move it, or drag a vertex to reshape it. Grounds and marker stay unchanged.'
-								: 'Click to add a missing marker, or drag the marker. Grounds stay unchanged.'}
+					{activeTool === 'draw-footprint'
+						? 'Click around the school grounds, then double-click to close the shape. This replaces the circle footprint.'
+						: activeTool === 'footprint'
+							? 'Drag the school grounds shape to move it, or drag a vertex to reshape it. The marker stays unchanged.'
+							: 'Click to add a missing marker, or drag the marker. Grounds stay unchanged.'}
 				</p>{/if}
 			<p class="text-xs">
 				Revision {original?.revision} · Point source: {original?.locationSource} · Approximate grounds

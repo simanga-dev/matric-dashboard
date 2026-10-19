@@ -43,8 +43,11 @@ school markers. Imagery is configurable, with no provider selected by default.
   The panel below keeps evidence, warnings, area, revision, and history.
 - Each school renders as an editable location-footprint polygon instead of a
   point icon. A 25 m circular footprint is generated when no correction exists.
-  Editors can move or reshape it independently from the imported point and the
-  school-grounds polygon.
+  Editors can redraw the grounds, move the polygon, or reshape its vertices
+  independently from the imported point.
+- Reason and evidence fields start with editable defaults so a correction can be
+  saved immediately after changing geometry. Editors can replace the text with
+  more specific evidence.
 - If the corrected footprint layer is unavailable or empty, the map converts
   imported `school_locations` points into the same small polygon shape and says
   so. The fallback disappears once the corrected layer is published.

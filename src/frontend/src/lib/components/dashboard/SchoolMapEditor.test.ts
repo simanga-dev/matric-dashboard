@@ -48,7 +48,7 @@ const state: SpatialState = {
 	warnings: []
 };
 interface EditorCommands {
-	selectTool: (tool: 'draw' | 'grounds' | 'footprint' | 'marker') => void;
+	selectTool: (tool: 'draw' | 'grounds' | 'draw-footprint' | 'footprint' | 'marker') => void;
 	saveDraft: () => void;
 	cancelEdit: () => void;
 }
@@ -181,12 +181,14 @@ describe('explicit editor save and cancel', () => {
 				hasMarker: false,
 				dirty: false,
 				saving: false,
-				validationCount: 2
+				validationCount: 0
 			})
 		);
-		component.selectTool('draw');
+		component.selectTool('draw-footprint');
 		await tick();
-		expect(mocks.status).toHaveBeenLastCalledWith(expect.objectContaining({ activeTool: 'draw' }));
+		expect(mocks.status).toHaveBeenLastCalledWith(
+			expect.objectContaining({ activeTool: 'draw-footprint' })
+		);
 		mocks.change?.(
 			{
 				type: 'Polygon',
@@ -206,7 +208,7 @@ describe('explicit editor save and cancel', () => {
 		);
 		await tick();
 		expect(mocks.status).toHaveBeenLastCalledWith(
-			expect.objectContaining({ hasBoundary: true, dirty: true, validationCount: 2 })
+			expect.objectContaining({ hasBoundary: true, dirty: true, validationCount: 0 })
 		);
 	});
 });
