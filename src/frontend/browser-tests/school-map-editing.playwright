@@ -32,14 +32,25 @@ async (page) => {
 			return route.fulfill({ json: canonical });
 		});
 		await browser.goto(`${origin}/overview?school=${school.id}`);
-		const edit = browser.getByRole('button', { name: 'Edit school map', exact: true });
+		const toolbar = browser.getByRole('toolbar', { name: 'Map tools' });
+		const edit = toolbar.getByRole('button', { name: 'Edit school map', exact: true });
 		await edit.waitFor();
 		check(await edit.isVisible(), 'Requires a user granted schools.spatial.edit');
+		check(
+			await edit.evaluate((element) => element.getBoundingClientRect().width >= 44),
+			'Map toolbar edit action must meet the 44px target'
+		);
 		await edit.click();
 		const editor = browser.getByRole('region', { name: 'School map editor' });
-		await editor.getByRole('button', { name: 'Add marker', exact: true }).click();
+		const addMarker = toolbar.getByRole('button', { name: 'Add marker', exact: true });
+		await addMarker.waitFor();
+		check(
+			await addMarker.evaluate((element) => element.getBoundingClientRect().height >= 44),
+			'Map toolbar edit actions must meet the 44px target'
+		);
+		await addMarker.click();
 		await browser.locator('.school-map').click({ position: { x: 200, y: 180 } });
-		await editor.getByRole('button', { name: 'Draw grounds', exact: true }).click();
+		await toolbar.getByRole('button', { name: 'Draw grounds', exact: true }).click();
 		for (const position of [{ x: 160, y: 140 }, { x: 240, y: 140 }, { x: 240, y: 220 }]) await browser.locator('.school-map').click({ position });
 		await browser.locator('.school-map').dblclick({ position: { x: 160, y: 220 } });
 		await editor.getByLabel('Reason for correction').fill('Verified school position');
@@ -48,24 +59,24 @@ async (page) => {
 		// fixture school is not in the live directory, so use a stable tree node.
 		await browser.getByRole('button', { name: /^Gauteng/ }).click();
 		check((await editor.textContent()).includes(school.id), 'Tree selection changed immutable editor identity');
-		await editor.getByRole('button', { name: 'Save school map', exact: true }).click();
+		await toolbar.getByRole('button', { name: 'Save school map', exact: true }).click();
 		await editor.getByRole('alert').waitFor();
 		check(await editor.getByLabel('Reason for correction').inputValue() === 'Verified school position', 'Conflict discarded draft evidence');
 		check(writes[0].url.endsWith(`/schools/${school.id}/spatial`), 'Draft attached to the wrong EMIS');
 		check(writes[0].body.locationMode === 'override' && writes[0].body.location.type === 'Point', 'Adding missing point did not create an override');
 		check(writes[0].body.boundary?.type === 'Polygon', 'Grounds drawing did not save a polygon');
 		conflict = false;
-		await editor.getByRole('button', { name: 'Save school map', exact: true }).click();
+		await toolbar.getByRole('button', { name: 'Save school map', exact: true }).click();
 		await editor.waitFor({ state: 'detached' });
 		await edit.click();
-		await browser.getByRole('button', { name: 'Move marker', exact: true }).waitFor();
+		await toolbar.getByRole('button', { name: 'Move marker', exact: true }).waitFor();
 		check(writes.length === 2, 'Expected one explicit retry after a conflict');
 		await editor.getByLabel('Reason for correction').fill('Unpublished change');
 		browser.once('dialog', (dialog) => dialog.dismiss());
-		await editor.getByRole('button', { name: 'Cancel', exact: true }).click();
+		await toolbar.getByRole('button', { name: 'Cancel', exact: true }).click();
 		check(await editor.isVisible(), 'Declining discard lost the draft');
 		browser.once('dialog', (dialog) => dialog.accept());
-		await editor.getByRole('button', { name: 'Cancel', exact: true }).click();
+		await toolbar.getByRole('button', { name: 'Cancel', exact: true }).click();
 		await editor.waitFor({ state: 'detached' });
 		const newer = (revision, longitude, latitude) => ({ ...canonical, revision, location: { type: 'Point', coordinates: [longitude, latitude] }, boundary: { type: 'MultiPolygon', coordinates: [[[[longitude - 0.05, latitude - 0.05], [longitude + 0.05, latitude - 0.05], [longitude + 0.05, latitude + 0.05], [longitude - 0.05, latitude + 0.05], [longitude - 0.05, latitude - 0.05]]]] } });
 		const assertPublishedGeometry = async () => {
@@ -79,7 +90,7 @@ async (page) => {
 		canonical = newer(2, 28, -26);
 		await edit.click();
 		await editor.getByText(/Revision 2/).waitFor();
-		await editor.getByRole('button', { name: 'Cancel', exact: true }).click();
+		await toolbar.getByRole('button', { name: 'Cancel', exact: true }).click();
 		await editor.waitFor({ state: 'detached' });
 		await browser.getByRole('button', { name: 'Other School', exact: true }).click();
 		await browser.getByRole('button', { name: 'Spatial Test School', exact: true }).click();

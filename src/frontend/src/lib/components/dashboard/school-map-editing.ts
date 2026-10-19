@@ -18,6 +18,24 @@ import type {
 const format = new GeoJSON();
 const projections = { dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857' };
 export type EditTool = 'draw' | 'grounds' | 'marker';
+
+/** State the map toolbar needs to render and disable editing actions. */
+export interface SpatialEditorStatus {
+	activeTool: EditTool | null;
+	hasDraft: boolean;
+	hasBoundary: boolean;
+	hasMarker: boolean;
+	dirty: boolean;
+	saving: boolean;
+	validationCount: number;
+}
+
+/** Imperative editing actions exposed to the map toolbar. */
+export interface SpatialEditorHandle {
+	selectTool(tool: EditTool): void;
+	saveDraft(): void;
+	cancelEdit(): void;
+}
 export function readSpatialGeometry(geometry: SpatialBoundary | SpatialPoint): Geometry {
 	const result = format.readGeometry(geometry, projections);
 	if (!result) throw new Error('The school map contains unsupported geometry.');

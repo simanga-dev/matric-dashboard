@@ -21,7 +21,19 @@
 	import type { Point } from 'ol/geom';
 	import type OlMap from 'ol/Map';
 	import type VectorLayer from 'ol/layer/Vector';
-	import { Maximize, Home, AlertCircle, MapPin, ExternalLink } from '@lucide/svelte';
+	import {
+		Maximize,
+		Home,
+		AlertCircle,
+		MapPin,
+		ExternalLink,
+		Pencil,
+		PenLine,
+		Spline,
+		Save,
+		X
+	} from '@lucide/svelte';
+	import type { EditTool, SpatialEditorHandle, SpatialEditorStatus } from './school-map-editing';
 	import { toTitleCase } from '$lib/utils';
 	import {
 		passRateBand,
@@ -51,6 +63,8 @@
 	let imagerySelected = $state(false);
 	let imageryMessage = $state('');
 	let editing = $state<{ emis: string; name: string } | null>(null);
+	let editorRef = $state<SpatialEditorHandle | null>(null);
+	let editorStatus = $state<SpatialEditorStatus | null>(null);
 	let selectionMessage = $state('');
 	let mapReady = $state(false);
 	let switchBackground: ((imagery: boolean) => void) | null = null;
@@ -587,12 +601,26 @@
 		void loadMap();
 	});
 
+	function toolbarButtonClass(active = false) {
+		return `flex size-11 shrink-0 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40 ${active ? 'bg-accent text-accent-foreground' : ''}`;
+	}
+	function chooseTool(tool: EditTool) {
+		editorRef?.selectTool(tool);
+	}
 	function openEditor() {
 		if (!selectedSchoolId || !canEdit) return;
 		const school = schools.find((school) => school.id === selectedSchoolId);
+		editorStatus = null;
+		editorRef = null;
 		editing = { emis: selectedSchoolId, name: school?.name ?? selectedSchoolId };
 		popup = null;
 		hidePopup?.();
+		selectionMessage = '';
+	}
+	function closeEditor() {
+		editing = null;
+		editorRef = null;
+		editorStatus = null;
 		selectionMessage = '';
 	}
 	function saved(state: SpatialState) {
@@ -607,30 +635,6 @@
 	aria-label="School locations"
 	class="flex h-full min-h-0 flex-col bg-card text-card-foreground"
 >
-	<div class="flex flex-wrap items-center gap-2 border-b p-2 text-xs">
-		<label
-			>Background <select
-				aria-label="Map background"
-				class="min-h-11 rounded-md border border-input bg-background px-3 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-				value={imagerySelected ? 'imagery' : 'street'}
-				onchange={(event) => switchBackground?.(event.currentTarget.value === 'imagery')}
-			>
-				<option value="street">OpenStreetMap</option><option
-					value="imagery"
-					disabled={!imageryConfig}
-					>Approved imagery{imageryConfig ? '' : ' (not configured)'}</option
-				>
-			</select></label
-		>
-		{#if imagerySelected && imageryConfig}<span>{imageryConfig.attribution}</span>{/if}
-		{#if canEdit}<Button
-				type="button"
-				variant="outline"
-				class="ms-auto min-h-11 min-w-11"
-				disabled={!selectedSchoolId || !mapReady || !!editing}
-				onclick={openEditor}>Edit school map</Button
-			>{/if}
-	</div>
 	{#if imageryMessage}<p role="status" class="p-2 text-xs">{imageryMessage}</p>{/if}
 	{#if selectionMessage && editing}<p role="status" class="p-2 text-xs">{selectionMessage}</p>{/if}
 	<div class="relative flex min-h-0 flex-1 flex-col" aria-busy={loading}>
@@ -672,34 +676,115 @@
 						class="school-map h-full w-full bg-background focus-visible:outline-2 focus-visible:outline-ring"
 					></div>
 					<div
-						class="absolute end-3 top-3 z-20 flex items-center gap-1 rounded-lg bg-background/85 p-1 shadow-md backdrop-blur"
+						role="toolbar"
+						aria-label="Map tools"
+						class="absolute end-3 top-3 z-20 flex max-w-[calc(100%-1.5rem)] flex-wrap items-center justify-end gap-1 rounded-lg bg-background/85 p-1 text-xs shadow-md backdrop-blur"
 					>
+						<label class="flex min-h-11 items-center gap-1 px-1">
+							<span class="text-muted-foreground">Background</span>
+							<select
+								aria-label="Map background"
+								class="min-h-11 max-w-40 rounded-md border border-input bg-background px-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+								value={imagerySelected ? 'imagery' : 'street'}
+								onchange={(event) => switchBackground?.(event.currentTarget.value === 'imagery')}
+							>
+								<option value="street">OpenStreetMap</option>
+								<option value="imagery" disabled={!imageryConfig}
+									>Approved imagery{imageryConfig ? '' : ' (not configured)'}</option
+								>
+							</select>
+						</label>
+						<span class="mx-1 h-7 w-px bg-border" aria-hidden="true"></span>
 						<button
 							type="button"
 							aria-label="Fit all school locations"
 							title="Fit all school locations"
 							onclick={() => fitSchools?.()}
-							class="rounded-md p-1.5 text-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
-							><Maximize class="size-4" /></button
+							class={toolbarButtonClass()}><Maximize class="size-4" /></button
 						>
 						<button
 							type="button"
 							aria-label="Reset map to full view"
 							title="Reset map to full view"
 							onclick={() => resetView?.()}
-							class="rounded-md p-1.5 text-foreground hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
-							><Home class="size-4" /></button
+							class={toolbarButtonClass()}><Home class="size-4" /></button
 						>
+						{#if canEdit}
+							<span class="mx-1 h-7 w-px bg-border" aria-hidden="true"></span>
+							{#if editing}
+								<button
+									type="button"
+									aria-label={editorStatus?.hasBoundary ? 'Redraw grounds' : 'Draw grounds'}
+									title={editorStatus?.hasBoundary ? 'Redraw grounds' : 'Draw grounds'}
+									aria-pressed={editorStatus?.activeTool === 'draw'}
+									disabled={!editorStatus?.hasDraft || editorStatus.saving}
+									onclick={() => chooseTool('draw')}
+									class={toolbarButtonClass(editorStatus?.activeTool === 'draw')}
+									><PenLine class="size-4" /></button
+								>
+								<button
+									type="button"
+									aria-label="Edit grounds"
+									title="Edit grounds"
+									aria-pressed={editorStatus?.activeTool === 'grounds'}
+									disabled={!editorStatus?.hasDraft ||
+										!editorStatus.hasBoundary ||
+										editorStatus.saving}
+									onclick={() => chooseTool('grounds')}
+									class={toolbarButtonClass(editorStatus?.activeTool === 'grounds')}
+									><Spline class="size-4" /></button
+								>
+								<button
+									type="button"
+									aria-label={editorStatus?.hasMarker ? 'Move marker' : 'Add marker'}
+									title={editorStatus?.hasMarker ? 'Move marker' : 'Add marker'}
+									aria-pressed={editorStatus?.activeTool === 'marker'}
+									disabled={!editorStatus?.hasDraft || editorStatus.saving}
+									onclick={() => chooseTool('marker')}
+									class={toolbarButtonClass(editorStatus?.activeTool === 'marker')}
+									><MapPin class="size-4" /></button
+								>
+								<span class="mx-1 h-7 w-px bg-border" aria-hidden="true"></span>
+								<button
+									type="button"
+									aria-label="Save school map"
+									title="Save school map"
+									disabled={!editorStatus?.hasDraft ||
+										!editorStatus.dirty ||
+										editorStatus.validationCount > 0 ||
+										editorStatus.saving}
+									onclick={() => editorRef?.saveDraft()}
+									class={toolbarButtonClass()}><Save class="size-4" /></button
+								>
+								<button
+									type="button"
+									aria-label="Cancel"
+									title="Cancel school map editing"
+									disabled={editorStatus?.saving}
+									onclick={() => editorRef?.cancelEdit()}
+									class={toolbarButtonClass()}><X class="size-4" /></button
+								>
+							{:else}
+								<button
+									type="button"
+									aria-label="Edit school map"
+									title="Edit school map"
+									disabled={!selectedSchoolId || !mapReady}
+									onclick={openEditor}
+									class={toolbarButtonClass()}><Pencil class="size-4" /></button
+								>
+							{/if}
+						{/if}
 					</div>
 					{#if featureCount === 0}<div
 							role="status"
-							class="pointer-events-none absolute inset-x-4 top-4 rounded-md border bg-background/95 p-3 text-sm shadow-sm"
+							class="pointer-events-none absolute inset-x-4 top-24 rounded-md border bg-background/95 p-3 text-sm shadow-sm"
 						>
 							No school locations are available yet. Use the directory to view school results.
 						</div>{/if}
 					{#if selectedLocationMissing && featureCount > 0}<div
 							role="status"
-							class="pointer-events-none absolute inset-x-4 top-4 rounded-md border bg-background/95 p-3 text-xs shadow-sm"
+							class="pointer-events-none absolute inset-x-4 top-24 rounded-md border bg-background/95 p-3 text-xs shadow-sm"
 						>
 							The selected school has no mapped location. Its results are shown in the details
 							panel.
@@ -762,22 +847,21 @@
 			<p role="status" class="p-3 text-sm">Opening school map editor…</p>
 		{:then { default: SchoolMapEditor }}
 			<SchoolMapEditor
+				bind:this={editorRef}
 				map={olMap}
 				emis={editing.emis}
 				name={editing.name}
 				onloaded={(state) => updateCanonical?.(state)}
 				onsaved={saved}
-				onclose={() => {
-					editing = null;
-					selectionMessage = '';
-				}}
+				onstatus={(status) => (editorStatus = status)}
+				onclose={closeEditor}
 			/>
 		{:catch}
 			<p role="alert" class="p-3 text-sm">
 				The editor could not be loaded. <button
 					type="button"
 					class="underline"
-					onclick={() => (editing = null)}>Close editor</button
+					onclick={closeEditor}>Close editor</button
 				>
 			</p>
 		{/await}

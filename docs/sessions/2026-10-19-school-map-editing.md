@@ -37,6 +37,9 @@ school markers. Imagery is configurable, with no provider selected by default.
 
 - The map editor uses isolated OpenLayers drafts, explicit Save/Cancel, a fixed
   school identity during editing, navigation warnings, and protected history.
+- The floating map toolbar holds the background switcher, fit/home controls, and
+  every editing action: draw, edit grounds, add/move marker, save, and cancel.
+  The panel below keeps evidence, warnings, area, revision, and history.
 - Marker changes are independent of grounds geometry. Errors and HTTP 409 retain
   the local draft rather than silently reverting or overwriting saved data.
 - The browser client uses generated OpenAPI routes with runtime GeoJSON narrowing.
@@ -50,7 +53,7 @@ school markers. Imagery is configurable, with no provider selected by default.
 
 - Backend build passed. Release tests passed, 1,226 tests and 15 existing skips,
   including 11 PostGIS integration tests in disposable containers.
-- Frontend tests passed, 540 tests. Lint and type checks passed; the 11 reported
+- Frontend tests passed, 541 tests. Lint and type checks passed; the 11 reported
   Svelte warnings already existed in unrelated components. Production build passed.
 - Browser editing and imagery regressions passed against a production build with
   fixture API routes. Editing coverage includes missing markers, drawing grounds,

@@ -11,6 +11,7 @@ const mocks = vi.hoisted(() => ({
 	history: vi.fn(),
 	navigate: vi.fn(),
 	destroy: vi.fn(),
+	status: vi.fn(),
 	change: null as
 		| null
 		| ((
@@ -42,12 +43,15 @@ const state: SpatialState = {
 	areaSquareMetres: null,
 	warnings: []
 };
-let component: ReturnType<typeof mount>;
+interface EditorCommands {
+	selectTool: (tool: 'draw' | 'grounds' | 'marker') => void;
+	saveDraft: () => void;
+	cancelEdit: () => void;
+}
+let component: ReturnType<typeof mount> & EditorCommands;
 const close = vi.fn();
 const saved = vi.fn();
 const loaded = vi.fn();
-const button = (name: string) =>
-	[...document.querySelectorAll('button')].find((element) => element.textContent?.trim() === name)!;
 async function evidence() {
 	const reason = document.querySelector('textarea')!;
 	reason.value = 'Verified school grounds';
@@ -71,9 +75,10 @@ beforeEach(async () => {
 			name: 'Original school',
 			onsaved: saved,
 			onloaded: loaded,
-			onclose: close
+			onclose: close,
+			onstatus: mocks.status
 		}
-	});
+	}) as ReturnType<typeof mount> & EditorCommands;
 	await vi.waitFor(() => expect(document.querySelector('textarea')).not.toBeNull());
 });
 afterEach(async () => {
@@ -83,7 +88,7 @@ afterEach(async () => {
 describe('explicit editor save and cancel', () => {
 	it('updates published state from the authoritative GET before Cancel can remove the draft', async () => {
 		expect(loaded).toHaveBeenCalledWith(state);
-		button('Cancel').click();
+		component.cancelEdit();
 		await tick();
 		expect(close).toHaveBeenCalled();
 		expect(loaded.mock.invocationCallOrder[0]).toBeLessThan(close.mock.invocationCallOrder[0]!);
@@ -112,13 +117,13 @@ describe('explicit editor save and cancel', () => {
 			false
 		);
 		await evidence();
-		button('Save school map').click();
+		component.saveDraft();
 		await tick();
 		expect(mocks.save).toHaveBeenCalledWith(
 			'00123',
 			expect.objectContaining({ locationMode: 'imported', location: null, expectedRevision: 0 })
 		);
-		button('Saving…').click();
+		component.saveDraft();
 		await tick();
 		expect(mocks.save).toHaveBeenCalledTimes(1);
 		finish({ ...state, revision: 1 });
@@ -129,7 +134,7 @@ describe('explicit editor save and cancel', () => {
 		mocks.save.mockRejectedValue(new Error('Revision conflict. Your draft is retained.'));
 		mocks.change?.(null, { type: 'Point', coordinates: [28, -26] }, true);
 		await evidence();
-		button('Save school map').click();
+		component.saveDraft();
 		await vi.waitFor(() =>
 			expect(document.querySelector('[role="alert"]')?.textContent).toContain('draft is retained')
 		);
@@ -153,12 +158,47 @@ describe('explicit editor save and cancel', () => {
 		const cancel = vi.fn();
 		mocks.navigate.mock.calls[0]![0]({ willUnload: false, cancel });
 		expect(cancel).toHaveBeenCalled();
-		button('Cancel').click();
+		component.cancelEdit();
 		await tick();
 		expect(close).not.toHaveBeenCalled();
 		vi.spyOn(window, 'confirm').mockReturnValue(true);
-		button('Cancel').click();
+		component.cancelEdit();
 		await tick();
 		expect(close).toHaveBeenCalled();
+	});
+	it('reports toolbar state for drawing, marker, dirty, save, and validation controls', async () => {
+		expect(mocks.status).toHaveBeenLastCalledWith(
+			expect.objectContaining({
+				activeTool: null,
+				hasDraft: true,
+				hasBoundary: false,
+				hasMarker: false,
+				dirty: false,
+				saving: false,
+				validationCount: 2
+			})
+		);
+		component.selectTool('draw');
+		await tick();
+		expect(mocks.status).toHaveBeenLastCalledWith(expect.objectContaining({ activeTool: 'draw' }));
+		mocks.change?.(
+			{
+				type: 'Polygon',
+				coordinates: [
+					[
+						[28, -26],
+						[28.01, -26],
+						[28.01, -26.01],
+						[28, -26]
+					]
+				]
+			},
+			null,
+			false
+		);
+		await tick();
+		expect(mocks.status).toHaveBeenLastCalledWith(
+			expect.objectContaining({ hasBoundary: true, dirty: true, validationCount: 2 })
+		);
 	});
 });

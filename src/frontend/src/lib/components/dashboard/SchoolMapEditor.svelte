@@ -14,7 +14,8 @@
 		spatialDraft,
 		spatialDraftWarnings,
 		validateSpatialDraft,
-		type EditTool
+		type EditTool,
+		type SpatialEditorStatus
 	} from './school-map-editing';
 
 	let {
@@ -23,7 +24,8 @@
 		name,
 		onloaded,
 		onsaved,
-		onclose
+		onclose,
+		onstatus
 	}: {
 		map: OlMap;
 		emis: string;
@@ -31,6 +33,7 @@
 		onloaded?: (state: SpatialState) => void;
 		onsaved: (state: SpatialState) => void;
 		onclose: () => void;
+		onstatus?: (status: SpatialEditorStatus) => void;
 	} = $props();
 	// Capture identity before any request. External tree changes cannot retarget a draft.
 	const school = captureSchool();
@@ -54,6 +57,17 @@
 		...(original?.warnings ?? []),
 		...(draft && original ? spatialDraftWarnings(draft, original) : [])
 	]);
+	$effect(() => {
+		onstatus?.({
+			activeTool,
+			hasDraft: Boolean(draft),
+			hasBoundary: Boolean(draft?.boundary),
+			hasMarker: Boolean(original?.location || draft?.location),
+			dirty,
+			saving,
+			validationCount: validation.length
+		});
+	});
 
 	function canLeave() {
 		return !saving && (!dirty || window.confirm('Discard unsaved school map changes?'));
@@ -107,9 +121,21 @@
 			if (!disposed) loading = false;
 		}
 	}
-	function tool(next: EditTool) {
+	function chooseTool(next: EditTool) {
 		activeTool = next;
 		interactions?.tool(next);
+	}
+	/** Selects a drawing or marker tool from the map toolbar. */
+	export function selectTool(next: EditTool) {
+		chooseTool(next);
+	}
+	/** Publishes the current draft from the map toolbar. */
+	export function saveDraft() {
+		void save();
+	}
+	/** Closes the editor from the map toolbar, confirming unsaved work. */
+	export function cancelEdit() {
+		if (canLeave()) onclose();
 	}
 	async function save() {
 		if (!draft || saving || !dirty || validation.length) return;
@@ -151,25 +177,15 @@
 	aria-label="School map editor"
 	class="max-h-80 space-y-3 overflow-auto border-t bg-card p-3 text-sm"
 >
-	<div class="flex items-start justify-between gap-3">
-		<div>
-			<h3 class="font-semibold">Edit school map</h3>
-			<p>{school.name} <span class="text-muted-foreground">EMIS {school.emis}</span></p>
-		</div>
-		<Button
-			type="button"
-			variant="outline"
-			class="min-h-11 min-w-11"
-			disabled={saving}
-			onclick={() => {
-				if (canLeave()) onclose();
-			}}>Cancel</Button
-		>
+	<div>
+		<h3 class="font-semibold">Edit school map</h3>
+		<p>{school.name} <span class="text-muted-foreground">EMIS {school.emis}</span></p>
 	</div>
 	<p class="text-xs text-muted-foreground">
-		Editor-traced grounds, not a surveyed cadastral boundary. School selection is locked until Save
-		or Cancel. Pan and zoom to find a school with no marker. Drawing and moving geometry require a
-		pointer in this version. Keyboard users can pan and zoom the map, edit evidence, Save, and
+		Use the map toolbar to draw or adjust the grounds and marker, then Save or Cancel. Editor-traced
+		grounds are not a surveyed cadastral boundary. School selection is locked while editing. Pan and
+		zoom to find a school with no marker. Drawing and moving geometry require a pointer in this
+		version. Keyboard users can pan and zoom the map, edit evidence, and use the toolbar Save and
 		Cancel, but cannot edit vertices.
 	</p>
 	{#if loading}<p role="status">Loading current geometry…</p>{/if}
@@ -182,31 +198,6 @@
 			>{/if}{/if}
 	{#if draft}
 		<fieldset disabled={saving} class="space-y-3">
-			<div class="flex flex-wrap gap-2">
-				<Button
-					type="button"
-					variant="outline"
-					class="min-h-11 min-w-11"
-					aria-pressed={activeTool === 'draw'}
-					onclick={() => tool('draw')}>{draft.boundary ? 'Redraw grounds' : 'Draw grounds'}</Button
-				>
-				<Button
-					type="button"
-					variant="outline"
-					class="min-h-11 min-w-11"
-					disabled={!draft.boundary}
-					aria-pressed={activeTool === 'grounds'}
-					onclick={() => tool('grounds')}>Edit grounds</Button
-				>
-				<Button
-					type="button"
-					variant="outline"
-					class="min-h-11 min-w-11"
-					aria-pressed={activeTool === 'marker'}
-					onclick={() => tool('marker')}
-					>{original?.location || draft.location ? 'Move marker' : 'Add marker'}</Button
-				>
-			</div>
 			{#if activeTool}<p role="status" class="text-xs">
 					{activeTool === 'draw'
 						? 'Click vertices, then double-click to finish the grounds. A new drawing replaces the draft grounds only.'
@@ -245,12 +236,6 @@
 			{#if dirty && validation.length}<ul class="list-inside list-disc text-xs text-destructive">
 					{#each validation as message (message)}<li>{message}</li>{/each}
 				</ul>{/if}
-			<Button
-				type="button"
-				class="min-h-11 min-w-11"
-				disabled={!dirty || validation.length > 0}
-				onclick={save}>{saving ? 'Saving…' : 'Save school map'}</Button
-			>
 		</fieldset>
 		<details>
 			<summary
