@@ -33,6 +33,10 @@ geo-locations:
 clean-school-names:
     python3 scripts/clean_school_names.py
 
+# Apply cleaned names to SQLite and Postgres
+clean-school-names-apply:
+    ./scripts/apply_clean_school_names.sh
+
 # Add a new EF Core migration
 migrate name:
     dotnet ef migrations add {{name}} \

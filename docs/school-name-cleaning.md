@@ -68,6 +68,48 @@ Rows that did not match, or that still contain a school-type code, carry a
 `review_note`. Filter that column to work through them. Placeholder EMIS rows are
 the same centres quarantined by `scripts/import_schools_to_db.py`.
 
+## Apply names to the databases
+
+`scripts/apply_clean_school_names.py` extends the cleaned export with names from
+`National.xlsx` for schools that are not in the report, updates the SQLite
+`schools` table in one transaction, and emits transactional Postgres SQL.
+
+```bash
+# SQLite and Postgres, using the running Aspire or Compose container
+./scripts/apply_clean_school_names.sh
+# or
+just clean-school-names-apply
+```
+
+The shell wrapper auto-detects the Postgres container and database. Override with
+`PG_CONTAINER`, `PG_USER`, `PG_DB`, and `PG_PASSWORD` when more than one stack is
+running.
+
+Before writing SQLite, the script copies it to `data/nsc/backups/`. It also writes
+`data/nsc/school_name_updates.csv` with every changed SQLite name, the old value,
+the new value, and the source. Postgres updates both
+`marks."Schools"."CentreName"` and `geo.school_locations.name` by EMIS, and sets
+`UpdatedAt` when a school name changes.
+
+To apply only the cleaned names to Postgres without the wrapper:
+
+```bash
+python3 scripts/apply_clean_school_names.py \
+    | docker exec -i -e PGPASSWORD=... <container> psql -U <user> -d <database>
+```
+
+## Search index
+
+`scripts/upload_to_meilisearch.py` reads `data/nsc/school_names_clean.csv` by
+default and replaces `centre_name` for matching EMIS values before uploading.
+Use `--clean-csv` to point at a different export. Re-run it after changing the
+name export, otherwise free-text search keeps ranking the old names.
+
+```bash
+MEILI_URL=http://127.0.0.1:32827 MEILI_MASTER_KEY=... \
+    python3 scripts/upload_to_meilisearch.py
+```
+
 ## Tests
 
 ```bash
