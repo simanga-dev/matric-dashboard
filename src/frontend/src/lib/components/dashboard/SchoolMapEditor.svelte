@@ -2,6 +2,8 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { beforeNavigate } from '$app/navigation';
 	import { Button } from '$lib/components/ui/button';
+	import InfoTooltip from '$lib/components/common/InfoTooltip.svelte';
+	import * as Tooltip from '$lib/components/ui/tooltip';
 	import type OlMap from 'ol/Map';
 	import { fromLonLat } from 'ol/proj';
 	import {
@@ -227,18 +229,21 @@
 	});
 </script>
 
-<section aria-label="School map editor" class="space-y-3 p-3 text-sm">
-	<div>
-		<h3 class="font-semibold">Edit school map</h3>
-		<p>{school.name} <span class="text-muted-foreground">EMIS {school.emis}</span></p>
+<section aria-label="School map editor" class="space-y-3 p-3 text-xs">
+	<div class="flex items-start justify-between gap-2">
+		<div class="min-w-0">
+			<h3 class="text-sm font-semibold">Edit school map</h3>
+			<p class="mt-0.5">
+				{school.name} <span class="text-muted-foreground">EMIS {school.emis}</span>
+			</p>
+		</div>
+		<Tooltip.Provider>
+			<InfoTooltip
+				label="editing school maps"
+				text="Use the map toolbar to draw or adjust the school grounds and marker, then Save or Cancel. Editor-traced grounds are not a surveyed cadastral boundary. School selection is locked while editing. Drawing and moving geometry require a pointer; keyboard users can pan and zoom the map and use the toolbar Save and Cancel, but cannot edit vertices."
+			/>
+		</Tooltip.Provider>
 	</div>
-	<p class="text-xs text-muted-foreground">
-		Use the map toolbar to draw or adjust the school grounds and marker, then Save or Cancel.
-		Editor-traced grounds are not a surveyed cadastral boundary. School selection is locked while
-		editing. Pan and zoom to find a school with no marker. Drawing and moving geometry require a
-		pointer in this version. Keyboard users can pan and zoom the map, edit evidence, and use the
-		toolbar Save and Cancel, but cannot edit vertices.
-	</p>
 	<form class="space-y-2" onsubmit={submitCoordinates}>
 		<label for="coordinate-input" class="block text-xs font-medium"
 			>Paste coordinates or a Google Maps link</label
@@ -251,12 +256,18 @@
 				spellcheck="false"
 				bind:value={coordinateInput}
 				placeholder="-30.86536, 29.85241"
-				class="min-h-11 min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+				class="min-h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none pointer-coarse:min-h-11"
 			/>
 			<div class="flex gap-2">
-				<Button type="submit" variant="outline" class="min-h-11">Locate</Button>
-				<Button type="button" class="min-h-11" disabled={loading || !draft} onclick={locateAndDraw}
-					>Locate and draw</Button
+				<Button type="submit" variant="outline" size="sm" class="text-xs pointer-coarse:min-h-11"
+					>Locate</Button
+				>
+				<Button
+					type="button"
+					size="sm"
+					class="text-xs pointer-coarse:min-h-11"
+					disabled={loading || !draft}
+					onclick={locateAndDraw}>Locate and draw</Button
 				>
 			</div>
 		</div>
@@ -270,7 +281,8 @@
 		{#if !draft && !loading}<Button
 				type="button"
 				variant="outline"
-				class="min-h-11 min-w-11"
+				size="sm"
+				class="text-xs pointer-coarse:min-h-11"
 				onclick={load}>Retry</Button
 			>{/if}{/if}
 	{#if draft}
@@ -294,9 +306,9 @@
 					Check this unusually small or large grounds area.
 				</p>{/if}
 			{#each warnings as warning, index (index)}<p class="text-xs">{warning}</p>{/each}
-			<label class="block"
+			<label class="block text-xs font-medium"
 				>Reason for correction <textarea
-					class="mt-1 block min-h-11 w-full rounded-md border border-input bg-background p-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+					class="mt-1 block min-h-9 w-full rounded-md border border-input bg-background p-2 text-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none pointer-coarse:min-h-11"
 					required
 					maxlength="2000"
 					rows="2"
@@ -304,9 +316,9 @@
 					oninput={() => (dirty = true)}
 				></textarea></label
 			>
-			<label class="block"
+			<label class="block text-xs font-medium"
 				>Source or evidence <input
-					class="mt-1 block min-h-11 w-full rounded-md border border-input bg-background p-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+					class="mt-1 block min-h-9 w-full rounded-md border border-input bg-background p-2 text-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none pointer-coarse:min-h-11"
 					required
 					maxlength="1000"
 					bind:value={draft.sourceDescription}
@@ -320,7 +332,7 @@
 		</fieldset>
 		<details>
 			<summary
-				class="min-h-11 cursor-pointer rounded-md py-3 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+				class="min-h-9 cursor-pointer rounded-md py-2 text-xs font-medium focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none pointer-coarse:min-h-11"
 				>Revision history</summary
 			>
 			{#if historyError}<p role="status">{historyError}</p>{:else if history.length === 0}<p>

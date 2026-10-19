@@ -70,6 +70,7 @@
 	let imageryMessage = $state('');
 	let editing = $state<{ emis: string; name: string } | null>(null);
 	let toolbarCollapsed = $state(false);
+	let toolbarWidth = $state(0);
 	let editorRef = $state<SpatialEditorHandle | null>(null);
 	let editorStatus = $state<SpatialEditorStatus | null>(null);
 	let selectionMessage = $state('');
@@ -647,6 +648,19 @@
 		editorStatus = null;
 		selectionMessage = '';
 	}
+	function toggleToolbar() {
+		if (toolbarCollapsed) {
+			toolbarCollapsed = false;
+			return;
+		}
+		if (editing) {
+			// Close the editor with the toolbar, respecting unsaved-change confirmation.
+			if (editorRef) editorRef.cancelEdit();
+			else closeEditor();
+			if (editing) return;
+		}
+		toolbarCollapsed = true;
+	}
 	function saved(state: SpatialState) {
 		updateCanonical?.(state);
 		invalidateGeoLayer('matric:school_footprints');
@@ -705,6 +719,7 @@
 					<div
 						role="toolbar"
 						aria-label="Map tools"
+						bind:clientWidth={toolbarWidth}
 						class="absolute end-3 top-3 z-20 flex max-w-[calc(100%-1.5rem)] items-start {toolbarCollapsed
 							? ''
 							: 'gap-1'} rounded-lg bg-background/85 p-1 text-xs shadow-md backdrop-blur"
@@ -860,7 +875,7 @@
 							aria-label={toolbarCollapsed ? 'Expand map toolbar' : 'Collapse map toolbar'}
 							title={toolbarCollapsed ? 'Expand map toolbar' : 'Collapse map toolbar'}
 							aria-expanded={!toolbarCollapsed}
-							onclick={() => (toolbarCollapsed = !toolbarCollapsed)}
+							onclick={toggleToolbar}
 							class={toolbarButtonClass()}
 						>
 							{#if toolbarCollapsed}
@@ -955,6 +970,7 @@
 					{#if editing && olMap && canEdit}
 						<div
 							class="absolute end-3 top-18 z-20 flex max-h-[min(26rem,calc(100%_-_5.5rem))] w-[min(26rem,calc(100%_-_1.5rem))] flex-col overflow-hidden rounded-lg border bg-card/95 text-sm shadow-lg backdrop-blur"
+							style:width={toolbarWidth ? `max(20rem, ${toolbarWidth}px)` : undefined}
 						>
 							{#await import('./SchoolMapEditor.svelte')}
 								<p role="status" class="p-3">Opening school map editor…</p>

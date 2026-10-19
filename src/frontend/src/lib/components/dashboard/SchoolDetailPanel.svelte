@@ -253,15 +253,18 @@
 		{@render headerAction?.()}
 	</header>
 	<div
-		class="min-h-0 flex-1 overflow-y-auto p-3 pt-5 @[320px]/details:p-4"
+		class="min-h-0 flex-1 overflow-x-hidden overflow-y-auto p-3 pt-5 @[320px]/details:p-4"
 		aria-busy={selectedSchoolId ? loading : regionLoading}
 	>
 		{#if !selectedSchoolId}
 			{#if regionLoading}
 				<div role="status" class="space-y-4">
 					<span class="sr-only">Loading region stats…</span>
-					<Skeleton class="h-5 w-40 rounded-full" />
-					<div class="space-y-3 rounded-xl bg-overview-metric p-3">
+					<div class="min-w-0 px-1">
+						<Skeleton class="h-5 w-40 rounded-full" />
+						<Skeleton class="mt-2 h-3 w-24 rounded-full" />
+					</div>
+					<div class="space-y-3 rounded-xl bg-overview-metric p-3 shadow-sm @[320px]/details:p-4">
 						<Skeleton class="h-3 w-28 rounded-full" />
 						<Skeleton class="h-9 w-24 rounded-md" />
 						<Skeleton class="h-1.5 w-full rounded-full" />
@@ -295,7 +298,7 @@
 						data-overview-metric
 					>
 						<Card.Content class="p-3 @[320px]/details:p-4">
-							<div class="flex items-end justify-between gap-3">
+							<div class="flex flex-wrap items-end justify-between gap-3">
 								<div>
 									<p class="text-xs text-muted-foreground">
 										NSC pass rate · {region.year}<InfoTooltip
@@ -432,26 +435,24 @@
 				</div>
 			{/if}
 		{:else if selectedSchoolId && loading && (!school || showSkeleton)}
-			<div role="status" class="space-y-5">
+			<div role="status" class="space-y-4">
 				<span class="sr-only">Loading selected school…</span>
-				<div class="flex items-center gap-3">
-					<Skeleton class="size-8 shrink-0 rounded-full" />
-					<div class="space-y-1.5">
-						<Skeleton class="h-4 w-40 rounded-full" />
-						<Skeleton class="h-3 w-24 rounded-full" />
-					</div>
+				<div class="min-w-0 px-1">
+					<Skeleton class="h-5 w-44 rounded-full" />
+					<Skeleton class="mt-2 h-3 w-24 rounded-full" />
 				</div>
-				<div class="space-y-3 rounded-xl bg-overview-metric p-3">
+				<div class="space-y-3 rounded-xl bg-overview-metric p-3 shadow-sm @[320px]/details:p-4">
 					<Skeleton class="h-3 w-28 rounded-full" />
 					<Skeleton class="h-8 w-24 rounded-md" />
 					<Skeleton class="h-1.5 w-full rounded-full" />
 					<Skeleton class="h-3 w-40 rounded-full" />
 				</div>
+				<Skeleton class="h-9 w-full rounded-md" />
 				{#each [[['w-24', 'w-16'], ['w-20', 'w-10'], ['w-28', 'w-12']], [['w-28', 'w-10'], ['w-24', 'w-12'], ['w-32', 'w-10']]] as rows, i (i)}
-					<div class="space-y-2">
+					<div class="space-y-3 rounded-xl bg-muted/30 p-3">
 						<Skeleton class="h-3 w-24 rounded-full" />
 						{#each rows as [label, value], j (j)}
-							<div class="flex items-center justify-between">
+							<div class="flex items-center justify-between gap-4">
 								<Skeleton class="h-3 {label} rounded-full" />
 								<Skeleton class="h-3 {value} rounded-full" />
 							</div>
@@ -512,7 +513,7 @@
 						data-overview-metric
 					>
 						<Card.Content class="p-3 @[320px]/details:p-4">
-							<div class="flex items-end justify-between gap-3">
+							<div class="flex flex-wrap items-end justify-between gap-3">
 								<div>
 									<p class="text-xs text-muted-foreground">
 										NSC pass rate{latestYear ? ` · ${latestYear}` : ''}<InfoTooltip

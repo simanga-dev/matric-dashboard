@@ -4,16 +4,14 @@
 	import { EmailVerificationBanner } from '$lib/components/auth';
 	import { page } from '$app/state';
 	import { invalidateAll } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import { healthState } from '$lib/state';
-	import { routes } from '$lib/config';
 	import { cn } from '$lib/utils';
 
 	let { children, data } = $props();
 
 	// The overview is a full-bleed workspace: it manages its own height and
 	// wants no page padding or card frame around it.
-	let fullBleed = $derived(page.url.pathname === resolve(routes.overview));
+	let fullBleed = $derived(page.route.id === '/(app)/overview');
 
 	// When health polling detects the backend went down, re-run server loads.
 	// The (app) layout.server.ts will throw 503, showing the error page with
