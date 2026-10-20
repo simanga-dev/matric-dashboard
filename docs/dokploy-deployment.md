@@ -2,7 +2,7 @@
 
 Use `docker-compose.production.yml` as the Compose path in Dokploy. This file runs only `frontend` and `api`. Do not combine it with `docker-compose.yml`, which also creates infrastructure services.
 
-The frontend starts independently of API health. The API health check remains enabled for monitoring. If the API is unhealthy, inspect its startup logs and connections to the external services; starting the frontend does not fix API failures.
+The frontend waits for the API container to start, but does not wait for API health. The API health check remains enabled for monitoring. If the API is unhealthy, inspect its startup logs and connections to the external services; starting the frontend does not fix API failures.
 
 ## Connections
 
@@ -12,7 +12,9 @@ The API connects to your separately managed PostgreSQL/PostGIS, Meilisearch, Geo
 
 Set `TRUSTED_PROXY_NETWORK` to the actual CIDR of the Compose default network carrying frontend-to-API requests. You can inspect it on the VPS with `docker network inspect <network-name>`. Create the network through Dokploy first if necessary. Do not trust all addresses. If Dokploy changes the network subnet on redeployment, update this setting.
 
-Add your HTTPS domain in Dokploy, targeting service `frontend`, port `3000`. Set `FRONTEND_URL` to that exact origin without a trailing slash. The frontend proxies requests to `http://api:8080`; the browser does not connect directly to infrastructure. Do not add public API or database ports. Dokploy handles TLS; HTTPS redirection is disabled inside the API to avoid redirects on internal HTTP requests.
+Add your HTTPS domain in Dokploy, targeting service `frontend`, port `3000`. Set `FRONTEND_URL` to that exact origin without a trailing slash. The frontend proxies requests to `http://matric-backend:8080` using an API alias on the stack's default bridge network; the browser does not connect directly to infrastructure. Do not add public API or database ports. Dokploy handles TLS; HTTPS redirection is disabled inside the API to avoid redirects on internal HTTP requests.
+
+Redeploy both containers after network changes. Remove any stale Dokploy override that sets the frontend's `API_URL` to `http://api:8080`. If proxy requests fail, run `node -e "require('dns').lookup('matric-backend', console.log)"` inside the frontend container and check the API container's startup logs. A stopped or restarting API still requires fixing its startup error.
 
 ## Before deploying
 
