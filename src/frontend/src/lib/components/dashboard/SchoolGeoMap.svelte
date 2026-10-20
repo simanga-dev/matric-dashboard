@@ -717,7 +717,23 @@
 
 	onMount(() => {
 		void loadMap();
+		window.addEventListener('keydown', handleEditShortcut);
+		return () => window.removeEventListener('keydown', handleEditShortcut);
 	});
+	function handleEditShortcut(event: KeyboardEvent) {
+		if (event.key.toLowerCase() !== 'e' || event.repeat || event.defaultPrevented) return;
+		if (event.metaKey || event.ctrlKey || event.altKey) return;
+		if (
+			event.target instanceof HTMLElement &&
+			event.target.closest(
+				'input, textarea, select, [contenteditable="true"], [role="dialog"], [role="menu"], [role="listbox"]'
+			)
+		)
+			return;
+		if (editing || !selectedSchoolId || !mapReady || !canEdit) return;
+		event.preventDefault();
+		openEditor();
+	}
 
 	function toolbarButtonClass(
 		active = false,
@@ -898,7 +914,7 @@
 												<button
 													type="button"
 													aria-label="Edit school map"
-													title="Edit school map"
+													title="Edit school map (E)"
 													disabled={!selectedSchoolId || !mapReady}
 													onclick={openEditor}
 													class={toolbarButtonClass(false, 'edit')}

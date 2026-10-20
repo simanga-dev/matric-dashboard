@@ -17,6 +17,13 @@ vi.mock('$lib/state/geo-data', async (original) => ({
 	...(await original<typeof import('$lib/state/geo-data')>()),
 	loadGeoJson: mocks.load
 }));
+vi.mock('$app/state', () => ({
+	page: {
+		data: {
+			user: { permissions: ['schools.spatial.edit'], roles: [] }
+		}
+	}
+}));
 vi.mock('$lib/api/school-spatial', () => ({
 	savedSpatialStates: mocks.states,
 	refreshAuthoritativeSpatialStates: mocks.refresh
@@ -105,6 +112,33 @@ describe('progressive school map startup', () => {
 		expect(mocks.load.mock.calls.some(([url]) => url.includes('matric:school_boundaries'))).toBe(
 			false
 		);
+	});
+	it('opens the map editor when E is pressed with a school selected', async () => {
+		mocks.load.mockImplementation((url: string) =>
+			Promise.resolve({
+				type: 'FeatureCollection',
+				features: url.includes('school_locations_effective')
+					? [
+							{
+								type: 'Feature',
+								properties: { emis_number: '00123' },
+								geometry: { type: 'Point', coordinates: [28, -26] }
+							}
+						]
+					: []
+			})
+		);
+		const target = document.createElement('div');
+		document.body.append(target);
+		component = mount(SchoolGeoMap, {
+			target,
+			props: { schools: [school], selectedSchoolId: '00123' }
+		});
+		await vi.waitFor(() => expect(mocks.map).toHaveBeenCalledTimes(1));
+		await vi.waitFor(() => expect(target.textContent).not.toContain('Loading school map'));
+		expect(target.textContent).not.toContain('Map layers');
+		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e', bubbles: true }));
+		await vi.waitFor(() => expect(target.textContent).toContain('Map layers'));
 	});
 	it('keeps a selected school in focus when optional boundaries arrive later', async () => {
 		let resolveProvince!: (value: Record<string, unknown>) => void;
