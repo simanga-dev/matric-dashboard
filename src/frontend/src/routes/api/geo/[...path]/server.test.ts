@@ -48,7 +48,8 @@ describe('OGC proxy boundary', () => {
 				{
 					headers: expect.any(Headers),
 					credentials: 'omit',
-					redirect: 'manual'
+					redirect: 'manual',
+					signal: input.request.signal
 				}
 			);
 			const headers = new Headers(input.fetch.mock.calls[0]?.[1]?.headers);
@@ -60,6 +61,20 @@ describe('OGC proxy boundary', () => {
 			]);
 		}
 	);
+
+	it('passes viewport filters and client cancellation through to the backend', async () => {
+		const input = event('wfs');
+		input.url.search =
+			'?service=WFS&request=GetFeature&typeName=matric:school_footprints&propertyName=emis_number,geom&bbox=28,-26,29,-25,EPSG:4326';
+		const controller = new AbortController();
+		input.request = new Request(input.url, { signal: controller.signal });
+		await invoke(GET, input);
+		const [target, options] = input.fetch.mock.calls[0]!;
+		expect(target).toBe(`http://backend.test/geoserver/wfs${input.url.search}`);
+		expect(options?.signal).toBe(input.request.signal);
+		controller.abort();
+		expect(options?.signal?.aborted).toBe(true);
+	});
 
 	it('forwards distinct server-derived client identities for separate rate buckets', async () => {
 		const first = event('wfs');

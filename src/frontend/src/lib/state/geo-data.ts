@@ -1,10 +1,9 @@
 /**
  * Session-scoped cache for GeoServer WFS layers.
  *
- * The school overview map fetches every school point (and the optional
- * province/district boundary layers) from GeoServer on each mount. Caching
- * the parsed GeoJSON avoids re-downloading the full layer when navigating
- * back to the overview. Failures are evicted so a retry refetches.
+ * Overview points and optional province/district boundaries are reused on
+ * remount. Detailed viewport polygons bypass this cache and support aborting
+ * superseded requests. Failures are evicted so a retry refetches.
  */
 
 /** Thrown when a WFS layer responds with an error or a non-JSON body. */
@@ -31,12 +30,17 @@ export function invalidateGeoLayer(typeName: string): void {
  * GeoServer returns an OGC XML exception with HTTP 200 when a layer is not
  * published, so a non-JSON content type is treated as unavailable.
  */
-export function loadGeoJson(url: string): Promise<Record<string, unknown>> {
-	const existing = geoJsonCache.get(url);
+export function loadGeoJson(
+	url: string,
+	options: { cache?: boolean; signal?: AbortSignal } = {}
+): Promise<Record<string, unknown>> {
+	// Viewport requests are short-lived and must not accumulate in the session cache.
+	const cache = options.cache !== false && !options.signal;
+	const existing = cache ? geoJsonCache.get(url) : undefined;
 	if (existing) return existing;
 
 	const pending = (async () => {
-		const response = await fetch(url);
+		const response = await fetch(url, options.signal ? { signal: options.signal } : undefined);
 		const contentType = response.headers.get('content-type') ?? '';
 		if (!response.ok || !contentType.includes('json')) {
 			throw new GeoLayerUnavailableError();
@@ -44,7 +48,7 @@ export function loadGeoJson(url: string): Promise<Record<string, unknown>> {
 		return (await response.json()) as Record<string, unknown>;
 	})();
 
-	geoJsonCache.set(url, pending);
+	if (cache) geoJsonCache.set(url, pending);
 	pending.catch(() => {
 		if (geoJsonCache.get(url) === pending) geoJsonCache.delete(url);
 	});

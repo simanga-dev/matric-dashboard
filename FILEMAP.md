@@ -98,6 +98,8 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 
 ### GeoServer / Spatial Changes
 
+Map loading behavior in `SchoolGeoMap.svelte` and `school-map-loading.ts` must stay aligned with `geo-data.ts`, their regression tests, and `docs/spatial-operations.md`. Overview requests use corrected points; detailed polygons are viewport-scoped and must preserve canonical editor overlays.
+
 Keep production GeoServer wiring in `docker-compose.production.yml`, `.env.production.example`, and `scripts/geoserver/production.py` aligned with `docs/dokploy-deployment.md` and `scripts/tests/test_production_geoserver.py`. Production layer names must match the local bootstrap and map consumers.
 
 | When you change... | Also update... |

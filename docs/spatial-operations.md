@@ -234,6 +234,33 @@ separate database first, reconcile revision history, and promote it through the
 normal deployment process. Do not drop correction tables or reset volumes to
 repair a map or GeoServer publication problem.
 
+### Map loading and performance
+
+The country overview loads `matric:school_locations_effective` with only
+`emis_number` and `geom`, falling back to imported `matric:school_locations` if
+the corrected layer is unavailable. Small display footprints are generated in
+the browser, avoiding a country-wide PostGIS buffer calculation on startup.
+Performance results and names still come from the current school directory.
+
+The map displays after its first rendered frame, without waiting for all raster
+tiles or administrative outlines. Province and district layers load independently
+after map creation. At zoom 12 and above, detailed `school_footprints` and
+`school_boundaries` requests include a WFS bounding box for the visible area.
+Panning is debounced; superseded requests are aborted and late responses ignored.
+Overview/region data is cached for the session, but viewport responses are not
+retained. Saved API revisions take precedence over published data after editing.
+
+Before upgrading a server, use the browser Network panel to compare point,
+boundary, detail, and raster tile requests. A slow imagery provider and slow
+GeoServer geometry queries require different fixes. Check actual CPU, memory,
+and disk pressure while reproducing the slow request, not just idle usage.
+
+A local GeoServer check with 6,872 schools measured 4,620,155 bytes for the
+original country-wide footprints versus 1,767,741 bytes for the corrected point
+overview. Median local Docker request times across three runs were 0.501 s and
+0.179 s respectively. These are backend-request measurements, not production
+page-load guarantees.
+
 ### Optional imagery
 
 No imagery provider is selected by default. Configure both runtime variables
