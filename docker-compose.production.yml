@@ -37,8 +37,10 @@ services:
       Hosting__ForceHttps: "false"
       Hosting__ReverseProxy__TrustedNetworks__0: ${TRUSTED_PROXY_NETWORK:?Set the actual frontend Docker network CIDR}
     networks:
-      - default
-      - external-services
+      default:
+        aliases:
+          - matric-backend
+      external-services: {}
     healthcheck:
       test: ["CMD", "/app/healthprobe/HealthProbe"]
       interval: 30s
@@ -52,7 +54,8 @@ services:
       context: src/frontend
       dockerfile: Dockerfile
     environment:
-      API_URL: http://api:8080
+      # Resolve the backend on this stack's private network, not a shared alias.
+      API_URL: http://matric-backend:8080
       ORIGIN: ${FRONTEND_URL:?FRONTEND_URL is required}
       TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:?Production Turnstile site key is required}
       PUBLIC_MAP_IMAGERY_URL: ${PUBLIC_MAP_IMAGERY_URL:-}
@@ -64,9 +67,14 @@ services:
     networks:
       - default
       - external-services
+    depends_on:
+      api:
+        condition: service_started
     restart: unless-stopped
 
 networks:
+  default:
+    driver: bridge
   external-services:
     external: true
     name: ${EXTERNAL_SERVICES_NETWORK:-dokploy-network}
