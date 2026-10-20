@@ -98,6 +98,8 @@ Quick-reference for "when you change X, also update Y" and "where does X live?"
 
 ### GeoServer / Spatial Changes
 
+Keep production GeoServer wiring in `docker-compose.production.yml`, `.env.production.example`, and `scripts/geoserver/production.py` aligned with `docs/dokploy-deployment.md` and `scripts/tests/test_production_geoserver.py`. Production layer names must match the local bootstrap and map consumers.
+
 | When you change... | Also update... |
 |---|---|
 | **`docker-compose.yml`** postgres image/volume | `.env.example`, `docs/spatial-operations.md`; preserve Compose PG17 layout by default, PG18 needs explicit image/volume/mount overrides. Inspect Aspire's separate persisted volume before changing its major version |
