@@ -1,5 +1,48 @@
 # Standalone production file. Do not merge with docker-compose.yml.
 services:
+  geoserver:
+    image: docker.osgeo.org/geoserver:2.26.2
+    environment:
+      SKIP_DEMO_DATA: "true"
+      GEOSERVER_ADMIN_USER: ${GEOSERVER_ADMIN_USER:-admin}
+      GEOSERVER_ADMIN_PASSWORD: ${GEOSERVER_ADMIN_PASSWORD:?GeoServer admin password is required}
+      CORS_ENABLED: "false"
+      EXTRA_JAVA_OPTS: "-Xms512m -Xmx1g"
+    volumes:
+      - geoserver-data:/opt/geoserver_data
+    networks:
+      - default
+      - external-services
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "--max-time", "5", "http://localhost:8080/geoserver/web/"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
+    restart: unless-stopped
+
+  geoserver-init:
+    image: python:3.13-alpine
+    command: ["python", "/bootstrap/production.py"]
+    environment:
+      GEOSERVER_BASE_URL: http://geoserver:8080/geoserver
+      GEOSERVER_ADMIN_USER: ${GEOSERVER_ADMIN_USER:-admin}
+      GEOSERVER_ADMIN_PASSWORD: ${GEOSERVER_ADMIN_PASSWORD:?GeoServer admin password is required}
+      GEOSERVER_DB_HOST: ${GEOSERVER_DB_HOST:?Set the main database hostname for GeoServer}
+      GEOSERVER_DB_PORT: ${GEOSERVER_DB_PORT:-5432}
+      GEOSERVER_DB_NAME: ${GEOSERVER_DB_NAME:?Set the main database name for GeoServer}
+      GEOSERVER_DB_USER: ${GEOSERVER_DB_USER:?Set the GeoServer database user}
+      GEOSERVER_DB_PASSWORD: ${GEOSERVER_DB_PASSWORD:?Set the GeoServer database password}
+      GEOSERVER_DB_SSLMODE: ${GEOSERVER_DB_SSLMODE:-require}
+    volumes:
+      - ./scripts/geoserver/production.py:/bootstrap/production.py:ro
+    depends_on:
+      geoserver:
+        condition: service_healthy
+      api:
+        condition: service_healthy
+    restart: "no"
+
   api:
     build:
       context: src/backend
@@ -20,7 +63,7 @@ services:
       MEILI_URL: ${MEILI_URL:?Meilisearch URL is required}
       MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?Meilisearch key is required}
       GeoServer__Enabled: "true"
-      GeoServer__BaseUrl: ${GEOSERVER_BASE_URL:?GeoServer URL is required}
+      GeoServer__BaseUrl: http://geoserver:8080/geoserver
       Email__Enabled: ${EMAIL_ENABLED:-false}
       Email__FromAddress: ${EMAIL_FROM_ADDRESS:-noreply@example.com}
       Email__FromName: ${EMAIL_FROM_NAME:-MatricDasbhoard}
@@ -70,7 +113,14 @@ services:
     depends_on:
       api:
         condition: service_started
+      geoserver:
+        condition: service_healthy
+      geoserver-init:
+        condition: service_completed_successfully
     restart: unless-stopped
+
+volumes:
+  geoserver-data:
 
 networks:
   default:
