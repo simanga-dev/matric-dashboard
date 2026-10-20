@@ -2,6 +2,8 @@
 
 Use `docker-compose.production.yml` as the Compose path in Dokploy. This file runs only `frontend` and `api`. Do not combine it with `docker-compose.yml`, which also creates infrastructure services.
 
+The frontend starts independently of API health. The API health check remains enabled for monitoring. If the API is unhealthy, inspect its startup logs and connections to the external services; starting the frontend does not fix API failures.
+
 ## Connections
 
 Copy `.env.production.example` into Dokploy's environment editor and replace the placeholders. Keep credentials out of Git. The database connection uses Npgsql `Host=...;Database=...` syntax, not a PostgreSQL URI.
