@@ -96,7 +96,12 @@ export const GET = (async ({
 	// Never copy the caller's X-Forwarded-For header into the rate-limit identity.
 	headers.set('x-forwarded-for', getClientAddress());
 	try {
-		const response = await fetch(target, { headers, credentials: 'omit', redirect: 'manual' });
+		const response = await fetch(target, {
+			headers,
+			credentials: 'omit',
+			redirect: 'manual',
+			signal: request.signal
+		});
 		if (response.status >= 300 && response.status < 400 && response.status !== 304) {
 			return problem(502, 'Bad Gateway', 'Unexpected GeoServer redirect.', url.pathname);
 		}

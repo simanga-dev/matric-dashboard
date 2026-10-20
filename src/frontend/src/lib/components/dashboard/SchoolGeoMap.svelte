@@ -6,8 +6,9 @@
 	import { selectionWhileEditing } from './school-map-selection';
 	import { applyCanonicalSpatial, loadPublishedSchoolLocations } from './school-map-publication';
 	import { spatialMapStyle } from './school-map-style';
+	import { createViewportLoader, regionLayerUrl, schoolLayerUrl } from './school-map-loading';
 	import type { SpatialState } from '$lib/api/school-spatial-contract';
-	import { refreshAuthoritativeSpatialStates } from '$lib/api/school-spatial';
+	import { refreshAuthoritativeSpatialStates, savedSpatialStates } from '$lib/api/school-spatial';
 	import { invalidateGeoLayer } from '$lib/state/geo-data';
 	import 'ol/ol.css';
 	import { resolve } from '$app/paths';
@@ -55,12 +56,8 @@
 	 * school tree uses (SchoolOutput.Id), so selecting a school in the tree
 	 * highlights and zooms to it here - and vice versa.
 	 */
-	const WFS_BASE =
-		'/api/geo/wfs?service=WFS&version=1.0.0&request=GetFeature&outputFormat=application/json';
-	const wfsUrl = (typeName: string) => `${WFS_BASE}&typeName=${typeName}`;
-	const WFS_URL = wfsUrl('matric:school_footprints');
-	const LEGACY_WFS_URL = wfsUrl('matric:school_locations');
-	const GROUNDS_URL = wfsUrl('matric:school_boundaries');
+	const WFS_URL = schoolLayerUrl('matric:school_locations_effective');
+	const LEGACY_WFS_URL = schoolLayerUrl('matric:school_locations');
 	let canEdit = $derived(hasPermission(page.data.user, Permissions.Schools.SpatialEdit));
 	let imageryConfig = $derived(
 		mapImagery(page.data.mapImageryUrl, page.data.mapImageryAttribution)
@@ -115,6 +112,9 @@
 	// wrapping them (which breaks OpenLayers internals).
 	let olMap = $state.raw<OlMap | null>(null);
 	let vecLayer: VectorLayer | null = null;
+	let detailLayer: VectorLayer | null = null;
+	let cancelLayerLoads: (() => void) | null = null;
+	let mapGeneration = 0;
 	let boundaryLayers: VectorLayer[] = [];
 	let provinceFeatures: Feature[] = [];
 	let districtFeatures: Feature[] = [];
@@ -165,13 +165,13 @@
 	 * Reflects the current selection on the boundary layers: the whole country
 	 * when nothing narrower is selected, otherwise a province or district.
 	 */
-	function applyRegionFocus() {
+	function applyRegionFocus(fit = true) {
 		if (editing) return;
 		highlightProvince = selectedProvince;
 		highlightDistrict = selectedDistrict;
 		highlightCountry = !selectedSchoolId && !selectedProvince && !selectedDistrict;
 		for (const layer of boundaryLayers) layer.changed();
-		if (!olMap) return;
+		if (!olMap || !fit) return;
 
 		if (highlightCountry) {
 			const country = boundaryExtent(provinceFeatures);
@@ -248,9 +248,14 @@
 	}
 
 	function findFeature(emis: string): FeatureLike | null {
-		const source = vecLayer?.getSource();
-		if (!source) return null;
-		return source.getFeatures().find((f) => String(f.get('emis_number')) === emis) ?? null;
+		for (const layer of [detailLayer, vecLayer]) {
+			const feature = layer
+				?.getSource()
+				?.getFeatures()
+				.find((f) => String(f.get('emis_number')) === emis);
+			if (feature) return feature;
+		}
+		return null;
 	}
 
 	/** Applies the selection: restyle, and pan/zoom to the selected school. */
@@ -259,6 +264,7 @@
 		if (selectedEmis === emis) return;
 		selectedEmis = emis;
 		vecLayer?.changed();
+		detailLayer?.changed();
 		popup = null;
 		hidePopup?.();
 		selectedLocationMissing = false;
@@ -298,6 +304,8 @@
 
 	onDestroy(() => {
 		disposed = true;
+		mapGeneration += 1;
+		cancelLayerLoads?.();
 		if (copyTimer) clearTimeout(copyTimer);
 		resizeObserver?.disconnect();
 		themeObserver?.disconnect();
@@ -305,6 +313,10 @@
 	});
 
 	async function loadMap() {
+		const generation = ++mapGeneration;
+		const active = () => !disposed && generation === mapGeneration;
+		cancelLayerLoads?.();
+		cancelLayerLoads = null;
 		mapReady = false;
 		resizeObserver?.disconnect();
 		themeObserver?.disconnect();
@@ -312,6 +324,7 @@
 		olMap?.setTarget(undefined);
 		olMap = null;
 		vecLayer = null;
+		detailLayer = null;
 		boundaryLayers = [];
 		provinceFeatures = [];
 		districtFeatures = [];
@@ -325,10 +338,7 @@
 		try {
 			// A missing corrected layer must not hide imported school points or
 			// prevent adding a missing marker.
-			const schoolsLayer = await loadPublishedSchoolLocations(loadGeoJson, WFS_URL, LEGACY_WFS_URL);
-			usingImportedLocations = schoolsLayer.fallback;
-			const geojson = schoolsLayer.geojson;
-			if (disposed) return;
+			const schoolsPending = loadPublishedSchoolLocations(loadGeoJson, WFS_URL, LEGACY_WFS_URL);
 
 			const [
 				{ default: OlMapCtor },
@@ -342,7 +352,8 @@
 				proj,
 				style,
 				{ defaults: defaultControls },
-				{ defaults: defaultInteractions }
+				{ defaults: defaultInteractions },
+				schoolsLayer
 			] = await Promise.all([
 				import('ol/Map'),
 				import('ol/View'),
@@ -355,42 +366,99 @@
 				import('ol/proj'),
 				import('ol/style'),
 				import('ol/control'),
-				import('ol/interaction/defaults')
+				import('ol/interaction/defaults'),
+				schoolsPending
 			]);
 
 			const { fromLonLat } = proj;
-			if (disposed) return;
+			if (!active()) return;
+			usingImportedLocations = schoolsLayer.fallback;
+			const geojson = schoolsLayer.geojson;
 			const { Style, Fill, Stroke } = style;
 
 			const reader = new GeoJSON();
 			const source = new VectorSource();
+			const footprintsSource = new VectorSource();
 			const groundsSource = new VectorSource();
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity -- OpenLayers redraws explicitly via layer.changed().
+			let detailedEmis = new Set<string>();
 			const features = reader.readFeatures(schoolMapGeoJson(geojson, schools), {
 				dataProjection: 'EPSG:4326',
 				featureProjection: 'EPSG:3857'
 			});
 			source.addFeatures(features);
 			featureCount = features.length;
-			const groundsGeo = await loadGeoJson(GROUNDS_URL).catch(() => null);
-			if (groundsGeo)
-				groundsSource.addFeatures(
-					reader.readFeatures(groundsGeo, {
-						dataProjection: 'EPSG:4326',
-						featureProjection: 'EPSG:3857'
-					})
-				);
 			updateCanonical = (state) => {
 				applyCanonicalSpatial(reader, source, groundsSource, state, schools);
+				// An editor/API state always wins over an older viewport response.
+				for (const feature of footprintsSource.getFeatures()) {
+					if (String(feature.get('emis_number')) === state.emisNumber)
+						footprintsSource.removeFeature(feature);
+				}
+				detailedEmis.delete(state.emisNumber);
 				featureCount = source.getFeatures().length;
+				vecLayer?.changed();
 				if (selectedSchoolId === state.emisNumber) selectedLocationMissing = !state.location;
 			};
-			for (const state of await refreshAuthoritativeSpatialStates()) updateCanonical(state);
+			const reapplyCanonical = () => {
+				for (const state of savedSpatialStates.values()) updateCanonical?.(state);
+			};
+			const revalidateCanonical = async () => {
+				for (const state of await refreshAuthoritativeSpatialStates()) {
+					if (active()) updateCanonical?.(state);
+				}
+			};
+			const viewportLoader = createViewportLoader(
+				(url, signal) => loadGeoJson(url, { cache: false, signal }),
+				(footprints, grounds) => {
+					if (!active()) return;
+					if (footprints) {
+						footprintsSource.clear();
+						footprintsSource.addFeatures(
+							reader.readFeatures(schoolMapGeoJson(footprints, schools), {
+								dataProjection: 'EPSG:4326',
+								featureProjection: 'EPSG:3857'
+							})
+						);
+						detailedEmis = new Set(
+							footprintsSource.getFeatures().map((f) => String(f.get('emis_number')))
+						);
+					}
+					if (grounds) {
+						groundsSource.clear();
+						groundsSource.addFeatures(
+							reader.readFeatures(grounds, {
+								dataProjection: 'EPSG:4326',
+								featureProjection: 'EPSG:3857'
+							})
+						);
+					}
+					reapplyCanonical();
+					vecLayer?.changed();
+				}
+			);
+			let viewportTimer: ReturnType<typeof setTimeout> | null = null;
+			cancelLayerLoads = () => {
+				viewportLoader.dispose();
+				if (viewportTimer) clearTimeout(viewportTimer);
+			};
+			const loadViewport = async () => {
+				if (!active() || !olMap) return;
+				const view = olMap.getView();
+				const extent = proj.transformExtent(
+					view.calculateExtent(olMap.getSize()),
+					'EPSG:3857',
+					'EPSG:4326'
+				);
+				await viewportLoader.load(extent, view.getZoom() ?? 0);
+			};
 			refreshSpatialLayers = async () => {
-				const [schoolsLayer, grounds] = await Promise.all([
-					loadPublishedSchoolLocations(loadGeoJson, WFS_URL, LEGACY_WFS_URL),
-					loadGeoJson(GROUNDS_URL).catch(() => null)
-				]);
-				if (disposed) return;
+				const schoolsLayer = await loadPublishedSchoolLocations(
+					loadGeoJson,
+					WFS_URL,
+					LEGACY_WFS_URL
+				);
+				if (!active()) return;
 				usingImportedLocations = schoolsLayer.fallback;
 				source.clear();
 				source.addFeatures(
@@ -399,62 +467,35 @@
 						featureProjection: 'EPSG:3857'
 					})
 				);
-				if (grounds) {
-					groundsSource.clear();
-					groundsSource.addFeatures(
-						reader.readFeatures(grounds, {
-							dataProjection: 'EPSG:4326',
-							featureProjection: 'EPSG:3857'
-						})
-					);
-				}
-				for (const state of await refreshAuthoritativeSpatialStates()) {
-					if (!disposed) updateCanonical?.(state);
-				}
+				reapplyCanonical();
+				await loadViewport();
+				await revalidateCanonical();
 			};
 
 			// Administrative boundaries are optional: if the layer is missing the
 			// school map still renders, just without region highlighting.
 			const provinceSource = new VectorSource();
 			const districtSource = new VectorSource();
-			try {
-				const [provinceGeo, districtGeo] = await Promise.all([
-					loadGeoJson(wfsUrl('matric:provinces')).catch(() => null),
-					loadGeoJson(wfsUrl('matric:districts')).catch(() => null)
-				]);
-				if (provinceGeo) {
-					provinceFeatures = reader.readFeatures(provinceGeo, {
-						dataProjection: 'EPSG:4326',
-						featureProjection: 'EPSG:3857'
-					});
-					provinceSource.addFeatures(provinceFeatures);
-				}
-				if (districtGeo) {
-					districtFeatures = reader.readFeatures(districtGeo, {
-						dataProjection: 'EPSG:4326',
-						featureProjection: 'EPSG:3857'
-					});
-					districtSource.addFeatures(districtFeatures);
-				}
-			} catch {
-				// Boundaries are an enhancement; ignore fetch/parse failures.
-			}
-			if (disposed) return;
 
 			// The host stays mounted beneath the loading overlay so OpenLayers
 			// measures the final panel dimensions before anything is revealed.
 			await tick();
 
-			if (disposed || !mapHost || !popupHost) {
+			if (!active() || !mapHost || !popupHost) {
 				return;
 			}
 
+			// eslint-disable-next-line svelte/prefer-svelte-reactivity -- Canvas style reuse is not component state.
+			const featureStyles = new Map<string, InstanceType<typeof Style>>();
 			const styleFor: StyleFunction = (feature: FeatureLike) => {
 				const emis = String(feature.get('emis_number'));
 				const isSelected = selectedEmis !== null && emis === selectedEmis;
 				const rate = passRate(Number(feature.get('passed')), Number(feature.get('wrote')));
+				const key = `${passRateBand(rate)}:${isSelected}`;
+				const existing = featureStyles.get(key);
+				if (existing) return existing;
 
-				return new Style({
+				const result = new Style({
 					zIndex: isSelected ? 2 : 1,
 					fill: new Fill({
 						color: withAlpha(markerColor(rate), isSelected ? 0.35 : 0.22)
@@ -464,6 +505,8 @@
 						width: isSelected ? 3 : 2
 					})
 				});
+				featureStyles.set(key, result);
+				return result;
 			};
 
 			const regionStyle = () =>
@@ -501,6 +544,7 @@
 			const imageryLayer = new TileLayer({ visible: false, className: 'school-imagery' });
 			if (imageryConfig) {
 				const { default: XYZ } = await import('ol/source/XYZ');
+				if (!active()) return;
 				const imagerySource = new XYZ({
 					url: imageryConfig.url,
 					attributions: attributionHtml(imageryConfig.attribution)
@@ -519,7 +563,14 @@
 				streetLayer.setVisible(!imagery);
 				imageryLayer.setVisible(imagery);
 			};
-			const pointsLayer = new VectorLayerCtor({ source, style: styleFor });
+			const pointsLayer = new VectorLayerCtor({
+				source,
+				style: (feature, resolution) =>
+					detailedEmis.has(String(feature.get('emis_number')))
+						? undefined
+						: styleFor(feature, resolution)
+			});
+			const footprintsLayer = new VectorLayerCtor({ source: footprintsSource, style: styleFor });
 			const groundsLayer = new VectorLayerCtor({
 				source: groundsSource,
 				style: spatialMapStyle(false)
@@ -537,21 +588,26 @@
 					provinceLayer,
 					districtLayer,
 					groundsLayer,
-					pointsLayer
+					pointsLayer,
+					footprintsLayer
 				],
 				view
 			});
-			olMap.once('rendercomplete', () => {
-				if (!disposed) loading = false;
+			// A rendered frame is enough; do not wait for every remote raster tile.
+			olMap.once('postrender', () => {
+				if (active()) loading = false;
 			});
 			vecLayer = pointsLayer;
+			detailLayer = footprintsLayer;
 			mapReady = true;
 
 			// Marker colours are resolved from theme variables for the SVG data
 			// URL, so restyle when the palette, scheme or chart colour changes.
 			themeObserver = new MutationObserver(() => {
 				markerColorCache = {};
+				featureStyles.clear();
 				vecLayer?.changed();
+				detailLayer?.changed();
 				groundsLayer.setStyle(spatialMapStyle(false));
 			});
 			themeObserver.observe(document.documentElement, {
@@ -559,8 +615,10 @@
 				attributeFilter: ['class', 'data-theme-preset', 'data-theme-chart']
 			});
 
-			const extent = source.getExtent();
+			// Cached editor saves must affect the initial fit and school selection too.
+			reapplyCanonical();
 			fitSchools = () => {
+				const extent = source.getExtent();
 				if (extent && Number.isFinite(extent[0]))
 					view.fit(extent, { padding: [48, 48, 48, 48], maxZoom: 9, duration: 0 });
 			};
@@ -590,7 +648,7 @@
 			olMap.on('singleclick', (event) => {
 				if (editing) return;
 				const hit = olMap?.forEachFeatureAtPixel(event.pixel, (f) => f, {
-					layerFilter: (layer) => layer === vecLayer
+					layerFilter: (layer) => layer === vecLayer || layer === detailLayer
 				});
 				const selectedPopup = hit ? schoolMapPopup(hit.getProperties()) : null;
 				if (!selectedPopup) {
@@ -609,8 +667,43 @@
 			// Apply any selection that was set before the map finished loading.
 			applySelection(selectedSchoolId);
 			olMap.updateSize();
+			const initialCenter = [...(view.getCenter() ?? [])];
+			const initialResolution = view.getResolution();
+			void revalidateCanonical();
+			olMap.on('moveend', () => {
+				if (viewportTimer) clearTimeout(viewportTimer);
+				viewportTimer = setTimeout(() => void loadViewport(), 200);
+			});
+			void loadViewport();
+			// Optional outlines arrive independently, after the interactive map exists.
+			for (const [typeName, regionSource] of [
+				['matric:provinces', provinceSource],
+				['matric:districts', districtSource]
+			] as const) {
+				void loadGeoJson(regionLayerUrl(typeName))
+					.then((geo) => {
+						if (!active()) return;
+						const features = reader.readFeatures(geo, {
+							dataProjection: 'EPSG:4326',
+							featureProjection: 'EPSG:3857'
+						});
+						regionSource.addFeatures(features);
+						if (typeName === 'matric:provinces') provinceFeatures = features;
+						else districtFeatures = features;
+						const viewUnchanged =
+							view.getResolution() === initialResolution &&
+							view.getCenter()?.every((value, index) => value === initialCenter[index]);
+						applyRegionFocus(
+							!selectedSchoolId &&
+								(Boolean(selectedProvince || selectedDistrict) || Boolean(viewUnchanged))
+						);
+					})
+					.catch(() => {
+						/* Optional boundaries must not block the school map. */
+					});
+			}
 		} catch (e) {
-			if (!disposed) {
+			if (active()) {
 				error =
 					e instanceof GeoLayerUnavailableError
 						? 'School map layer is not available. Publish it with scripts/geoserver/bootstrap.sh.'
@@ -618,7 +711,7 @@
 							? e.message
 							: 'Failed to load school locations.';
 			}
-			if (!disposed) loading = false;
+			if (active()) loading = false;
 		}
 	}
 
@@ -679,6 +772,7 @@
 	}
 	function saved(state: SpatialState) {
 		updateCanonical?.(state);
+		invalidateGeoLayer('matric:school_locations_effective');
 		invalidateGeoLayer('matric:school_footprints');
 		invalidateGeoLayer('matric:school_boundaries');
 		void refreshSpatialLayers?.();
