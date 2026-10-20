@@ -153,8 +153,9 @@ and independently add or move its marker. They must provide a reason and source
 description before saving. Save publishes the whole draft; Cancel discards it.
 These are editor-traced school grounds, not surveyed cadastral boundaries.
 Drawing and vertex editing currently require a mouse, pen, or touch pointer.
-The form and toolbar support keyboard focus, but this version does not include a
-keyboard-only coordinate editor.
+Pressing Enter finishes a drawn polygon and saves it. The form and toolbar
+support keyboard focus, but this version does not include a keyboard-only
+coordinate editor.
 
 ### Deployment order
 

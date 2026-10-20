@@ -11,7 +11,6 @@
 		Clock,
 		KeyRound,
 		Package2,
-		CircleHelp,
 		LogIn,
 		BookOpen,
 		BookMarked,
@@ -21,10 +20,9 @@
 		type IconProps
 	} from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
-	import { ThemeToggle, LanguageSelector, UserNav } from '$lib/components/layout';
+	import { UserNav } from '$lib/components/layout';
 	import { LoginForm } from '$lib/components/auth';
 	import * as Dialog from '$lib/components/ui/dialog';
-	import { shortcutsState, ShortcutAction, getShortcutSymbol } from '$lib/state/shortcuts.svelte';
 	import type { Component } from 'svelte';
 	import type { User } from '$lib/types';
 
@@ -230,11 +228,11 @@
 		{/if}
 	</Sidebar.Content>
 	<Sidebar.Footer class="pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
+		{#if !sidebar.isMobile || !user}
+			<Sidebar.Separator />
+		{/if}
 		{#if !sidebar.isMobile}
-			<div class="flex items-center gap-1 group-data-[collapsible=icon]:flex-col">
-				<LanguageSelector />
-				<ThemeToggle />
-				<div class="flex-1 group-data-[collapsible=icon]:hidden"></div>
+			<div class="flex w-full items-center gap-1 group-data-[collapsible=icon]:justify-center">
 				{#if user}
 					<UserNav {user} />
 				{:else}
@@ -246,25 +244,6 @@
 					</Sidebar.MenuButton>
 				{/if}
 			</div>
-			<Sidebar.Separator />
-			<Sidebar.Menu>
-				<Sidebar.MenuItem>
-					<Sidebar.MenuButton
-						size="sm"
-						class="min-h-[44px] rounded-lg px-3 py-1 group-data-[collapsible=icon]:min-h-0"
-						tooltipContent={m.shortcuts_help()}
-						onclick={() => (shortcutsState.isHelpOpen = true)}
-					>
-						<CircleHelp class="size-4" />
-						<span class="flex-1">{m.shortcuts_help()}</span>
-						<kbd
-							class="pointer-events-none ms-auto inline-flex h-4 shrink-0 items-center rounded border bg-muted px-1 font-mono text-[10px] font-medium text-muted-foreground select-none group-data-[collapsible=icon]:hidden"
-						>
-							{getShortcutSymbol(ShortcutAction.Help)}
-						</kbd>
-					</Sidebar.MenuButton>
-				</Sidebar.MenuItem>
-			</Sidebar.Menu>
 		{:else if !user}
 			<Sidebar.Menu>
 				<Sidebar.MenuItem>

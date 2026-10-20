@@ -13,6 +13,7 @@ const mocks = vi.hoisted(() => ({
 	navigate: vi.fn(),
 	destroy: vi.fn(),
 	status: vi.fn(),
+	finishDrawing: vi.fn(),
 	change: null as
 		| null
 		| ((
@@ -33,7 +34,13 @@ vi.mock('./school-map-editing', async (original) => ({
 	...(await original<typeof import('./school-map-editing')>()),
 	createSpatialInteractions: (_map: unknown, _state: unknown, changed: typeof mocks.change) => {
 		mocks.change = changed;
-		return { tool: vi.fn(), stop: vi.fn(), area: () => null, destroy: mocks.destroy };
+		return {
+			tool: vi.fn(),
+			stop: vi.fn(),
+			finishDrawing: mocks.finishDrawing,
+			area: () => null,
+			destroy: mocks.destroy
+		};
 	}
 }));
 const state: SpatialState = {
@@ -71,6 +78,7 @@ async function evidence() {
 }
 beforeEach(async () => {
 	vi.clearAllMocks();
+	mocks.finishDrawing.mockReturnValue(false);
 	mocks.read.mockResolvedValue(structuredClone(state));
 	mocks.history.mockResolvedValue([
 		{
@@ -204,6 +212,48 @@ describe('explicit editor save and cancel', () => {
 		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
 		await tick();
 		expect(close).toHaveBeenCalled();
+	});
+	it('does not save on Enter while typing in the evidence fields', async () => {
+		await evidence();
+		const textarea = document.querySelector('textarea')!;
+		textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+		await tick();
+		expect(mocks.save).not.toHaveBeenCalled();
+	});
+	it('finishes the polygon being drawn on Enter and then saves it', async () => {
+		mocks.save.mockResolvedValue({ ...state, revision: 1 });
+		mocks.finishDrawing.mockImplementation(() => {
+			mocks.change?.(
+				{
+					type: 'Polygon',
+					coordinates: [
+						[
+							[28, -26],
+							[28.01, -26],
+							[28.01, -26.01],
+							[28, -26]
+						]
+					]
+				},
+				null,
+				false,
+				null,
+				false
+			);
+			return true;
+		});
+		await evidence();
+		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+		await vi.waitFor(() => expect(mocks.finishDrawing).toHaveBeenCalled());
+		await vi.waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(1));
+	});
+	it('saves a dirty draft on Enter when no drawing is in progress', async () => {
+		mocks.save.mockResolvedValue({ ...state, revision: 1 });
+		mocks.change?.(null, { type: 'Point', coordinates: [28, -26] }, true, null, false);
+		await evidence();
+		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+		await vi.waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(1));
+		expect(mocks.finishDrawing).toHaveBeenCalled();
 	});
 	it('warns on browser unload, cancels in-app navigation, and does not discard on declined Cancel', async () => {
 		await evidence();

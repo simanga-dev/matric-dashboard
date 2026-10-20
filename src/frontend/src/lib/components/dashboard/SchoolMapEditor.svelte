@@ -101,6 +101,30 @@
 		event.preventDefault();
 		if (canLeave()) onclose();
 	}
+	function isTextEntry(target: EventTarget | null) {
+		return (
+			target instanceof HTMLInputElement ||
+			target instanceof HTMLTextAreaElement ||
+			target instanceof HTMLSelectElement ||
+			(target instanceof HTMLElement && target.isContentEditable)
+		);
+	}
+	/** Enter finishes a polygon in progress and then saves the draft. */
+	function handleEnter(event: KeyboardEvent) {
+		if (event.key !== 'Enter' || event.repeat || event.defaultPrevented || saving) return;
+		if (isTextEntry(event.target)) return;
+		if (
+			event.target instanceof Element &&
+			event.target.closest(
+				'[role="dialog"], [role="menu"], [role="listbox"], button, a, [contenteditable]'
+			)
+		)
+			return;
+		const finishedShape = interactions?.finishDrawing() ?? false;
+		if (!finishedShape && !dirty) return;
+		event.preventDefault();
+		queueMicrotask(() => void save());
+	}
 	async function load() {
 		loading = true;
 		error = '';
@@ -217,6 +241,7 @@
 	onMount(() => {
 		window.addEventListener('beforeunload', beforeUnload);
 		window.addEventListener('keydown', handleEscape);
+		window.addEventListener('keydown', handleEnter);
 		void load();
 	});
 	onDestroy(() => {
@@ -225,6 +250,7 @@
 		if (typeof window !== 'undefined') {
 			window.removeEventListener('beforeunload', beforeUnload);
 			window.removeEventListener('keydown', handleEscape);
+			window.removeEventListener('keydown', handleEnter);
 		}
 	});
 </script>
@@ -240,42 +266,48 @@
 		<Tooltip.Provider>
 			<InfoTooltip
 				label="editing school maps"
-				text="Use the map toolbar to draw or adjust the school grounds and marker, then Save or Cancel. Editor-traced grounds are not a surveyed cadastral boundary. School selection is locked while editing. Drawing and moving geometry require a pointer; keyboard users can pan and zoom the map and use the toolbar Save and Cancel, but cannot edit vertices."
+				text="Use the map toolbar to draw or adjust the school grounds and marker, then Save or Cancel. Press Enter to finish a drawn shape and save. Editor-traced grounds are not a surveyed cadastral boundary. School selection is locked while editing. Drawing and moving geometry require a pointer; keyboard users can pan and zoom the map and use the toolbar Save and Cancel, but cannot edit vertices."
 			/>
 		</Tooltip.Provider>
 	</div>
-	<form class="space-y-2" onsubmit={submitCoordinates}>
-		<label for="coordinate-input" class="block text-xs font-medium"
-			>Paste coordinates or a Google Maps link</label
+	<details>
+		<summary
+			class="min-h-9 cursor-pointer rounded-md py-2 text-xs font-medium focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none pointer-coarse:min-h-11"
+			>Locate by coordinates</summary
 		>
-		<div class="flex flex-col gap-2">
-			<input
-				id="coordinate-input"
-				aria-label="Paste coordinates or Google Maps link"
-				autocomplete="off"
-				spellcheck="false"
-				bind:value={coordinateInput}
-				placeholder="-30.86536, 29.85241"
-				class="min-h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none pointer-coarse:min-h-11"
-			/>
-			<div class="flex gap-2">
-				<Button type="submit" variant="outline" size="sm" class="text-xs pointer-coarse:min-h-11"
-					>Locate</Button
-				>
-				<Button
-					type="button"
-					size="sm"
-					class="text-xs pointer-coarse:min-h-11"
-					disabled={loading || !draft}
-					onclick={locateAndDraw}>Locate and draw</Button
-				>
+		<form class="space-y-2 py-1" onsubmit={submitCoordinates}>
+			<label for="coordinate-input" class="block text-xs font-medium"
+				>Paste coordinates or a Google Maps link</label
+			>
+			<div class="flex flex-col gap-2">
+				<input
+					id="coordinate-input"
+					aria-label="Paste coordinates or Google Maps link"
+					autocomplete="off"
+					spellcheck="false"
+					bind:value={coordinateInput}
+					placeholder="-30.86536, 29.85241"
+					class="min-h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-2.5 py-1.5 text-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none pointer-coarse:min-h-11"
+				/>
+				<div class="flex gap-2">
+					<Button type="submit" variant="outline" size="sm" class="text-xs pointer-coarse:min-h-11"
+						>Locate</Button
+					>
+					<Button
+						type="button"
+						size="sm"
+						class="text-xs pointer-coarse:min-h-11"
+						disabled={loading || !draft}
+						onclick={locateAndDraw}>Locate and draw</Button
+					>
+				</div>
 			</div>
-		</div>
-	</form>
-	{#if coordinateError}<p role="alert" class="text-xs text-destructive">{coordinateError}</p>{/if}
-	{#if coordinateStatus}<p role="status" class="text-xs text-muted-foreground">
-			{coordinateStatus}
-		</p>{/if}
+		</form>
+		{#if coordinateError}<p role="alert" class="text-xs text-destructive">{coordinateError}</p>{/if}
+		{#if coordinateStatus}<p role="status" class="text-xs text-muted-foreground">
+				{coordinateStatus}
+			</p>{/if}
+	</details>
 	{#if loading}<p role="status">Loading current geometry…</p>{/if}
 	{#if error}<p role="alert" class="text-destructive">{error}</p>
 		{#if !draft && !loading}<Button

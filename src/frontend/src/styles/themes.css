@@ -36,6 +36,11 @@
 	--warning: 42 75% 50%;
 	--warning-foreground: 20 15% 15%;
 
+	/* Readable icon and text variants of semantic colors. Dark mode lightens
+	   these because --destructive and --success are surface fills there. */
+	--destructive-emphasis: var(--destructive);
+	--success-emphasis: var(--success);
+
 	/* UI colors */
 	--border: 30 12% 88%;
 	--input: 30 12% 88%;
@@ -89,6 +94,10 @@
 	--success-foreground: 150 40% 90%;
 	--warning: 42 55% 30%;
 	--warning-foreground: 42 70% 88%;
+
+	/* Icon and text variants stay vivid against dark surfaces. */
+	--destructive-emphasis: 0 70% 65%;
+	--success-emphasis: 150 40% 62%;
 
 	/* UI colors */
 	--border: 24 5% 18%;

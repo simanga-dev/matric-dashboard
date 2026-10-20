@@ -11,7 +11,7 @@
 		RESIZABLE_CTX_KEY,
 		type ResizableContext
 	} from '$lib/components/ui/resizable';
-	import { overviewWidths } from './overview-layout';
+	import { overviewWidths, treeDefaultPercent } from './overview-layout';
 	import type { School } from '$lib/types/dashboard';
 
 	let {
@@ -60,9 +60,23 @@
 			workspaceWidth = container.clientWidth;
 		});
 		workspaceWidth = container.clientWidth;
+		applyDefaultTreeWidth();
 		observer.observe(container);
 		return () => observer.disconnect();
 	});
+
+	/** Seed the school browser with its pixel default before any resize drag. */
+	function applyDefaultTreeWidth() {
+		if (!window.matchMedia('(min-width: 1200px)').matches) return;
+		const sizes = panels.sizes;
+		if (sizes.length < 3 || workspaceWidth <= 0) return;
+		const tree = Math.round(treeDefaultPercent(workspaceWidth) * 10) / 10;
+		const map = Math.round((100 - tree - (sizes[2] ?? 0)) * 10) / 10;
+		// Leave the map useful on narrow but still horizontal workspaces.
+		if (tree >= 60 || map < 10) return;
+		sizes[0] = tree;
+		sizes[1] = map;
+	}
 
 	async function focusTree(nextOpen: boolean) {
 		await tick();

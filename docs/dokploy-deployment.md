@@ -34,6 +34,16 @@ Redeploy both containers after network changes. Remove any stale Dokploy overrid
 
 ## Verification
 
+### One-time admin account
+
+Copy `scripts/create_admin.py` onto the database server and run `python3 create_admin.py` with permission to use Docker. No Python packages, .NET SDK, or public database port are required. The script auto-detects the running PostgreSQL container if there is exactly one; otherwise pass `--container NAME`. Use `--database NAME` if the application database is not `postgres`.
+
+It prompts for email and a password of at least 12 characters, then asks for confirmation before creating an email-confirmed Admin account. It uses ASP.NET Identity V3 password hashing and an atomic transaction. It refuses existing accounts and requires the API's migrations and role seeding to have run. It does not grant Superuser or school-editing permissions. Database credentials are read inside the container from `POSTGRES_PASSWORD` or `POSTGRES_PASSWORD_FILE`; these must match the current database password.
+
+This is an operator-only bootstrap that writes directly to the database and bypasses the registration endpoint and its email verification. Use it only for an account you own. It does not overwrite accounts or reset passwords. Prefer the application's registration and admin interfaces for routine user management. Enable two-factor authentication after signing in.
+
+### Deployment checks
+
 Validate Compose with your populated environment before deployment:
 
 ```bash
