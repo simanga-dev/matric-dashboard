@@ -64,9 +64,6 @@ services:
     networks:
       - default
       - external-services
-    depends_on:
-      api:
-        condition: service_healthy
     restart: unless-stopped
 
 networks:
