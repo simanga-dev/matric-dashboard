@@ -8,6 +8,15 @@ EMIS number.
 `scripts/clean_school_names.py` does that join and writes
 `data/nsc/school_names_clean.csv`. It does not change the source report.
 
+## Source data
+
+The raw report is not committed to the repository because it is a large external
+dataset. Place the DBE NSC school performance report at the repository root as
+`2024_nsc_school_performance_report.csv`, or point `CSV_PATH` at a local copy.
+The same file feeds `import_schools_to_db.py`, `import_school_locations.py`,
+and `upload_to_meilisearch.py`. Without it those scripts cannot run, and the two
+tests that parse the real report skip.
+
 ## Run it
 
 ```bash
