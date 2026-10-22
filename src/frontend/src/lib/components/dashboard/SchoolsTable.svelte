@@ -13,16 +13,17 @@
 
 	interface Props {
 		externalSearch?: string;
+		title?: string;
+		pageSize?: number;
 	}
 
-	let { externalSearch }: Props = $props();
+	let { externalSearch, title = 'Schools Performance', pageSize = 10 }: Props = $props();
 
 	let schoolData = $state<SchoolList | null>(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 	let searchQuery = $state(externalSearch ?? '');
 	let page = $state(1);
-	const pageSize = 10;
 
 	// One effect drives every fetch: a page or query change reruns it, and the
 	// initial mount is covered too. Calling loadData() explicitly as well used
@@ -64,7 +65,7 @@
 <Card>
 	<CardHeader>
 		<div class="flex items-center justify-between gap-4">
-			<CardTitle>Schools Performance</CardTitle>
+			<CardTitle>{title}</CardTitle>
 			<div class="flex items-center gap-2">
 				<Input
 					bind:value={searchQuery}

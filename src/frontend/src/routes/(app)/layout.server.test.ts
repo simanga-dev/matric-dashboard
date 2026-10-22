@@ -11,7 +11,7 @@ function event(id: string, hadSession = false) {
 }
 
 describe('public results access', () => {
-	it.each(['/(app)/overview', '/(app)/subjects', '/(app)/schools/[id]'])(
+	it.each(['/(app)/overview', '/(app)/subjects', '/(app)/schools', '/(app)/schools/[id]'])(
 		'allows anonymous visitors to %s',
 		async (id) => {
 			await expect(load(event(id))).resolves.toMatchObject({ user: null });

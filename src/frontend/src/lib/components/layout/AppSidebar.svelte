@@ -15,6 +15,7 @@
 		BookOpen,
 		BookMarked,
 		MapPinned,
+		GraduationCap,
 		Trophy,
 		List,
 		type IconProps
@@ -44,6 +45,11 @@
 			title: m.nav_overview,
 			href: resolve(routes.overview),
 			icon: MapPinned
+		},
+		{
+			title: m.nav_schools,
+			href: resolve(routes.schools),
+			icon: GraduationCap
 		},
 		{
 			title: () => 'Top Achievers',

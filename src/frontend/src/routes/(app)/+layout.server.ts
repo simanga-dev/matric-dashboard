@@ -15,6 +15,7 @@ export const load: LayoutServerLoad = async ({ parent, route, cookies }) => {
 		route.id === '/(app)/dashboard' ||
 		route.id === '/(app)/overview' ||
 		route.id === '/(app)/subjects' ||
+		route.id === '/(app)/schools' ||
 		route.id?.startsWith('/(app)/schools/');
 
 	if (!user && !isPublicRoute) {
