@@ -13,13 +13,4 @@
 	<meta name="description" content={m.meta_schools_description()} />
 </svelte:head>
 
-<div class="space-y-6">
-	<header class="space-y-2">
-		<h1 class="text-2xl font-semibold tracking-tight sm:text-3xl">{m.schools_title()}</h1>
-		<p class="max-w-2xl text-sm leading-relaxed text-muted-foreground">
-			{m.schools_subtitle()}
-		</p>
-	</header>
-
-	<SchoolsTable title={m.schools_allTitle()} pageSize={25} externalSearch={search} />
-</div>
+<SchoolsTable title={m.schools_allTitle()} pageSize={25} externalSearch={search} />

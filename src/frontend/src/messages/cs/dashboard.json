@@ -9,8 +9,6 @@
 
 	"meta_schools_title": "Školy",
 	"meta_schools_description": "Prohledejte národní adresář škol a otevřete profil výsledků NSC dané školy.",
-	"schools_title": "Školy",
-	"schools_subtitle": "Prohledejte všechny školy v zemi a otevřete školu pro zobrazení výsledků nebo opravu její polohy na mapě. Sloupec mapy ukazuje poslední ruční opravu; školy s importovanými souřadnicemi DBE zobrazují „Importováno“.",
 	"schools_allTitle": "Všechny školy",
 	"schools_columnUpdated": "Mapa upravena",
 	"schools_mapImported": "Importováno",
