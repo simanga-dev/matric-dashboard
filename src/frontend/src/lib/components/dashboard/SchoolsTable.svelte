@@ -40,9 +40,31 @@
 	let schoolData = $state<SchoolList | null>(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
-	let searchQuery = $state(externalSearch ?? '');
+	// Snapshot the deep-link search once; the effect below follows later route changes.
+	const initialSearch = externalSearch ?? '';
+	let searchQuery = $state(initialSearch);
+	let appliedSearch = $state(initialSearch);
 	let page = $state(1);
 	let sorting = $state<SortingState>([]);
+	let controller: AbortController | null = null;
+
+	// Follow route-level deep links such as /schools?search=pretoria.
+	$effect(() => {
+		const incoming = externalSearch ?? '';
+		searchQuery = incoming;
+		appliedSearch = incoming;
+	});
+
+	// Debounce typing so a directory request is not issued per keystroke.
+	$effect(() => {
+		const query = searchQuery;
+		const timer = setTimeout(() => {
+			if (query === appliedSearch) return;
+			appliedSearch = query;
+			page = 1;
+		}, 250);
+		return () => clearTimeout(timer);
+	});
 
 	const features = tableFeatures({ rowSortingFeature });
 	const columnHelper = createColumnHelper<typeof features, School>();
@@ -124,11 +146,11 @@
 		}
 	});
 
-	// One effect drives every fetch: page, query, or column sort changes rerun
-	// it, and the initial mount is covered too.
+	// One effect drives every fetch: page, applied search, or column sort changes
+	// rerun it, and the initial mount is covered too.
 	let request = $derived({
 		page,
-		search: searchQuery,
+		search: appliedSearch,
 		sort: sorting[0]?.id as SchoolSort | undefined,
 		order: (sorting[0] ? (sorting[0].desc ? 'desc' : 'asc') : undefined) as
 			| SchoolSortOrder
@@ -138,6 +160,7 @@
 	$effect(() => {
 		const { page: currentPage, search, sort, order } = request;
 		void loadData(currentPage, search, sort, order);
+		return () => controller?.abort();
 	});
 
 	async function loadData(
@@ -146,24 +169,36 @@
 		sort: SchoolSort | undefined,
 		order: SchoolSortOrder | undefined
 	) {
+		controller?.abort();
+		const requestController = new AbortController();
+		controller = requestController;
 		loading = true;
 		error = null;
 		try {
-			schoolData = await fetchSchools({
-				pageNumber: currentPage,
-				pageSize,
-				search: query || undefined,
-				sort,
-				order
-			});
+			const result = await fetchSchools(
+				{
+					pageNumber: currentPage,
+					pageSize,
+					search: query || undefined,
+					sort,
+					order
+				},
+				undefined,
+				requestController.signal
+			);
+			if (requestController.signal.aborted) return;
+			schoolData = result;
 		} catch (e) {
+			if (requestController.signal.aborted) return;
 			error = e instanceof Error ? e.message : 'Failed to load schools';
 		} finally {
-			loading = false;
+			if (!requestController.signal.aborted) loading = false;
 		}
 	}
 
+	/** Applies the current query immediately instead of waiting for the debounce. */
 	function handleSearch() {
+		appliedSearch = searchQuery;
 		page = 1;
 	}
 
@@ -181,8 +216,8 @@
 		year: 'numeric'
 	});
 
-	function formatUpdated(value: string | null | undefined): string {
-		return value ? updatedDate.format(new Date(value)) : '—';
+	function formatUpdated(value: string): string {
+		return updatedDate.format(new Date(value));
 	}
 
 	function ariaSort(column: {
