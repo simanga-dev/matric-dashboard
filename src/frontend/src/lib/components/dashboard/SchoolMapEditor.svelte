@@ -109,9 +109,11 @@
 			(target instanceof HTMLElement && target.isContentEditable)
 		);
 	}
-	/** Enter finishes a polygon in progress and then saves the draft. */
-	function handleEnter(event: KeyboardEvent) {
-		if (event.key !== 'Enter' || event.repeat || event.defaultPrevented || saving) return;
+	/** Enter or S finishes a polygon in progress and then saves the draft. */
+	function handleSaveShortcut(event: KeyboardEvent) {
+		const isSaveKey = event.key === 'Enter' || event.key === 's' || event.key === 'S';
+		if (!isSaveKey || event.repeat || event.defaultPrevented || saving) return;
+		if (event.key !== 'Enter' && (event.metaKey || event.ctrlKey || event.altKey)) return;
 		if (isTextEntry(event.target)) return;
 		if (
 			event.target instanceof Element &&
@@ -241,7 +243,7 @@
 	onMount(() => {
 		window.addEventListener('beforeunload', beforeUnload);
 		window.addEventListener('keydown', handleEscape);
-		window.addEventListener('keydown', handleEnter);
+		window.addEventListener('keydown', handleSaveShortcut);
 		void load();
 	});
 	onDestroy(() => {
@@ -250,7 +252,7 @@
 		if (typeof window !== 'undefined') {
 			window.removeEventListener('beforeunload', beforeUnload);
 			window.removeEventListener('keydown', handleEscape);
-			window.removeEventListener('keydown', handleEnter);
+			window.removeEventListener('keydown', handleSaveShortcut);
 		}
 	});
 </script>
@@ -266,7 +268,7 @@
 		<Tooltip.Provider>
 			<InfoTooltip
 				label="editing school maps"
-				text="Use the map toolbar to draw or adjust the school grounds and marker, then Save or Cancel. Press Enter to finish a drawn shape and save. Editor-traced grounds are not a surveyed cadastral boundary. School selection is locked while editing. Drawing and moving geometry require a pointer; keyboard users can pan and zoom the map and use the toolbar Save and Cancel, but cannot edit vertices."
+				text="Use the map toolbar to draw or adjust the school grounds and marker, then Save or Cancel. Press Enter or S to finish a drawn shape and save. Editor-traced grounds are not a surveyed cadastral boundary. School selection is locked while editing. Drawing and moving geometry require a pointer; keyboard users can pan and zoom the map and use the toolbar Save and Cancel, but cannot edit vertices."
 			/>
 		</Tooltip.Provider>
 	</div>

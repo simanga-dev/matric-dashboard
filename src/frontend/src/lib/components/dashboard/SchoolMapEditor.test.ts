@@ -255,6 +255,25 @@ describe('explicit editor save and cancel', () => {
 		await vi.waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(1));
 		expect(mocks.finishDrawing).toHaveBeenCalled();
 	});
+	it('saves a dirty draft on S when no drawing is in progress', async () => {
+		mocks.save.mockResolvedValue({ ...state, revision: 1 });
+		mocks.change?.(null, { type: 'Point', coordinates: [28, -26] }, true, null, false);
+		await evidence();
+		window.dispatchEvent(new KeyboardEvent('keydown', { key: 's', bubbles: true }));
+		await vi.waitFor(() => expect(mocks.save).toHaveBeenCalledTimes(1));
+		expect(mocks.finishDrawing).toHaveBeenCalled();
+	});
+
+	it('does not save on S while typing evidence and ignores the browser save shortcut', async () => {
+		await evidence();
+		const textarea = document.querySelector('textarea')!;
+		textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 's', bubbles: true }));
+		mocks.change?.(null, { type: 'Point', coordinates: [28, -26] }, true, null, false);
+		window.dispatchEvent(new KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true }));
+		await tick();
+		expect(mocks.save).not.toHaveBeenCalled();
+	});
+
 	it('warns on browser unload, cancels in-app navigation, and does not discard on declined Cancel', async () => {
 		await evidence();
 		const event = new Event('beforeunload', { cancelable: true });
