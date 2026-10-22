@@ -10,10 +10,10 @@
 	"meta_schools_title": "Schools",
 	"meta_schools_description": "Search the national school directory and open a school's NSC performance profile.",
 	"schools_title": "Schools",
-	"schools_subtitle": "Search every school in the country, then open one to review its results or correct its position on the map.",
+	"schools_subtitle": "Search every school in the country, then open one to review its results or correct its position on the map. Map updated shows the last manual correction; schools still on the imported DBE coordinates show “Imported”.",
 	"schools_allTitle": "All schools",
 	"schools_columnUpdated": "Map updated",
-	"schools_mapNever": "Never",
+	"schools_mapImported": "Imported",
 
 	"overview_subtitle": "Key metrics and quick access to everything that matters.",
 

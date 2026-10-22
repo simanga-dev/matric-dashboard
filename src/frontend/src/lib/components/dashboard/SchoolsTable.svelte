@@ -288,7 +288,7 @@
 												{formatUpdated(String(cell.getValue()))}
 											</time>
 										{:else}
-											{m.schools_mapNever()}
+											{m.schools_mapImported()}
 										{/if}
 									{:else if cell.column.id === 'passRate'}
 										{formatPassRate(Number(cell.getValue() ?? 0))}
