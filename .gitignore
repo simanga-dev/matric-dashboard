@@ -467,3 +467,7 @@ $RECYCLE.BIN/
 
 # Playwright MCP session artifacts (screenshots, snapshots, logs)
 .playwright-mcp/
+
+# Raw NSC source datasets (keep local only - used by scripts/, not committed)
+2024_nsc_school_performance_report.csv
+2024_nsc_school_performance_report.xlsx
