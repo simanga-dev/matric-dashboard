@@ -21,5 +21,5 @@
 		</p>
 	</header>
 
-	<SchoolsTable title={m.schools_allTitle()} pageSize={25} externalSearch={search} />
+	<SchoolsTable title={m.schools_allTitle()} pageSize={25} sortable externalSearch={search} />
 </div>

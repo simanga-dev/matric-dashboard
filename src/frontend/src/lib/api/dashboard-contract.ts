@@ -27,7 +27,14 @@ export interface DashboardPaths {
 	};
 	'/api/v1/dashboard/schools': {
 		get: {
-			parameters: { query?: { pageNumber?: number; pageSize?: number; search?: string } };
+			parameters: {
+				query?: {
+					pageNumber?: number;
+					pageSize?: number;
+					search?: string;
+					sort?: 'name' | 'updated';
+				};
+			};
 			responses: GetResponse<SchoolList>;
 		};
 	};

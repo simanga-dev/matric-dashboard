@@ -22,7 +22,8 @@ public interface IDashboardService
     /// <summary>
     /// Returns a paginated list of schools with optional search.
     /// </summary>
-    Task<SchoolListOutput> GetSchoolsAsync(int pageNumber, int pageSize, string? search = null);
+    /// <param name="sort">Sort order: "name" (default) or "updated" for most recently edited map coordinates first.</param>
+    Task<SchoolListOutput> GetSchoolsAsync(int pageNumber, int pageSize, string? search = null, string? sort = null);
 
     /// <summary>
     /// Returns aggregated NSC performance for the country, or narrowed to a

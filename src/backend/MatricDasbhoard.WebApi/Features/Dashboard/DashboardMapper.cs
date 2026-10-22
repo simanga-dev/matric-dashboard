@@ -78,7 +78,8 @@ internal static class DashboardMapper
         TotalWrote = output.TotalWrote,
         TotalPassed = output.TotalPassed,
         PassRate = output.PassRate,
-        TotalAchieved = output.TotalAchieved
+        TotalAchieved = output.TotalAchieved,
+        MapUpdatedAt = output.MapUpdatedAt
     };
 
     /// <summary>

@@ -273,7 +273,21 @@ internal sealed class DashboardService : IDashboardService
     }
 
     /// <inheritdoc />
-    public async Task<SchoolListOutput> GetSchoolsAsync(int pageNumber, int pageSize, string? search = null)
+    public async Task<SchoolListOutput> GetSchoolsAsync(int pageNumber, int pageSize, string? search = null,
+        string? sort = null)
+    {
+        var page = string.Equals(sort, "updated", StringComparison.OrdinalIgnoreCase)
+            ? await GetSchoolsByRecentUpdateAsync(pageNumber, pageSize, search)
+            : await GetSchoolDirectoryPageAsync(pageNumber, pageSize, search);
+
+        return await WithMapUpdatesAsync(page);
+    }
+
+    /// <summary>
+    /// Name-ordered directory page. Free-text search prefers the Meilisearch
+    /// relevance index and falls back to the database when it is unreachable.
+    /// </summary>
+    private async Task<SchoolListOutput> GetSchoolDirectoryPageAsync(int pageNumber, int pageSize, string? search)
     {
         var term = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
         if (term is not null)
@@ -314,6 +328,97 @@ internal sealed class DashboardService : IDashboardService
             .ToListAsync();
 
         return new SchoolListOutput(items, totalCount, pageNumber, pageSize);
+    }
+
+    /// <summary>
+    /// Orders the directory by the last saved map correction so recently edited
+    /// coordinates surface first. Schools without a correction sort last by name.
+    /// The ordering joins a PostGIS-owned table, so it is issued as SQL rather
+    /// than mapped into the EF model. Meilisearch relevance ranking is skipped
+    /// here because it cannot preserve a global timestamp order across pages.
+    /// </summary>
+    private async Task<SchoolListOutput> GetSchoolsByRecentUpdateAsync(int pageNumber, int pageSize, string? search)
+    {
+        var term = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
+
+        // Component tests use the in-memory provider, which cannot run the
+        // PostGIS ordering join; keep them on the directory order.
+        if (!_dbContext.Database.IsNpgsql())
+        {
+            return await GetSchoolDirectoryPageAsync(pageNumber, pageSize, term);
+        }
+
+        var totalCount = await _dbContext.Database.SqlQuery<int>($"""
+            SELECT count(*)::int AS "Value"
+            FROM marks."Schools" s
+            WHERE NOT s."IsDeleted"
+              AND ({term}::text IS NULL
+                OR strpos(lower(public.unaccent('public.unaccent'::regdictionary, s."CentreName")),
+                     lower(public.unaccent('public.unaccent'::regdictionary, {term}::text))) > 0
+                OR strpos(lower(public.unaccent('public.unaccent'::regdictionary, s."EmisNumber")),
+                     lower(public.unaccent('public.unaccent'::regdictionary, {term}::text))) > 0)
+            """).SingleAsync();
+
+        var ids = await _dbContext.Database.SqlQuery<string>($"""
+            SELECT s."EmisNumber" AS "Value"
+            FROM marks."Schools" s
+            LEFT JOIN geo.school_spatial_profiles p ON p.school_id = s."Id"
+            WHERE NOT s."IsDeleted"
+              AND ({term}::text IS NULL
+                OR strpos(lower(public.unaccent('public.unaccent'::regdictionary, s."CentreName")),
+                     lower(public.unaccent('public.unaccent'::regdictionary, {term}::text))) > 0
+                OR strpos(lower(public.unaccent('public.unaccent'::regdictionary, s."EmisNumber")),
+                     lower(public.unaccent('public.unaccent'::regdictionary, {term}::text))) > 0)
+            ORDER BY p.changed_at DESC NULLS LAST, s."CentreName", s."EmisNumber"
+            LIMIT {pageSize} OFFSET {(pageNumber - 1) * pageSize}
+            """).ToListAsync();
+
+        if (ids.Count == 0)
+        {
+            return new SchoolListOutput([], totalCount, pageNumber, pageSize);
+        }
+
+        var latestYear = await GetLatestYearAsync(CancellationToken.None);
+        var matching = _dbContext.Schools.AsNoTracking()
+            .Where(s => !s.IsDeleted && ids.Contains(s.EmisNumber));
+        var byId = (await CurrentSchoolOutputs(matching, latestYear).ToListAsync())
+            .ToDictionary(s => s.Id);
+        var items = ids.Where(byId.ContainsKey).Select(id => byId[id]).ToList();
+
+        return new SchoolListOutput(items, totalCount, pageNumber, pageSize);
+    }
+
+    /// <summary>
+    /// Adds the last map-correction timestamp to a page of schools without
+    /// mapping the PostGIS profile table into the EF model.
+    /// </summary>
+    private async Task<SchoolListOutput> WithMapUpdatesAsync(SchoolListOutput page)
+    {
+        if (page.Items.Count == 0 || !_dbContext.Database.IsNpgsql())
+        {
+            return page;
+        }
+
+        var emisNumbers = page.Items.Select(i => i.Id).ToArray();
+        var updates = await _dbContext.Database.SqlQuery<MapUpdateRow>($"""
+            SELECT s."EmisNumber" AS "EmisNumber", p.changed_at AS "ChangedAt"
+            FROM geo.school_spatial_profiles p
+            JOIN marks."Schools" s ON s."Id" = p.school_id
+            WHERE s."EmisNumber" = ANY({emisNumbers})
+            """).ToListAsync();
+
+        if (updates.Count == 0)
+        {
+            return page;
+        }
+
+        var changedAt = updates.ToDictionary(u => u.EmisNumber, u => u.ChangedAt);
+        return page with
+        {
+            Items = page.Items
+                .Select(i => changedAt.TryGetValue(i.Id, out var value) ? i with { MapUpdatedAt = value } : i)
+                .ToList()
+        };
     }
 
     /// <summary>Projects the same current-year data for browsing and ranked search hits.</summary>
@@ -619,5 +724,12 @@ internal sealed class DashboardService : IDashboardService
     {
         [JsonPropertyName("school_id")]
         public string? Id { get; set; }
+    }
+
+    /// <summary>Row shape for the map-correction timestamp lookup.</summary>
+    private sealed class MapUpdateRow
+    {
+        public string EmisNumber { get; set; } = string.Empty;
+        public DateTimeOffset ChangedAt { get; set; }
     }
 }

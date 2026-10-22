@@ -28,4 +28,7 @@ public class SchoolResponse
 
     /// <summary>Learners who achieved bachelor passes, if available.</summary>
     public int? TotalAchieved { get; init; }
+
+    /// <summary>When the school's map geometry was last corrected, or null if never edited.</summary>
+    public DateTimeOffset? MapUpdatedAt { get; init; }
 }

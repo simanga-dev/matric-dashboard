@@ -6,6 +6,7 @@ import type {
 	RegionSubjects,
 	SchoolDetail,
 	SchoolList,
+	SchoolSort,
 	SchoolSubjects
 } from '$lib/types/dashboard';
 
@@ -35,10 +36,11 @@ export async function fetchSchools(
 	pageSize = 10,
 	search?: string,
 	client: ApiClient = browserClient,
-	signal?: AbortSignal
+	signal?: AbortSignal,
+	sort?: SchoolSort
 ): Promise<SchoolList> {
 	const { data, error } = await client.GET('/api/v1/dashboard/schools', {
-		params: { query: { pageNumber, pageSize, search } },
+		params: { query: { pageNumber, pageSize, search, sort } },
 		signal
 	});
 	if (error || !data) throw new Error('Failed to fetch schools');

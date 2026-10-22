@@ -71,6 +71,14 @@ describe('dashboard API requests', () => {
 		expect(request.signal.aborted).toBe(true);
 	});
 
+	it('forwards the map-update sort to the schools request', async () => {
+		transport.mockResolvedValue(Response.json({ items: [] }));
+		await fetchSchools(1, 10, undefined, undefined, undefined, 'updated');
+		expect(transport.mock.calls[0]?.[0]).toMatchObject({
+			url: 'http://frontend.test/api/v1/dashboard/schools?pageNumber=1&pageSize=10&sort=updated'
+		});
+	});
+
 	it('encodes region scope filters and returns the yearly trend', async () => {
 		const body = {
 			scope: 'district',

@@ -26,7 +26,12 @@ export interface School {
 	totalPassed: number;
 	passRate: number;
 	totalAchieved: number | null;
+	/** When the school's map coordinates were last corrected, or null if never edited. */
+	mapUpdatedAt?: string | null;
 }
+
+/** School directory ordering. */
+export type SchoolSort = 'name' | 'updated';
 
 export interface SchoolYear {
 	year: number;
