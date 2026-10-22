@@ -267,7 +267,7 @@
 		searched = true;
 		searchError = null;
 		try {
-			const list = await fetchSchools(1, 10, query);
+			const list = await fetchSchools({ pageNumber: 1, pageSize: 10, search: query });
 			results = list.items;
 		} catch (e) {
 			results = [];

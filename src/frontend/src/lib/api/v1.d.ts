@@ -715,6 +715,7 @@ export interface paths {
 					pageSize?: number;
 					search?: string;
 					sort?: string;
+					order?: string;
 				};
 				header?: never;
 				path?: never;

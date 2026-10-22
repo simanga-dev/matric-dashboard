@@ -7,6 +7,7 @@ import type {
 	SchoolDetail,
 	SchoolList,
 	SchoolSort,
+	SchoolSortOrder,
 	SchoolSubjects
 } from '$lib/types/dashboard';
 
@@ -31,16 +32,22 @@ export async function fetchPassRateTrends(
 	return data;
 }
 
+/** Filters and ordering for the paginated school directory. */
+export interface SchoolQuery {
+	pageNumber?: number;
+	pageSize?: number;
+	search?: string;
+	sort?: SchoolSort;
+	order?: SchoolSortOrder;
+}
+
 export async function fetchSchools(
-	pageNumber = 1,
-	pageSize = 10,
-	search?: string,
+	query: SchoolQuery = {},
 	client: ApiClient = browserClient,
-	signal?: AbortSignal,
-	sort?: SchoolSort
+	signal?: AbortSignal
 ): Promise<SchoolList> {
 	const { data, error } = await client.GET('/api/v1/dashboard/schools', {
-		params: { query: { pageNumber, pageSize, search, sort } },
+		params: { query },
 		signal
 	});
 	if (error || !data) throw new Error('Failed to fetch schools');

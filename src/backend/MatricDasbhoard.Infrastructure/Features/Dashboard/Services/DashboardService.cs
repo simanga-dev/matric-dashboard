@@ -274,23 +274,58 @@ internal sealed class DashboardService : IDashboardService
 
     /// <inheritdoc />
     public async Task<SchoolListOutput> GetSchoolsAsync(int pageNumber, int pageSize, string? search = null,
-        string? sort = null)
+        string? sort = null, string? order = null)
     {
-        var page = string.Equals(sort, "updated", StringComparison.OrdinalIgnoreCase)
-            ? await GetSchoolsByRecentUpdateAsync(pageNumber, pageSize, search)
-            : await GetSchoolDirectoryPageAsync(pageNumber, pageSize, search);
+        var key = NormalizeSort(sort);
+        var descending = IsDescending(key, order);
+
+        var page = key == MapUpdatedSort
+            ? await GetSchoolsByRecentUpdateAsync(pageNumber, pageSize, search, descending)
+            : await GetSchoolDirectoryPageAsync(pageNumber, pageSize, search, key, descending);
 
         return await WithMapUpdatesAsync(page);
     }
 
+    /// <summary>Sort key for the last saved map correction (accepted as "updated" too).</summary>
+    private const string MapUpdatedSort = "mapUpdatedAt";
+
+    /// <summary>Maps an untrusted sort parameter onto a supported column, defaulting to name.</summary>
+    private static string? NormalizeSort(string? sort) => sort?.Trim().ToLowerInvariant() switch
+    {
+        null or "" => null,
+        "name" => "name",
+        "province" => "province",
+        "wrote" or "totalwrote" => "totalWrote",
+        "passed" or "totalpassed" => "totalPassed",
+        "passrate" => "passRate",
+        "updated" or "mapupdatedat" => MapUpdatedSort,
+        _ => null
+    };
+
     /// <summary>
-    /// Name-ordered directory page. Free-text search prefers the Meilisearch
-    /// relevance index and falls back to the database when it is unreachable.
+    /// Metric columns read best highest-first; names and provinces ascending.
+    /// The frontend always sends an explicit order, so this only shapes direct API calls.
     /// </summary>
-    private async Task<SchoolListOutput> GetSchoolDirectoryPageAsync(int pageNumber, int pageSize, string? search)
+    private static bool IsDescending(string? sort, string? order)
+    {
+        if (!string.IsNullOrWhiteSpace(order))
+        {
+            return string.Equals(order.Trim(), "desc", StringComparison.OrdinalIgnoreCase);
+        }
+
+        return sort is MapUpdatedSort or "totalWrote" or "totalPassed" or "passRate";
+    }
+
+    /// <summary>
+    /// Directory page. Without an explicit sort, free-text search prefers the
+    /// Meilisearch relevance index and falls back to the database when it is
+    /// unreachable.
+    /// </summary>
+    private async Task<SchoolListOutput> GetSchoolDirectoryPageAsync(int pageNumber, int pageSize, string? search,
+        string? sort, bool descending)
     {
         var term = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
-        if (term is not null)
+        if (term is not null && sort is null)
         {
             var fromIndex = await SearchSchoolsAsync(term, pageNumber, pageSize);
             if (fromIndex is not null)
@@ -322,7 +357,7 @@ internal sealed class DashboardService : IDashboardService
         // Left join onto the single latest-year performance row instead of three
         // correlated subqueries per school. The school directory pages through
         // every row, so per-row subqueries multiply badly.
-        var items = await CurrentSchoolOutputs(query, latestYear)
+        var items = await CurrentSchoolOutputs(query, latestYear, sort, descending)
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync();
@@ -331,13 +366,13 @@ internal sealed class DashboardService : IDashboardService
     }
 
     /// <summary>
-    /// Orders the directory by the last saved map correction so recently edited
-    /// coordinates surface first. Schools without a correction sort last by name.
-    /// The ordering joins a PostGIS-owned table, so it is issued as SQL rather
-    /// than mapped into the EF model. Meilisearch relevance ranking is skipped
-    /// here because it cannot preserve a global timestamp order across pages.
+    /// Orders the directory by the last saved map correction. The ordering
+    /// joins a PostGIS-owned table, so it is issued as SQL rather than mapped
+    /// into the EF model. Meilisearch relevance ranking is skipped here because
+    /// it cannot preserve a global timestamp order across pages.
     /// </summary>
-    private async Task<SchoolListOutput> GetSchoolsByRecentUpdateAsync(int pageNumber, int pageSize, string? search)
+    private async Task<SchoolListOutput> GetSchoolsByRecentUpdateAsync(int pageNumber, int pageSize, string? search,
+        bool descending)
     {
         var term = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
 
@@ -345,7 +380,7 @@ internal sealed class DashboardService : IDashboardService
         // PostGIS ordering join; keep them on the directory order.
         if (!_dbContext.Database.IsNpgsql())
         {
-            return await GetSchoolDirectoryPageAsync(pageNumber, pageSize, term);
+            return await GetSchoolDirectoryPageAsync(pageNumber, pageSize, term, null, false);
         }
 
         var totalCount = await _dbContext.Database.SqlQuery<int>($"""
@@ -369,7 +404,9 @@ internal sealed class DashboardService : IDashboardService
                      lower(public.unaccent('public.unaccent'::regdictionary, {term}::text))) > 0
                 OR strpos(lower(public.unaccent('public.unaccent'::regdictionary, s."EmisNumber")),
                      lower(public.unaccent('public.unaccent'::regdictionary, {term}::text))) > 0)
-            ORDER BY p.changed_at DESC NULLS LAST, s."CentreName", s."EmisNumber"
+            ORDER BY CASE WHEN {descending} THEN p.changed_at END DESC NULLS LAST,
+                     CASE WHEN NOT {descending} THEN p.changed_at END ASC NULLS LAST,
+                     s."CentreName", s."EmisNumber"
             LIMIT {pageSize} OFFSET {(pageNumber - 1) * pageSize}
             """).ToListAsync();
 
@@ -421,25 +458,50 @@ internal sealed class DashboardService : IDashboardService
         };
     }
 
-    /// <summary>Projects the same current-year data for browsing and ranked search hits.</summary>
-    private IQueryable<SchoolOutput> CurrentSchoolOutputs(IQueryable<School> query, int year)
+    /// <summary>Projects current-year data for browsing and ranked search hits.</summary>
+    private IQueryable<SchoolOutput> CurrentSchoolOutputs(IQueryable<School> query, int year, string? sort = null,
+        bool descending = false)
     {
         var performances = _dbContext.SchoolPerformances
             .Where(p => p.Year == year && !p.IsDeleted);
 
-        return from s in query
-               join p in performances on s.Id equals p.SchoolId into schoolPerformances
-               from performance in schoolPerformances.DefaultIfEmpty()
-               orderby s.CentreName, s.EmisNumber
-               select new SchoolOutput(
-                   s.EmisNumber,
-                   s.CentreName,
-                   s.Province,
-                   s.DistrictName,
-                   performance == null ? 0 : performance.TotalWrote,
-                   performance == null ? 0 : performance.TotalAchieved,
-                   performance == null ? 0 : (double)performance.PercentAchieved,
-                   null);
+        // Order while the query still refers to mapped columns; EF cannot
+        // translate ordering by members of a positional record projection.
+        var rows = from s in query
+                   join p in performances on s.Id equals p.SchoolId into schoolPerformances
+                   from performance in schoolPerformances.DefaultIfEmpty()
+                   select new { School = s, Performance = performance };
+
+        var ordered = sort switch
+        {
+            "province" => descending
+                ? rows.OrderByDescending(r => r.School.Province)
+                : rows.OrderBy(r => r.School.Province),
+            "totalWrote" => descending
+                ? rows.OrderByDescending(r => r.Performance == null ? 0 : r.Performance.TotalWrote)
+                : rows.OrderBy(r => r.Performance == null ? 0 : r.Performance.TotalWrote),
+            "totalPassed" => descending
+                ? rows.OrderByDescending(r => r.Performance == null ? 0 : r.Performance.TotalAchieved)
+                : rows.OrderBy(r => r.Performance == null ? 0 : r.Performance.TotalAchieved),
+            "passRate" => descending
+                ? rows.OrderByDescending(r => r.Performance == null ? 0 : (double)r.Performance.PercentAchieved)
+                : rows.OrderBy(r => r.Performance == null ? 0 : (double)r.Performance.PercentAchieved),
+            _ => descending
+                ? rows.OrderByDescending(r => r.School.CentreName)
+                : rows.OrderBy(r => r.School.CentreName)
+        };
+
+        // Stable tie-breakers keep pages from overlapping when values repeat.
+        return ordered.ThenBy(r => r.School.CentreName).ThenBy(r => r.School.EmisNumber)
+            .Select(r => new SchoolOutput(
+                r.School.EmisNumber,
+                r.School.CentreName,
+                r.School.Province,
+                r.School.DistrictName,
+                r.Performance == null ? 0 : r.Performance.TotalWrote,
+                r.Performance == null ? 0 : r.Performance.TotalAchieved,
+                r.Performance == null ? 0 : (double)r.Performance.PercentAchieved,
+                null));
     }
 
     /// <summary>

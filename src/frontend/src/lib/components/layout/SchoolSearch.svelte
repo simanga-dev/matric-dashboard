@@ -36,7 +36,7 @@
 		debounceTimer = setTimeout(async () => {
 			loading = true;
 			try {
-				const data = await fetchSchools(1, 8, query);
+				const data = await fetchSchools({ pageNumber: 1, pageSize: 8, search: query });
 				results = data.items;
 				open = results.length > 0;
 			} catch {

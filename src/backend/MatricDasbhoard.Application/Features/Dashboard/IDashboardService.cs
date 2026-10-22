@@ -20,10 +20,12 @@ public interface IDashboardService
     Task<IReadOnlyList<PassRateTrendOutput>> GetPassRateTrendsAsync(string? years = null);
 
     /// <summary>
-    /// Returns a paginated list of schools with optional search.
+    /// Returns a paginated list of schools with optional search and per-column sorting.
     /// </summary>
-    /// <param name="sort">Sort order: "name" (default) or "updated" for most recently edited map coordinates first.</param>
-    Task<SchoolListOutput> GetSchoolsAsync(int pageNumber, int pageSize, string? search = null, string? sort = null);
+    /// <param name="sort">Column to sort by: name, province, totalWrote, totalPassed, passRate, or mapUpdatedAt.</param>
+    /// <param name="order">Sort direction: asc or desc. Defaults to desc for metrics and mapUpdatedAt, asc otherwise.</param>
+    Task<SchoolListOutput> GetSchoolsAsync(int pageNumber, int pageSize, string? search = null, string? sort = null,
+        string? order = null);
 
     /// <summary>
     /// Returns aggregated NSC performance for the country, or narrowed to a

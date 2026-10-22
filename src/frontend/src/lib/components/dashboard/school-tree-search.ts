@@ -15,7 +15,7 @@ export function scheduleSchoolTreeSearch(
 	onResult: (result: SchoolList) => void,
 	onError: () => void,
 	fetchPage: FetchPage = (page, size, query, signal) =>
-		fetchSchools(page, size, query, undefined, signal)
+		fetchSchools({ pageNumber: page, pageSize: size, search: query }, undefined, signal)
 ): () => void {
 	const controller = new AbortController();
 	const timer = setTimeout(

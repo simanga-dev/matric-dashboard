@@ -30,8 +30,17 @@ export interface School {
 	mapUpdatedAt?: string | null;
 }
 
-/** School directory ordering. */
-export type SchoolSort = 'name' | 'updated';
+/** Sortable school directory columns. */
+export type SchoolSort =
+	| 'name'
+	| 'province'
+	| 'totalWrote'
+	| 'totalPassed'
+	| 'passRate'
+	| 'mapUpdatedAt';
+
+/** Sort direction for the school directory. */
+export type SchoolSortOrder = 'asc' | 'desc';
 
 export interface SchoolYear {
 	year: number;

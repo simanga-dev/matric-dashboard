@@ -5,6 +5,8 @@ import type {
 	RegionSubjects,
 	SchoolDetail,
 	SchoolList,
+	SchoolSort,
+	SchoolSortOrder,
 	SchoolSubjects
 } from '$lib/types/dashboard';
 import type { components } from './v1';
@@ -32,7 +34,8 @@ export interface DashboardPaths {
 					pageNumber?: number;
 					pageSize?: number;
 					search?: string;
-					sort?: 'name' | 'updated';
+					sort?: SchoolSort;
+					order?: SchoolSortOrder;
 				};
 			};
 			responses: GetResponse<SchoolList>;

@@ -59,6 +59,33 @@ public class DashboardServiceTests
         Assert.Equal(3, first.TotalCount);
     }
 
+    /// <summary>Requested column order applies before paging, with stable tie-breakers.</summary>
+    [Fact]
+    public async Task Browse_SortsByRequestedColumnAndDirection()
+    {
+        await using var db = TestDbContextFactory.Create();
+        var alpha = School("100", "Alpha", "WESTERN CAPE");
+        alpha.AddPerformance(new SchoolPerformance(2024, 0, 30, 20, 66.7m));
+        var bravo = School("200", "Bravo", "GAUTENG");
+        bravo.AddPerformance(new SchoolPerformance(2024, 0, 10, 9, 90m));
+        var charlie = School("300", "Charlie", "EASTERN CAPE");
+        charlie.AddPerformance(new SchoolPerformance(2024, 0, 20, 15, 75m));
+        db.Schools.AddRange(alpha, bravo, charlie);
+        await db.SaveChangesAsync();
+        using var http = UnreachableSearch();
+        var service = new DashboardService(db, new MeilisearchClient(http));
+
+        var byWrote = await service.GetSchoolsAsync(1, 10, null, "totalWrote", "desc");
+        var byRate = await service.GetSchoolsAsync(1, 10, null, "passRate");
+        var byProvince = await service.GetSchoolsAsync(1, 10, null, "province", "desc");
+        var byName = await service.GetSchoolsAsync(1, 10, null, "name", "desc");
+
+        Assert.Equal(["100", "300", "200"], byWrote.Items.Select(s => s.Id));
+        Assert.Equal(["200", "300", "100"], byRate.Items.Select(s => s.Id));
+        Assert.Equal(["100", "200", "300"], byProvince.Items.Select(s => s.Id));
+        Assert.Equal(["300", "200", "100"], byName.Items.Select(s => s.Id));
+    }
+
     /// <summary>Historical totals must be compared against the same academic year.</summary>
     [Fact]
     public async Task Detail_HistoricalSchoolUsesHistoricalCohortAndWeightedAverages()
