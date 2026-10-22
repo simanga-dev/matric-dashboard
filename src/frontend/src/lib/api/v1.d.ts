@@ -714,6 +714,8 @@ export interface paths {
 					pageNumber?: number;
 					pageSize?: number;
 					search?: string;
+					sort?: string;
+					order?: string;
 				};
 				header?: never;
 				path?: never;
@@ -4946,6 +4948,11 @@ export interface components {
 			 * @description Learners who achieved bachelor passes, if available.
 			 */
 			totalAchieved?: null | number;
+			/**
+			 * Format: date-time
+			 * @description When the school's map geometry was last corrected, or null if never edited.
+			 */
+			mapUpdatedAt?: string | null;
 		};
 		/** @description A school's NSC performance in a single subject for one academic year. */
 		SchoolSubjectResponse: {

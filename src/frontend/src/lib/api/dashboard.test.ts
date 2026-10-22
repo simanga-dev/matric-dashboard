@@ -55,7 +55,9 @@ describe('dashboard API requests', () => {
 			hasNextPage: false
 		};
 		transport.mockResolvedValue(Response.json(body));
-		expect(await fetchSchools(2, 8, 'School & District')).toEqual(body);
+		expect(await fetchSchools({ pageNumber: 2, pageSize: 8, search: 'School & District' })).toEqual(
+			body
+		);
 		expect(transport.mock.calls[0]?.[0]).toMatchObject({
 			url: 'http://frontend.test/api/v1/dashboard/schools?pageNumber=2&pageSize=8&search=School%20%26%20District'
 		});
@@ -64,11 +66,23 @@ describe('dashboard API requests', () => {
 	it('forwards cancellation to the school search request', async () => {
 		const controller = new AbortController();
 		transport.mockResolvedValue(Response.json({ items: [] }));
-		await fetchSchools(1, 100, 'School', undefined, controller.signal);
+		await fetchSchools(
+			{ pageNumber: 1, pageSize: 100, search: 'School' },
+			undefined,
+			controller.signal
+		);
 		const request = transport.mock.calls[0]?.[0] as Request;
 		expect(request.signal.aborted).toBe(false);
 		controller.abort();
 		expect(request.signal.aborted).toBe(true);
+	});
+
+	it('forwards the map-update sort to the schools request', async () => {
+		transport.mockResolvedValue(Response.json({ items: [] }));
+		await fetchSchools({ pageNumber: 1, pageSize: 10, sort: 'mapUpdatedAt', order: 'desc' });
+		expect(transport.mock.calls[0]?.[0]).toMatchObject({
+			url: 'http://frontend.test/api/v1/dashboard/schools?pageNumber=1&pageSize=10&sort=mapUpdatedAt&order=desc'
+		});
 	});
 
 	it('encodes region scope filters and returns the yearly trend', async () => {

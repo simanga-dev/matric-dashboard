@@ -7,6 +7,12 @@
 	"meta_overview_title": "Overview",
 	"meta_overview_description": "At-a-glance view of your application.",
 
+	"meta_schools_title": "Schools",
+	"meta_schools_description": "Search the national school directory and open a school's NSC performance profile.",
+	"schools_allTitle": "All schools",
+	"schools_columnUpdated": "Map updated",
+	"schools_mapImported": "Imported",
+
 	"overview_subtitle": "Key metrics and quick access to everything that matters.",
 
 	"dashboard_welcome": "Welcome back, {name}",

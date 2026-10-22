@@ -5,6 +5,8 @@ import type {
 	RegionSubjects,
 	SchoolDetail,
 	SchoolList,
+	SchoolSort,
+	SchoolSortOrder,
 	SchoolSubjects
 } from '$lib/types/dashboard';
 import type { components } from './v1';
@@ -27,7 +29,15 @@ export interface DashboardPaths {
 	};
 	'/api/v1/dashboard/schools': {
 		get: {
-			parameters: { query?: { pageNumber?: number; pageSize?: number; search?: string } };
+			parameters: {
+				query?: {
+					pageNumber?: number;
+					pageSize?: number;
+					search?: string;
+					sort?: SchoolSort;
+					order?: SchoolSortOrder;
+				};
+			};
 			responses: GetResponse<SchoolList>;
 		};
 	};

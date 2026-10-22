@@ -8,6 +8,7 @@
 
 	"nav_dashboard": "Nástěnka",
 	"nav_overview": "Přehled",
+	"nav_schools": "Školy",
 	"nav_profile": "Profil",
 	"nav_settings": "Nastavení",
 	"nav_logout": "Odhlásit se",
@@ -29,6 +30,7 @@
 	"shortcuts_toggleSidebar": "Přepnout postranní panel",
 	"shortcuts_commandPalette": "Otevřít příkazovou paletu",
 	"shortcuts_help": "Klávesové zkratky",
+	"shortcuts_editMap": "Upravit mapu vybrané školy (přehled)",
 
 	"commandPalette_placeholder": "Zadejte příkaz nebo hledejte...",
 	"commandPalette_noResults": "Žádné výsledky.",

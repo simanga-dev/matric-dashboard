@@ -27,7 +27,9 @@ export function loadSchoolDirectory(fetch: Fetch, origin: string): Promise<Schoo
 	}
 	if (!inflight) {
 		const client = createApiClient(fetch, origin);
-		inflight = loadSchoolHierarchy((page, size) => fetchSchools(page, size, undefined, client))
+		inflight = loadSchoolHierarchy((page, size) =>
+			fetchSchools({ pageNumber: page, pageSize: size }, client)
+		)
 			.then((schools) => {
 				cache = { schools, expiresAt: Date.now() + DIRECTORY_TTL_MS };
 				return schools;

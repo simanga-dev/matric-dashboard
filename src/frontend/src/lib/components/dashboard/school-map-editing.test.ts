@@ -247,6 +247,19 @@ describe('school map drafts', () => {
 		expect(draft.footprint?.type).toBe('MultiPolygon');
 		editing.destroy();
 	});
+	it('refuses to finish a drawing that has no sketch yet', () => {
+		const map = {
+			addLayer: vi.fn(),
+			removeLayer: vi.fn(),
+			addInteraction: vi.fn(),
+			removeInteraction: vi.fn(),
+			getView: () => ({ fit: vi.fn() })
+		} as unknown as OlMap;
+		const editing = createSpatialInteractions(map, state, vi.fn());
+		editing.tool('draw-footprint');
+		expect(editing.finishDrawing()).toBe(false);
+		editing.destroy();
+	});
 	it('round trips EPSG:4326 longitude first through EPSG:3857', () => {
 		const projected = readSpatialGeometry(state.location!);
 		expect(projected.getExtent()[0]).toBeGreaterThan(1_000_000);

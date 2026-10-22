@@ -1,6 +1,7 @@
 import Feature from 'ol/Feature';
 import GeoJSON from 'ol/format/GeoJSON';
 import type Geometry from 'ol/geom/Geometry';
+import type Polygon from 'ol/geom/Polygon';
 import type OlMap from 'ol/Map';
 import VectorSource from 'ol/source/Vector';
 import VectorLayer from 'ol/layer/Vector';
@@ -195,6 +196,7 @@ export function createSpatialInteractions(
 	});
 	let active: Array<Draw | Modify | Translate> = [];
 	let snap: Snap | null = null;
+	let sketch: Feature<Geometry> | null = null;
 	let markerEdited = false;
 	let boundaryEdited = false;
 	let footprintEdited = false;
@@ -217,7 +219,24 @@ export function createSpatialInteractions(
 		if (snap) map.removeInteraction(snap);
 		active = [];
 		snap = null;
+		sketch = null;
 		toolChanged(null);
+	}
+	/**
+	 * Commit the polygon currently being drawn when it has at least three
+	 * vertices. Returns true when a shape was finished so callers can save.
+	 */
+	function finishDrawing(): boolean {
+		const drawing = active[0];
+		if (!(drawing instanceof Draw) || !sketch) return false;
+		const geometry = sketch.getGeometry();
+		const ring =
+			geometry?.getType() === 'Polygon' ? ((geometry as Polygon).getCoordinates()[0] ?? []) : [];
+		// The sketch ring holds one entry per click, the live cursor position
+		// and a closing copy of the first vertex.
+		if (ring.length < 5) return false;
+		drawing.finishDrawing();
+		return true;
 	}
 	function tool(tool: EditTool) {
 		stop();
@@ -231,7 +250,11 @@ export function createSpatialInteractions(
 			const draw = new Draw({
 				type: tool === 'draw' || tool === 'draw-footprint' ? 'Polygon' : 'Point'
 			});
+			draw.on('drawstart', (event) => {
+				sketch = event.feature;
+			});
 			draw.on('drawend', (event) => {
+				sketch = null;
 				if (tool === 'draw') {
 					boundaryEdited = true;
 					if (boundary) source.removeFeature(boundary);
@@ -286,6 +309,7 @@ export function createSpatialInteractions(
 	return {
 		tool,
 		stop,
+		finishDrawing,
 		area: () => {
 			const geometry = boundary?.getGeometry() ?? footprint?.getGeometry();
 			return geometry ? getArea(geometry) : null;

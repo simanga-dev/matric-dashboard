@@ -19,12 +19,14 @@
 	--color-muted-foreground: hsl(var(--muted-foreground));
 	--color-success: hsl(var(--success));
 	--color-success-foreground: hsl(var(--success-foreground));
+	--color-success-emphasis: hsl(var(--success-emphasis));
 	--color-warning: hsl(var(--warning));
 	--color-warning-foreground: hsl(var(--warning-foreground));
 	--color-accent: hsl(var(--accent));
 	--color-accent-foreground: hsl(var(--accent-foreground));
 	--color-destructive: hsl(var(--destructive));
 	--color-destructive-foreground: hsl(var(--destructive-foreground));
+	--color-destructive-emphasis: hsl(var(--destructive-emphasis));
 	--color-border: hsl(var(--border));
 	--color-input: hsl(var(--input));
 	--color-ring: hsl(var(--ring));

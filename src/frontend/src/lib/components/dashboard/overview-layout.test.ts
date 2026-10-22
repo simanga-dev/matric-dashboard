@@ -1,7 +1,23 @@
 import { describe, expect, it } from 'vitest';
-import { overviewWidths } from './overview-layout';
+import { overviewWidths, treeDefaultPercent } from './overview-layout';
 
 const defaultSizes = [20, 52, 28];
+
+describe('school browser default width', () => {
+	it('converts the 380px default to the panel percentage', () => {
+		expect(treeDefaultPercent(1216)).toBeCloseTo(31.7, 1);
+	});
+
+	it('falls back when the workspace has no measurable width', () => {
+		expect(treeDefaultPercent(0)).toBe(20);
+	});
+
+	it('lands on 380px after the default sizes are applied', () => {
+		const percent = Math.round(treeDefaultPercent(1216) * 10) / 10;
+		const sizes = [percent, 100 - percent - 28, 28];
+		expect(overviewWidths(1216, sizes, false, false).tree).toBeCloseTo(380, 0);
+	});
+});
 
 describe('overview workspace widths', () => {
 	it('uses the panel proportions when both sides are expanded', () => {

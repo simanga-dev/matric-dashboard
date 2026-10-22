@@ -21,6 +21,16 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 
+REPORT_CSV = Path(
+    os.environ.get("CSV_PATH", ROOT / "2024_nsc_school_performance_report.csv")
+)
+# The raw DBE report is not committed (see .gitignore). Tests that parse the real
+# file skip when it is absent; set CSV_PATH to point at a local copy.
+requires_report = unittest.skipUnless(
+    REPORT_CSV.is_file(),
+    f"NSC performance report not found at {REPORT_CSV}; set CSV_PATH to run this test.",
+)
+
 
 def load_script(name, path):
     spec = importlib.util.spec_from_file_location(name, ROOT / path)
@@ -272,12 +282,13 @@ class ImportTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 1)
                 self.assertEqual(result.stdout, "")
 
+    @requires_report
     def test_existing_quarantine_is_never_overwritten(self):
         with tempfile.TemporaryDirectory() as directory:
             existing = Path(directory) / "quarantine.csv"
             existing.write_text("retain this file\n")
             env = dict(os.environ, QUARANTINE_PATH=str(existing),
-                       CSV_PATH=str(ROOT / "2024_nsc_school_performance_report.csv"))
+                       CSV_PATH=str(REPORT_CSV))
             result = subprocess.run(
                 ["python3", "-B", str(ROOT / "scripts/import_schools_to_db.py")],
                 env=env, capture_output=True, text=True, check=False,
@@ -286,11 +297,12 @@ class ImportTests(unittest.TestCase):
             self.assertEqual(result.stdout, "")
             self.assertEqual(existing.read_text(), "retain this file\n")
 
+    @requires_report
     def test_bundled_report_retains_all_unresolved_centres_without_database_access(self):
         with tempfile.TemporaryDirectory() as directory:
             rejected = Path(directory) / "quarantine.csv"
             env = dict(os.environ, QUARANTINE_PATH=str(rejected),
-                       CSV_PATH=str(ROOT / "2024_nsc_school_performance_report.csv"))
+                       CSV_PATH=str(REPORT_CSV))
             result = subprocess.run(
                 ["python3", "-B", str(ROOT / "scripts/import_schools_to_db.py")],
                 env=env, capture_output=True, text=True, check=False,

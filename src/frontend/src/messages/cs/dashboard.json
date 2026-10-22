@@ -7,6 +7,12 @@
 	"meta_overview_title": "Přehled",
 	"meta_overview_description": "Rychlý přehled vaší aplikace.",
 
+	"meta_schools_title": "Školy",
+	"meta_schools_description": "Prohledejte národní adresář škol a otevřete profil výsledků NSC dané školy.",
+	"schools_allTitle": "Všechny školy",
+	"schools_columnUpdated": "Mapa upravena",
+	"schools_mapImported": "Importováno",
+
 	"overview_subtitle": "Klíčové metriky a rychlý přístup ke všemu důležitému.",
 
 	"dashboard_welcome": "Vítejte zpět, {name}",

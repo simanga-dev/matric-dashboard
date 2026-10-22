@@ -45,7 +45,8 @@ public record SchoolOutput(
     int TotalWrote,
     int TotalPassed,
     double PassRate,
-    int? TotalAchieved
+    int? TotalAchieved,
+    DateTimeOffset? MapUpdatedAt = null
 );
 
 /// <summary>

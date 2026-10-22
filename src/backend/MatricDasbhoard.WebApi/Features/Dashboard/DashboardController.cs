@@ -76,16 +76,23 @@ public class DashboardController(IDashboardService dashboardService) : ApiContro
     }
 
     /// <summary>
-    /// Returns a paginated list of schools with optional search.
+    /// Returns a paginated list of schools with optional search and per-column sorting.
     /// </summary>
+    /// <param name="pageNumber">One-based page number.</param>
+    /// <param name="pageSize">Number of schools per page.</param>
+    /// <param name="search">Optional name or EMIS number search.</param>
+    /// <param name="sort">Column to sort by: name, province, totalWrote, totalPassed, passRate, or mapUpdatedAt.</param>
+    /// <param name="order">Sort direction: asc or desc. Defaults to desc for metrics and mapUpdatedAt, asc otherwise.</param>
     [HttpGet("schools")]
     [ProducesResponseType(typeof(Dtos.SchoolListResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<Dtos.SchoolListResponse>> GetSchools(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 10,
-        [FromQuery] string? search = null)
+        [FromQuery] string? search = null,
+        [FromQuery] string? sort = null,
+        [FromQuery] string? order = null)
     {
-        var schools = await dashboardService.GetSchoolsAsync(pageNumber, pageSize, search);
+        var schools = await dashboardService.GetSchoolsAsync(pageNumber, pageSize, search, sort, order);
         return Ok(schools.ToResponse());
     }
 

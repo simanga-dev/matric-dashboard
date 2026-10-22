@@ -26,7 +26,21 @@ export interface School {
 	totalPassed: number;
 	passRate: number;
 	totalAchieved: number | null;
+	/** When the school's map coordinates were last corrected, or null if never edited. */
+	mapUpdatedAt?: string | null;
 }
+
+/** Sortable school directory columns. */
+export type SchoolSort =
+	| 'name'
+	| 'province'
+	| 'totalWrote'
+	| 'totalPassed'
+	| 'passRate'
+	| 'mapUpdatedAt';
+
+/** Sort direction for the school directory. */
+export type SchoolSortOrder = 'asc' | 'desc';
 
 export interface SchoolYear {
 	year: number;

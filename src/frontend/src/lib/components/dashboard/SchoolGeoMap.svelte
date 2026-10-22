@@ -10,6 +10,11 @@
 	import type { SpatialState } from '$lib/api/school-spatial-contract';
 	import { refreshAuthoritativeSpatialStates, savedSpatialStates } from '$lib/api/school-spatial';
 	import { invalidateGeoLayer } from '$lib/state/geo-data';
+	import {
+		isOverlayOpen,
+		registerShortcutHandler,
+		ShortcutAction
+	} from '$lib/state/shortcuts.svelte';
 	import 'ol/ol.css';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
@@ -717,10 +722,32 @@
 
 	onMount(() => {
 		void loadMap();
+		return registerShortcutHandler(ShortcutAction.OpenMapEditor, requestMapEditor);
 	});
+	/** Opens the editor from the E shortcut when a school is selected and editable. */
+	function requestMapEditor() {
+		if (editing || !selectedSchoolId || !mapReady || !canEdit) return;
+		if (isOverlayOpen()) return;
+		openEditor();
+	}
 
-	function toolbarButtonClass(active = false) {
-		return `flex size-11 shrink-0 items-center justify-center rounded-md text-foreground transition-colors hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40 ${active ? 'bg-accent text-accent-foreground' : ''}`;
+	function toolbarButtonClass(
+		active = false,
+		tone: 'neutral' | 'save' | 'cancel' | 'edit' = 'neutral'
+	) {
+		const toneClass =
+			tone === 'save'
+				? 'text-foreground hover:bg-success-emphasis/10 hover:text-success-emphasis dark:hover:bg-success-emphasis/20'
+				: tone === 'cancel'
+					? 'text-foreground hover:bg-destructive-emphasis/10 hover:text-destructive-emphasis dark:hover:bg-destructive-emphasis/20'
+					: tone === 'edit'
+						? 'text-success-emphasis hover:bg-success-emphasis/10 dark:hover:bg-success-emphasis/20'
+						: 'text-foreground hover:bg-muted';
+		const activeClass =
+			tone === 'edit'
+				? 'bg-success-emphasis/15 text-success-emphasis dark:bg-success-emphasis/25'
+				: 'bg-accent text-accent-foreground';
+		return `flex size-11 shrink-0 items-center justify-center rounded-md transition-colors ${toneClass} focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40 ${active ? activeClass : ''}`;
 	}
 	function chooseTool(tool: EditTool) {
 		editorRef?.selectTool(tool);
@@ -883,10 +910,11 @@
 												<button
 													type="button"
 													aria-label="Edit school map"
-													title="Edit school map"
+													title="Edit school map (E)"
 													disabled={!selectedSchoolId || !mapReady}
 													onclick={openEditor}
-													class={toolbarButtonClass()}><Pencil class="size-4" /></button
+													class={toolbarButtonClass(false, 'edit')}
+													><Pencil class="size-4" /></button
 												>
 											</div>
 										</div>
@@ -912,8 +940,10 @@
 													aria-pressed={editorStatus?.activeTool === 'draw-footprint'}
 													disabled={!editorStatus?.hasDraft || editorStatus.saving}
 													onclick={() => chooseTool('draw-footprint')}
-													class={toolbarButtonClass(editorStatus?.activeTool === 'draw-footprint')}
-													><PenLine class="size-4" /></button
+													class={toolbarButtonClass(
+														editorStatus?.activeTool === 'draw-footprint',
+														'edit'
+													)}><PenLine class="size-4" /></button
 												>
 												<button
 													type="button"
@@ -947,7 +977,7 @@
 														editorStatus.validationCount > 0 ||
 														editorStatus.saving}
 													onclick={() => editorRef?.saveDraft()}
-													class={toolbarButtonClass()}><Save class="size-4" /></button
+													class={toolbarButtonClass(false, 'save')}><Save class="size-4" /></button
 												>
 												<button
 													type="button"
@@ -955,7 +985,7 @@
 													title="Cancel school map editing"
 													disabled={editorStatus?.saving}
 													onclick={() => editorRef?.cancelEdit()}
-													class={toolbarButtonClass()}><X class="size-4" /></button
+													class={toolbarButtonClass(false, 'cancel')}><X class="size-4" /></button
 												>
 											</div>
 										</div>
@@ -1062,7 +1092,7 @@
 					</div>
 					{#if layersPanelOpen || (editing && olMap && canEdit)}
 						<div
-							class="absolute end-3 top-18 z-20 flex max-h-[min(26rem,calc(100%_-_5.5rem))] w-[min(26rem,calc(100%_-_1.5rem))] flex-col overflow-hidden rounded-lg border bg-card/95 text-sm shadow-lg backdrop-blur"
+							class="absolute end-3 top-18 z-20 flex max-h-[min(26rem,calc(100%_-_5.5rem))] w-[min(26rem,calc(100%-1.5rem))] flex-col overflow-hidden rounded-lg border bg-background/85 text-sm shadow-lg backdrop-blur"
 							style:width={toolbarWidth ? `max(20rem, ${toolbarWidth}px)` : undefined}
 						>
 							<div class="min-h-0 overflow-y-auto">

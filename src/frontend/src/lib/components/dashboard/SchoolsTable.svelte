@@ -3,50 +3,202 @@
 	import * as Table from '$lib/components/ui/table';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
-	import { Search, ChevronLeft, ChevronRight, ExternalLink } from '@lucide/svelte';
+	import {
+		Search,
+		ChevronLeft,
+		ChevronRight,
+		ChevronsUpDown,
+		ArrowDown,
+		ArrowUp,
+		ExternalLink
+	} from '@lucide/svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { fetchSchools } from '$lib/api/dashboard';
 	import { schoolPath } from '$lib/config';
-	import type { SchoolList } from '$lib/types/dashboard';
+	import type { School, SchoolList, SchoolSort, SchoolSortOrder } from '$lib/types/dashboard';
 	import { toTitleCase } from '$lib/utils';
+	import * as m from '$lib/paraglide/messages';
+	import {
+		createTable,
+		createColumnHelper,
+		tableFeatures,
+		rowSortingFeature,
+		functionalUpdate,
+		FlexRender,
+		type SortingState
+	} from '@tanstack/svelte-table';
 
 	interface Props {
 		externalSearch?: string;
+		title?: string;
+		pageSize?: number;
 	}
 
-	let { externalSearch }: Props = $props();
+	let { externalSearch, title = 'Schools Performance', pageSize = 10 }: Props = $props();
 
 	let schoolData = $state<SchoolList | null>(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
-	let searchQuery = $state(externalSearch ?? '');
+	// Snapshot the deep-link search once; the effect below follows later route changes.
+	const initialSearch = externalSearch ?? '';
+	let searchQuery = $state(initialSearch);
+	let appliedSearch = $state(initialSearch);
 	let page = $state(1);
-	const pageSize = 10;
+	let sorting = $state<SortingState>([]);
+	let controller: AbortController | null = null;
 
-	// One effect drives every fetch: a page or query change reruns it, and the
-	// initial mount is covered too. Calling loadData() explicitly as well used
-	// to double every request.
-	let request = $derived({ page, search: searchQuery });
-
+	// Follow route-level deep links such as /schools?search=pretoria.
 	$effect(() => {
-		const { page: currentPage, search } = request;
-		void loadData(currentPage, search);
+		const incoming = externalSearch ?? '';
+		searchQuery = incoming;
+		appliedSearch = incoming;
 	});
 
-	async function loadData(currentPage: number, query: string) {
+	// Debounce typing so a directory request is not issued per keystroke.
+	$effect(() => {
+		const query = searchQuery;
+		const timer = setTimeout(() => {
+			if (query === appliedSearch) return;
+			appliedSearch = query;
+			page = 1;
+		}, 250);
+		return () => clearTimeout(timer);
+	});
+
+	const features = tableFeatures({ rowSortingFeature });
+	const columnHelper = createColumnHelper<typeof features, School>();
+
+	const nameColumn = columnHelper.accessor('name', { header: 'School' });
+	const mapColumn = columnHelper.accessor('mapUpdatedAt', {
+		header: () => m.schools_columnUpdated(),
+		sortDescFirst: true,
+		sortUndefined: 'last'
+	});
+	const provinceColumn = columnHelper.accessor('province', {
+		header: 'Province',
+		sortDescFirst: false
+	});
+	const wroteColumn = columnHelper.accessor('totalWrote', {
+		header: 'Wrote',
+		sortDescFirst: true
+	});
+	const passedColumn = columnHelper.accessor('totalPassed', {
+		header: 'Passed',
+		sortDescFirst: true
+	});
+	const rateColumn = columnHelper.accessor('passRate', {
+		header: 'Pass Rate',
+		sortDescFirst: true
+	});
+	const bachelorColumn = columnHelper.accessor('totalAchieved', {
+		header: 'Bachelor',
+		enableSorting: false
+	});
+
+	const columns = columnHelper.columns([
+		nameColumn,
+		mapColumn,
+		provinceColumn,
+		wroteColumn,
+		passedColumn,
+		rateColumn,
+		bachelorColumn
+	]);
+
+	const headerClass: Record<string, string> = {
+		province: 'hidden md:table-cell',
+		totalWrote: 'text-right',
+		totalPassed: 'text-right',
+		passRate: 'text-right',
+		totalAchieved: 'hidden text-right lg:table-cell',
+		mapUpdatedAt: 'hidden lg:table-cell'
+	};
+
+	const cellClass: Record<string, string> = {
+		province: 'hidden md:table-cell',
+		totalWrote: 'text-right tabular-nums',
+		totalPassed: 'text-right tabular-nums',
+		passRate: 'text-right font-medium tabular-nums',
+		totalAchieved: 'hidden text-right tabular-nums lg:table-cell',
+		mapUpdatedAt: 'hidden text-sm text-muted-foreground lg:table-cell'
+	};
+
+	let items = $derived(schoolData?.items ?? []);
+
+	// Sorting is server-owned so every page of the whole directory is ordered,
+	// not just the rows currently loaded.
+	const table = createTable({
+		features,
+		columns,
+		get data() {
+			return items;
+		},
+		getRowId: (row) => row.id,
+		manualSorting: true,
+		enableSortingRemoval: true,
+		get state() {
+			return { sorting };
+		},
+		onSortingChange: (updater) => {
+			sorting = functionalUpdate(updater, sorting);
+			page = 1;
+		}
+	});
+
+	// One effect drives every fetch: page, applied search, or column sort changes
+	// rerun it, and the initial mount is covered too.
+	let request = $derived({
+		page,
+		search: appliedSearch,
+		sort: sorting[0]?.id as SchoolSort | undefined,
+		order: (sorting[0] ? (sorting[0].desc ? 'desc' : 'asc') : undefined) as
+			| SchoolSortOrder
+			| undefined
+	});
+
+	$effect(() => {
+		const { page: currentPage, search, sort, order } = request;
+		void loadData(currentPage, search, sort, order);
+		return () => controller?.abort();
+	});
+
+	async function loadData(
+		currentPage: number,
+		query: string,
+		sort: SchoolSort | undefined,
+		order: SchoolSortOrder | undefined
+	) {
+		controller?.abort();
+		const requestController = new AbortController();
+		controller = requestController;
 		loading = true;
 		error = null;
 		try {
-			schoolData = await fetchSchools(currentPage, pageSize, query || undefined);
+			const result = await fetchSchools(
+				{
+					pageNumber: currentPage,
+					pageSize,
+					search: query || undefined,
+					sort,
+					order
+				},
+				undefined,
+				requestController.signal
+			);
+			if (requestController.signal.aborted) return;
+			schoolData = result;
 		} catch (e) {
+			if (requestController.signal.aborted) return;
 			error = e instanceof Error ? e.message : 'Failed to load schools';
 		} finally {
-			loading = false;
+			if (!requestController.signal.aborted) loading = false;
 		}
 	}
 
+	/** Applies the current query immediately instead of waiting for the debounce. */
 	function handleSearch() {
+		appliedSearch = searchQuery;
 		page = 1;
 	}
 
@@ -58,14 +210,31 @@
 		return `${rate.toFixed(1)}%`;
 	}
 
-	let items = $derived(schoolData?.items ?? []);
+	const updatedDate = new Intl.DateTimeFormat(undefined, {
+		day: 'numeric',
+		month: 'short',
+		year: 'numeric'
+	});
+
+	function formatUpdated(value: string): string {
+		return updatedDate.format(new Date(value));
+	}
+
+	function ariaSort(column: {
+		getCanSort: () => boolean;
+		getIsSorted: () => false | 'asc' | 'desc';
+	}): 'ascending' | 'descending' | 'none' | undefined {
+		if (!column.getCanSort()) return undefined;
+		const sorted = column.getIsSorted();
+		return sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : 'none';
+	}
 </script>
 
 <Card>
 	<CardHeader>
-		<div class="flex items-center justify-between gap-4">
-			<CardTitle>Schools Performance</CardTitle>
-			<div class="flex items-center gap-2">
+		<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+			<CardTitle>{title}</CardTitle>
+			<div class="flex flex-wrap items-center gap-2">
 				<Input
 					bind:value={searchQuery}
 					placeholder="Search schools..."
@@ -92,48 +261,79 @@
 		{:else}
 			<Table.Root>
 				<Table.Header>
-					<Table.Row>
-						<Table.Head>School</Table.Head>
-						<Table.Head class="hidden md:table-cell">Province</Table.Head>
-						<Table.Head class="text-right">Wrote</Table.Head>
-						<Table.Head class="text-right">Passed</Table.Head>
-						<Table.Head class="text-right">Pass Rate</Table.Head>
-						<Table.Head class="hidden text-right lg:table-cell">Bachelor</Table.Head>
-					</Table.Row>
+					{#each table.getHeaderGroups() as headerGroup (headerGroup.id)}
+						<Table.Row>
+							{#each headerGroup.headers as header (header.id)}
+								<Table.Head
+									class={headerClass[header.column.id] ?? ''}
+									aria-sort={ariaSort(header.column)}
+								>
+									{#if header.column.getCanSort()}
+										<button
+											type="button"
+											class="inline-flex items-center gap-1 font-medium transition-colors hover:text-foreground"
+											onclick={(event) => header.column.getToggleSortingHandler()?.(event)}
+										>
+											<FlexRender {header} />
+											{#if header.column.getIsSorted() === 'asc'}
+												<ArrowUp class="size-3" />
+											{:else if header.column.getIsSorted() === 'desc'}
+												<ArrowDown class="size-3" />
+											{:else}
+												<ChevronsUpDown class="size-3 text-muted-foreground/50" />
+											{/if}
+										</button>
+									{:else}
+										<FlexRender {header} />
+									{/if}
+								</Table.Head>
+							{/each}
+						</Table.Row>
+					{/each}
 				</Table.Header>
 				<Table.Body>
-					{#each items as school (school.id)}
+					{#each table.getRowModel().rows as row (row.id)}
 						<Table.Row
 							class="cursor-pointer transition-colors hover:bg-muted/50"
-							onclick={() => goto(resolve(schoolPath(school.id)))}
+							onclick={() => goto(resolve(schoolPath(row.original.id)))}
 							onkeydown={(e) => {
 								if (e.key === 'Enter' || e.key === ' ') {
 									e.preventDefault();
-									goto(resolve(schoolPath(school.id)));
+									goto(resolve(schoolPath(row.original.id)));
 								}
 							}}
 							role="link"
 							tabindex={0}
 						>
-							<Table.Cell class="font-medium">
-								<span class="inline-flex items-center gap-1.5">
-									{toTitleCase(school.name)}
-									<ExternalLink class="size-3 shrink-0 text-muted-foreground" />
-								</span>
-							</Table.Cell>
-							<Table.Cell class="hidden md:table-cell">{toTitleCase(school.province)}</Table.Cell>
-							<Table.Cell class="text-right tabular-nums"
-								>{school.totalWrote.toLocaleString()}</Table.Cell
-							>
-							<Table.Cell class="text-right tabular-nums"
-								>{school.totalPassed.toLocaleString()}</Table.Cell
-							>
-							<Table.Cell class="text-right font-medium tabular-nums"
-								>{formatPassRate(school.passRate)}</Table.Cell
-							>
-							<Table.Cell class="hidden text-right tabular-nums lg:table-cell">
-								{school.totalAchieved?.toLocaleString() ?? '-'}
-							</Table.Cell>
+							{#each row.getAllCells() as cell (cell.id)}
+								<Table.Cell class={cellClass[cell.column.id] ?? ''}>
+									{#if cell.column.id === 'name'}
+										<span class="inline-flex items-center gap-1.5">
+											{toTitleCase(String(cell.getValue()))}
+											<ExternalLink class="size-3 shrink-0 text-muted-foreground" />
+										</span>
+									{:else if cell.column.id === 'province'}
+										{toTitleCase(String(cell.getValue() ?? ''))}
+									{:else if cell.column.id === 'mapUpdatedAt'}
+										{#if cell.getValue()}
+											<time
+												datetime={String(cell.getValue())}
+												title={new Date(String(cell.getValue())).toLocaleString()}
+											>
+												{formatUpdated(String(cell.getValue()))}
+											</time>
+										{:else}
+											{m.schools_mapImported()}
+										{/if}
+									{:else if cell.column.id === 'passRate'}
+										{formatPassRate(Number(cell.getValue() ?? 0))}
+									{:else if cell.column.id === 'totalWrote' || cell.column.id === 'totalPassed'}
+										{Number(cell.getValue() ?? 0).toLocaleString()}
+									{:else}
+										{cell.getValue<number>()?.toLocaleString() ?? '-'}
+									{/if}
+								</Table.Cell>
+							{/each}
 						</Table.Row>
 					{/each}
 				</Table.Body>
