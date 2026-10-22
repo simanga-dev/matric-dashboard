@@ -214,9 +214,20 @@ describe('explicit editor save and cancel', () => {
 		expect(close).toHaveBeenCalled();
 	});
 	it('does not save on Enter while typing in the evidence fields', async () => {
+		mocks.save.mockResolvedValue({ ...state, revision: 1 });
+		mocks.change?.(null, { type: 'Point', coordinates: [28, -26] }, true, null, false);
 		await evidence();
 		const textarea = document.querySelector('textarea')!;
 		textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+		await tick();
+		expect(mocks.save).not.toHaveBeenCalled();
+	});
+	it('does not save on Enter from the coordinate disclosure summary', async () => {
+		mocks.save.mockResolvedValue({ ...state, revision: 1 });
+		mocks.change?.(null, { type: 'Point', coordinates: [28, -26] }, true, null, false);
+		await evidence();
+		const summary = document.querySelector('summary')!;
+		summary.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
 		await tick();
 		expect(mocks.save).not.toHaveBeenCalled();
 	});
@@ -265,10 +276,11 @@ describe('explicit editor save and cancel', () => {
 	});
 
 	it('does not save on S while typing evidence and ignores the browser save shortcut', async () => {
+		mocks.save.mockResolvedValue({ ...state, revision: 1 });
+		mocks.change?.(null, { type: 'Point', coordinates: [28, -26] }, true, null, false);
 		await evidence();
 		const textarea = document.querySelector('textarea')!;
 		textarea.dispatchEvent(new KeyboardEvent('keydown', { key: 's', bubbles: true }));
-		mocks.change?.(null, { type: 'Point', coordinates: [28, -26] }, true, null, false);
 		window.dispatchEvent(new KeyboardEvent('keydown', { key: 's', ctrlKey: true, bubbles: true }));
 		await tick();
 		expect(mocks.save).not.toHaveBeenCalled();

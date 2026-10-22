@@ -21,6 +21,7 @@
 		type SpatialEditorStatus
 	} from './school-map-editing';
 	import { parseMapCoordinates } from './school-map-coordinates';
+	import { isOverlayOpen, isShortcutTargetBlocked } from '$lib/state/shortcuts.svelte';
 
 	let {
 		map,
@@ -101,27 +102,12 @@
 		event.preventDefault();
 		if (canLeave()) onclose();
 	}
-	function isTextEntry(target: EventTarget | null) {
-		return (
-			target instanceof HTMLInputElement ||
-			target instanceof HTMLTextAreaElement ||
-			target instanceof HTMLSelectElement ||
-			(target instanceof HTMLElement && target.isContentEditable)
-		);
-	}
 	/** Enter or S finishes a polygon in progress and then saves the draft. */
 	function handleSaveShortcut(event: KeyboardEvent) {
 		const isSaveKey = event.key === 'Enter' || event.key === 's' || event.key === 'S';
 		if (!isSaveKey || event.repeat || event.defaultPrevented || saving) return;
 		if (event.key !== 'Enter' && (event.metaKey || event.ctrlKey || event.altKey)) return;
-		if (isTextEntry(event.target)) return;
-		if (
-			event.target instanceof Element &&
-			event.target.closest(
-				'[role="dialog"], [role="menu"], [role="listbox"], button, a, [contenteditable]'
-			)
-		)
-			return;
+		if (isShortcutTargetBlocked(event.target) || isOverlayOpen()) return;
 		const finishedShape = interactions?.finishDrawing() ?? false;
 		if (!finishedShape && !dirty) return;
 		event.preventDefault();

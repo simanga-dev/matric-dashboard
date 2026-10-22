@@ -5,6 +5,7 @@ import SchoolGeoMap from './SchoolGeoMap.svelte';
 import type View from 'ol/View';
 import { toLonLat } from 'ol/proj';
 import type { SpatialState } from '$lib/api/school-spatial-contract';
+import { globalShortcuts } from '$lib/state/shortcuts.svelte';
 
 const mocks = vi.hoisted(() => ({
 	load: vi.fn(),
@@ -52,6 +53,7 @@ vi.mock('ol/Map', () => ({
 }));
 
 let component: ReturnType<typeof mount> | undefined;
+let shortcuts: ReturnType<typeof globalShortcuts> | undefined;
 const school = {
 	id: '00123',
 	name: 'Test school',
@@ -66,6 +68,7 @@ beforeEach(() => {
 	vi.clearAllMocks();
 	mocks.states.clear();
 	mocks.refresh.mockResolvedValue([]);
+	shortcuts = globalShortcuts(window);
 	vi.stubGlobal(
 		'ResizeObserver',
 		class {
@@ -79,6 +82,8 @@ beforeEach(() => {
 afterEach(async () => {
 	if (component) await unmount(component);
 	component = undefined;
+	shortcuts?.destroy();
+	shortcuts = undefined;
 	document.body.replaceChildren();
 	vi.unstubAllGlobals();
 });
@@ -137,8 +142,41 @@ describe('progressive school map startup', () => {
 		await vi.waitFor(() => expect(mocks.map).toHaveBeenCalledTimes(1));
 		await vi.waitFor(() => expect(target.textContent).not.toContain('Loading school map'));
 		expect(target.textContent).not.toContain('Map layers');
-		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e', bubbles: true }));
+		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e', code: 'KeyE', bubbles: true }));
 		await vi.waitFor(() => expect(target.textContent).toContain('Map layers'));
+	});
+
+	it('ignores the E shortcut while a modal dialog is open', async () => {
+		mocks.load.mockImplementation((url: string) =>
+			Promise.resolve({
+				type: 'FeatureCollection',
+				features: url.includes('school_locations_effective')
+					? [
+							{
+								type: 'Feature',
+								properties: { emis_number: '00123' },
+								geometry: { type: 'Point', coordinates: [28, -26] }
+							}
+						]
+					: []
+			})
+		);
+		const target = document.createElement('div');
+		document.body.append(target);
+		const dialog = document.createElement('div');
+		dialog.setAttribute('role', 'dialog');
+		dialog.setAttribute('data-state', 'open');
+		document.body.append(dialog);
+		component = mount(SchoolGeoMap, {
+			target,
+			props: { schools: [school], selectedSchoolId: '00123' }
+		});
+		await vi.waitFor(() => expect(mocks.map).toHaveBeenCalledTimes(1));
+		await vi.waitFor(() => expect(target.textContent).not.toContain('Loading school map'));
+		window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e', code: 'KeyE', bubbles: true }));
+		await new Promise((resolve) => setTimeout(resolve, 0));
+		expect(target.textContent).not.toContain('Map layers');
+		dialog.remove();
 	});
 	it('keeps a selected school in focus when optional boundaries arrive later', async () => {
 		let resolveProvince!: (value: Record<string, unknown>) => void;

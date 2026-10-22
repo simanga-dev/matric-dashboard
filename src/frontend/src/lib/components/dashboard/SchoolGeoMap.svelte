@@ -10,6 +10,11 @@
 	import type { SpatialState } from '$lib/api/school-spatial-contract';
 	import { refreshAuthoritativeSpatialStates, savedSpatialStates } from '$lib/api/school-spatial';
 	import { invalidateGeoLayer } from '$lib/state/geo-data';
+	import {
+		isOverlayOpen,
+		registerShortcutHandler,
+		ShortcutAction
+	} from '$lib/state/shortcuts.svelte';
 	import 'ol/ol.css';
 	import { resolve } from '$app/paths';
 	import { Button } from '$lib/components/ui/button';
@@ -717,21 +722,12 @@
 
 	onMount(() => {
 		void loadMap();
-		window.addEventListener('keydown', handleEditShortcut);
-		return () => window.removeEventListener('keydown', handleEditShortcut);
+		return registerShortcutHandler(ShortcutAction.OpenMapEditor, requestMapEditor);
 	});
-	function handleEditShortcut(event: KeyboardEvent) {
-		if (event.key.toLowerCase() !== 'e' || event.repeat || event.defaultPrevented) return;
-		if (event.metaKey || event.ctrlKey || event.altKey) return;
-		if (
-			event.target instanceof HTMLElement &&
-			event.target.closest(
-				'input, textarea, select, [contenteditable="true"], [role="dialog"], [role="menu"], [role="listbox"]'
-			)
-		)
-			return;
+	/** Opens the editor from the E shortcut when a school is selected and editable. */
+	function requestMapEditor() {
 		if (editing || !selectedSchoolId || !mapReady || !canEdit) return;
-		event.preventDefault();
+		if (isOverlayOpen()) return;
 		openEditor();
 	}
 

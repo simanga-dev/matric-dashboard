@@ -1,3 +1,4 @@
+import { SvelteMap } from 'svelte/reactivity';
 import { IS_MAC } from '$lib/utils/platform';
 import * as m from '$lib/paraglide/messages';
 
@@ -17,7 +18,8 @@ export const ShortcutAction = {
 	Settings: 'settings',
 	Logout: 'logout',
 	Help: 'help',
-	ToggleSidebar: 'toggleSidebar'
+	ToggleSidebar: 'toggleSidebar',
+	OpenMapEditor: 'openMapEditor'
 } as const;
 
 export type ShortcutActionType = (typeof ShortcutAction)[keyof typeof ShortcutAction];
@@ -74,6 +76,12 @@ const SHORTCUTS: ShortcutConfig[] = [
 		action: ShortcutAction.Help,
 		description: m.shortcuts_help,
 		display: () => (IS_MAC ? '⇧ ?' : 'Shift+?')
+	},
+	{
+		code: 'KeyE',
+		action: ShortcutAction.OpenMapEditor,
+		description: m.shortcuts_editMap,
+		display: () => 'E'
 	}
 ];
 
@@ -89,6 +97,73 @@ export function getShortcutSymbol(action: ShortcutActionType): string {
 // --- Action ---
 
 export type ShortcutHandlers = Partial<Record<ShortcutActionType, () => void>>;
+
+const registeredHandlers = new SvelteMap<ShortcutActionType, () => void>();
+
+/**
+ * Registers a shortcut handler owned by a mounted component instead of the root
+ * layout. The shortcut stays listed in the help dialog. Returns an unregister
+ * function.
+ */
+export function registerShortcutHandler(
+	action: ShortcutActionType,
+	handler: () => void
+): () => void {
+	registeredHandlers.set(action, handler);
+	return () => {
+		if (registeredHandlers.get(action) === handler) registeredHandlers.delete(action);
+	};
+}
+
+/**
+ * Elements that own Enter, Space, or letter keys themselves, so page shortcuts
+ * must not act while focus is inside them.
+ */
+const INTERACTIVE_SELECTOR = [
+	'input',
+	'textarea',
+	'select',
+	'button',
+	'a[href]',
+	'summary',
+	'[contenteditable]:not([contenteditable="false"])',
+	'[role="dialog"]',
+	'[role="alertdialog"]',
+	'[role="menu"]',
+	'[role="menubar"]',
+	'[role="listbox"]',
+	'[role="tree"]',
+	'[role="treeitem"]',
+	'[role="option"]',
+	'[role="tablist"]',
+	'[role="tab"]',
+	'[role="slider"]',
+	'[role="switch"]',
+	'[role="checkbox"]',
+	'[role="radio"]',
+	'[role="textbox"]',
+	'[role="combobox"]',
+	'[role="grid"]'
+].join(', ');
+
+/** True when a key press belongs to a focused control rather than a page shortcut. */
+export function isShortcutTargetBlocked(target: EventTarget | null): boolean {
+	return target instanceof Element && target.closest(INTERACTIVE_SELECTOR) !== null;
+}
+
+/**
+ * True when a modal surface owns the keyboard. Checks the document rather than
+ * only the focus target so a dialog with focus on the body still wins.
+ */
+export function isOverlayOpen(): boolean {
+	if (shortcutsState.isHelpOpen || shortcutsState.isCommandPaletteOpen) return true;
+	if (typeof document === 'undefined') return false;
+	return (
+		document.querySelector(
+			'[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]'
+		) !== null
+	);
+}
 
 function isInput(target: EventTarget | null): boolean {
 	if (!(target instanceof HTMLElement)) return false;
@@ -148,5 +223,6 @@ function executeAction(action: ShortcutActionType, handlers: ShortcutHandlers) {
 		shortcutsState.isCommandPaletteOpen = !shortcutsState.isCommandPaletteOpen;
 		return;
 	}
-	handlers[action]?.();
+	const handler = handlers[action] ?? registeredHandlers.get(action);
+	handler?.();
 }

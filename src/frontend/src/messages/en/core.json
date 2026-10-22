@@ -30,6 +30,7 @@
 	"shortcuts_toggleSidebar": "Toggle sidebar",
 	"shortcuts_commandPalette": "Open command palette",
 	"shortcuts_help": "Keyboard shortcuts",
+	"shortcuts_editMap": "Edit the selected school map (overview)",
 
 	"commandPalette_placeholder": "Type a command or search...",
 	"commandPalette_noResults": "No results found.",
