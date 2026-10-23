@@ -16,6 +16,13 @@ type GetResponse<T> = {
 	default: { content: { 'application/problem+json': components['schemas']['ProblemDetails'] } };
 };
 
+/** Counts returned after republishing the school directory to Meilisearch. */
+export interface SearchIndexRebuild {
+	indexed: number;
+	removed: number;
+	durationMs: number;
+}
+
 /** Dashboard contracts supplement the generated spec until it includes these endpoints. */
 export interface DashboardPaths {
 	'/api/v1/dashboard/stats': {
@@ -63,6 +70,11 @@ export interface DashboardPaths {
 		get: {
 			parameters: { query?: { province?: string; district?: string; year?: number } };
 			responses: GetResponse<RegionSubjects>;
+		};
+	};
+	'/api/v1/search-index/schools': {
+		post: {
+			responses: GetResponse<SearchIndexRebuild>;
 		};
 	};
 }

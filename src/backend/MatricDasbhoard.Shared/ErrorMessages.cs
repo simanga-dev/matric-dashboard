@@ -206,4 +206,13 @@ public static class ErrorMessages
     {
         public const string SchoolNotFound = "School not found.";
     }
+
+    /// <summary>
+    /// School search index maintenance error messages.
+    /// </summary>
+    public static class SearchIndex
+    {
+        public const string Unavailable = "The search service is unavailable. The index was not updated.";
+        public const string RebuildFailed = "The search index could not be updated.";
+    }
 }

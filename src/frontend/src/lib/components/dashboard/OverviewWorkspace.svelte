@@ -5,6 +5,7 @@
 	import SchoolTree from './SchoolTree.svelte';
 	import SchoolGeoMap from './SchoolGeoMap.svelte';
 	import SchoolDetailPanel from './SchoolDetailPanel.svelte';
+	import DataSources from './DataSources.svelte';
 	import {
 		ResizablePanel,
 		ResizableHandle,
@@ -123,6 +124,9 @@
 										class="flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
 										><ChevronLeft class="size-4" /></Collapsible.Trigger
 									>
+								{/snippet}
+								{#snippet footer()}
+									<DataSources />
 								{/snippet}
 							</SchoolTree>
 						</div>

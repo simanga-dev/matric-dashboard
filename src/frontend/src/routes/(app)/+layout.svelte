@@ -13,6 +13,10 @@
 	// wants no page padding or card frame around it.
 	let fullBleed = $derived(page.route.id === '/(app)/overview');
 
+	// The school profile already lives inside the inset surface. Adding a
+	// second rounded, shadowed frame around it reads as a card inside a card.
+	let framedPage = $derived(!fullBleed && page.route.id !== '/(app)/schools/[id]');
+
 	// When health polling detects the backend went down, re-run server loads.
 	// The (app) layout.server.ts will throw 503, showing the error page with
 	// auto-recovery. Only trigger on a confirmed online->offline transition.
@@ -29,14 +33,14 @@
 
 <Sidebar.Provider
 	open={data.sidebarOpen}
-	class="h-dvh overflow-hidden"
-	style="--sidebar-width: calc(var(--spacing) * 72); --header-height: calc(var(--spacing) * 12);"
+	class="h-dvh overflow-hidden bg-sidebar"
+	style="--sidebar-width: 19.5rem; --header-height: calc(var(--spacing) * 12);"
 >
 	<AppSidebar user={data.user} />
 	<Sidebar.Inset
 		class={fullBleed
-			? 'md:peer-data-[variant=inset]:m-0 md:peer-data-[variant=inset]:ms-0 md:peer-data-[variant=inset]:rounded-none md:peer-data-[variant=inset]:shadow-none md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ms-0'
-			: undefined}
+			? 'md:m-0 md:rounded-none md:shadow-none'
+			: 'md:my-2 md:me-2 md:rounded-xl md:shadow-sm'}
 	>
 		<ContentHeader borderless={fullBleed} />
 		{#if data.user && !data.user.emailConfirmed}
@@ -45,8 +49,8 @@
 
 		<div
 			class={cn(
-				'flex flex-1 flex-col bg-background',
-				!fullBleed && 'md:m-2 md:rounded-xl md:shadow-sm'
+				'flex min-h-0 flex-1 flex-col bg-background',
+				framedPage && 'md:m-2 md:rounded-xl md:shadow-sm'
 			)}
 		>
 			<div

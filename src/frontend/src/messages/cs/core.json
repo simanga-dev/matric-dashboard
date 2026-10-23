@@ -1,9 +1,11 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
 
-	"app_name": "MatricDasbhoard",
+	"app_name": "Matric Dashboard",
 
-	"meta_titleTemplate": "{title} | MatricDasbhoard",
+	"common_account": "Účet",
+
+	"meta_titleTemplate": "{title} | Matric Dashboard",
 	"meta_description": "Produkční šablona webové aplikace.",
 
 	"nav_dashboard": "Nástěnka",

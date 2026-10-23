@@ -9,6 +9,7 @@ using MatricDasbhoard.Infrastructure.Features.Admin.Extensions;
 using MatricDasbhoard.Infrastructure.Features.Audit.Extensions;
 using MatricDasbhoard.Infrastructure.Features.Dashboard.Extensions;
 using MatricDasbhoard.Infrastructure.Features.SchoolSpatial.Extensions;
+using MatricDasbhoard.Infrastructure.Features.SearchIndex.Extensions;
 using MatricDasbhoard.Infrastructure.Features.Meilisearch.Extensions;
 using MatricDasbhoard.Infrastructure.Features.Avatar.Extensions;
 using MatricDasbhoard.Infrastructure.Features.Captcha.Extensions;
@@ -71,6 +72,7 @@ try
 
         Log.Debug("Adding Meilisearch services");
         builder.Services.AddMeilisearchServices();
+        builder.Services.AddSchoolSearchIndexServices();
 
         Log.Debug("Adding audit services");
         builder.Services.AddAuditServices();

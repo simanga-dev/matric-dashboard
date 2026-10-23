@@ -84,3 +84,6 @@ internal record AuditEventContract(Guid Id, Guid? UserId, string Action, string?
     Guid? TargetEntityId, string? Metadata, DateTime CreatedAt);
 internal record ListAuditEventsContract(List<AuditEventContract> Items, int TotalCount, int PageNumber,
     int PageSize, int TotalPages, bool HasPreviousPage, bool HasNextPage);
+
+// Search index
+internal record SearchIndexRebuildContract(int Indexed, int Removed, long DurationMs);

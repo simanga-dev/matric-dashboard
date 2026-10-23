@@ -12,6 +12,8 @@
 
 import { createApiClient } from '$lib/api/client';
 import { fetchDashboardStats, fetchPassRateTrends, fetchSchoolById } from '$lib/api/dashboard';
+import { spatialStateResponse } from '$lib/api/school-spatial-contract';
+import type { SpatialState } from '$lib/api/school-spatial-contract';
 import type { DashboardStats, PassRateTrend, SchoolDetail } from '$lib/types/dashboard';
 
 type Fetch = typeof globalThis.fetch;
@@ -35,4 +37,25 @@ export function getSchoolById(
 	id: string
 ): Promise<SchoolDetail | null> {
 	return fetchSchoolById(id, api(fetch, origin));
+}
+
+/**
+ * Authoritative public map state for a school. The detail page treats the
+ * map as progressive enhancement, so an unavailable spatial service returns
+ * null rather than failing the whole page.
+ */
+export async function getSchoolSpatial(
+	fetch: Fetch,
+	origin: string,
+	id: string
+): Promise<SpatialState | null> {
+	const response = await api(fetch, origin)
+		.GET('/api/v1/schools/{emis}/spatial', { params: { path: { emis: id } } })
+		.catch(() => null);
+	if (!response || response.error || !response.data) return null;
+	try {
+		return spatialStateResponse(response.data);
+	} catch {
+		return null;
+	}
 }

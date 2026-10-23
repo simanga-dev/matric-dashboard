@@ -17,6 +17,7 @@
 	} from '@lucide/svelte';
 	import { onDestroy, tick, untrack, type Snippet } from 'svelte';
 	import type { School, SchoolList } from '$lib/types/dashboard';
+	import SeedSearchButton from './SeedSearchButton.svelte';
 	import { scheduleSchoolTreeSearch } from './school-tree-search';
 	import { schoolDetailCache } from './school-detail-cache';
 	import {
@@ -44,7 +45,8 @@
 		expandedCircuits = $bindable(new Set<string>()),
 		restoredSchoolId = null,
 		revealRequest = 0,
-		headerAction
+		headerAction,
+		footer
 	}: {
 		initialSchools?: School[];
 		selectedSchoolId?: string | null;
@@ -55,6 +57,7 @@
 		restoredSchoolId?: string | null;
 		revealRequest?: number;
 		headerAction?: Snippet;
+		footer?: Snippet;
 	} = $props();
 
 	let directory = $derived(indexSchoolDirectory(initialSchools));
@@ -86,7 +89,7 @@
 	let searchInput: HTMLInputElement | null = $state(null);
 	let scrollTop = $state(0);
 	let viewportHeight = $state(600);
-	let rowHeight = $state(44);
+	let rowHeight = $state(36);
 	let focusedKey = $state('country');
 	let focusInside = $state(false);
 	let viewWindow = $derived(schoolTreeWindow(rows.length, scrollTop, viewportHeight, rowHeight));
@@ -424,6 +427,7 @@
 			>
 		{/if}
 		<div class="ms-auto flex shrink-0 gap-0.5">
+			<SeedSearchButton />
 			<button
 				type="button"
 				aria-label="Expand all"
@@ -608,11 +612,13 @@
 			>
 		{/if}
 	</div>
+	{@render footer?.()}
 </section>
 
 <style>
 	.row-measure {
-		height: max(2.75rem, 44px);
+		/* Match the sidebar nav row height (h-9) so the tree and nav items align. */
+		height: 2.25rem;
 	}
 	.tree-scroll {
 		overflow-anchor: none;

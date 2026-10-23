@@ -52,9 +52,12 @@ def load_csv(path: str, clean_names: dict[str, str] | None = None) -> list[dict]
             if not emis:
                 continue
 
-            # Build a clean document with the EMIS as the primary key
+            # Build a clean document with the EMIS as the primary key.
+            # `school_id` is the identifier the API reads from hits before
+            # hydrating them from the database.
             doc = {
                 "id": emis,
+                "school_id": emis,
                 "province": row.get("province", "").strip(),
                 "district_name": row.get("district_name", "").strip(),
                 "emis_number": emis,

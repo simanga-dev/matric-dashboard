@@ -1,9 +1,11 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
 
-	"app_name": "MatricDasbhoard",
+	"app_name": "Matric Dashboard",
 
-	"meta_titleTemplate": "{title} | MatricDasbhoard",
+	"common_account": "Account",
+
+	"meta_titleTemplate": "{title} | Matric Dashboard",
 	"meta_description": "A production-ready web application template.",
 
 	"nav_dashboard": "Dashboard",

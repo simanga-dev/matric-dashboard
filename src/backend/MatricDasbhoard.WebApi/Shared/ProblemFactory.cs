@@ -25,7 +25,9 @@ internal static class ProblemFactory
             Status = code,
             Detail = detail,
             Title = ReasonPhrases.GetReasonPhrase(code),
-            Type = $"https://tools.ietf.org/html/rfc9110#section-15.5.{code - 399}"
+            Type = code >= 500
+                ? $"https://tools.ietf.org/html/rfc9110#section-15.6.{code - 499}"
+                : $"https://tools.ietf.org/html/rfc9110#section-15.5.{code - 399}"
         };
 
         return new ObjectResult(problemDetails) { StatusCode = code };
@@ -38,6 +40,7 @@ internal static class ProblemFactory
         ErrorType.NotFound => StatusCodes.Status404NotFound,
         ErrorType.Forbidden => StatusCodes.Status403Forbidden,
         ErrorType.Conflict => StatusCodes.Status409Conflict,
+        ErrorType.ServiceUnavailable => StatusCodes.Status503ServiceUnavailable,
         _ => StatusCodes.Status400BadRequest
     };
 }
