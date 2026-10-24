@@ -52,11 +52,12 @@
 			href: resolve(routes.overview),
 			icon: MapPinned
 		},
-		{
-			title: m.nav_schools,
-			href: resolve(routes.schools),
-			icon: GraduationCap
-		},
+		// Hidden for now - the directory opens as a dialog from the overview.
+		// {
+		// 	title: m.nav_schools,
+		// 	href: resolve(routes.schools),
+		// 	icon: GraduationCap
+		// },
 		// Hidden for now - re-enable when the Top Achievers page is ready.
 		// {
 		// 	title: () => 'Top Achievers',

@@ -5,6 +5,7 @@
 	import SchoolTree from './SchoolTree.svelte';
 	import SchoolGeoMap from './SchoolGeoMap.svelte';
 	import SchoolDetailPanel from './SchoolDetailPanel.svelte';
+	import SchoolDirectoryDialog from './SchoolDirectoryDialog.svelte';
 	import DataSources from './DataSources.svelte';
 	import {
 		ResizablePanel,
@@ -23,7 +24,8 @@
 		expandedProvinces = $bindable(new Set<string>()),
 		expandedCircuits = $bindable(new Set<string>()),
 		restoredSchoolId = null,
-		revealRequest = 0
+		revealRequest = 0,
+		schoolsOpen = $bindable(false)
 	}: {
 		schools?: School[];
 		selectedSchoolId?: string | null;
@@ -33,6 +35,8 @@
 		expandedCircuits?: Set<string>;
 		restoredSchoolId?: string | null;
 		revealRequest?: number;
+		/** Mirrors the `schools` query parameter of the overview URL. */
+		schoolsOpen?: boolean;
 	} = $props();
 
 	const id = $props.id();
@@ -110,6 +114,7 @@
 								initialSchools={schools}
 								{restoredSchoolId}
 								{revealRequest}
+								onOpenSchools={() => (schoolsOpen = true)}
 								bind:selectedSchoolId
 								bind:selectedProvince
 								bind:selectedDistrict
@@ -192,6 +197,8 @@
 		</div>
 	{/snippet}
 </Collapsible.Root>
+
+<SchoolDirectoryDialog bind:open={schoolsOpen} {schools} />
 
 <style>
 	@media (min-width: 1200px) {

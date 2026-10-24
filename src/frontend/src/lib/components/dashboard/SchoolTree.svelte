@@ -13,7 +13,8 @@
 		X,
 		ExternalLink,
 		ChevronsDownUp,
-		ChevronsUpDown
+		ChevronsUpDown,
+		Table2
 	} from '@lucide/svelte';
 	import { onDestroy, tick, untrack, type Snippet } from 'svelte';
 	import type { School, SchoolList } from '$lib/types/dashboard';
@@ -46,6 +47,7 @@
 		restoredSchoolId = null,
 		revealRequest = 0,
 		headerAction,
+		onOpenSchools,
 		footer
 	}: {
 		initialSchools?: School[];
@@ -57,6 +59,8 @@
 		restoredSchoolId?: string | null;
 		revealRequest?: number;
 		headerAction?: Snippet;
+		/** Opens the school directory dialog owned by the workspace. */
+		onOpenSchools?: () => void;
 		footer?: Snippet;
 	} = $props();
 
@@ -427,6 +431,16 @@
 			>
 		{/if}
 		<div class="ms-auto flex shrink-0 gap-0.5">
+			{#if onOpenSchools}
+				<button
+					type="button"
+					aria-label="Open school directory"
+					title="Open school directory"
+					onclick={onOpenSchools}
+					class="flex size-8 shrink-0 items-center justify-center rounded-md hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring pointer-coarse:size-11"
+					><Table2 class="size-4" /></button
+				>
+			{/if}
 			<SeedSearchButton />
 			<button
 				type="button"
