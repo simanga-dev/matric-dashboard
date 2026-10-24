@@ -7,7 +7,9 @@ import {
 	fetchRegionStats,
 	fetchSchoolById,
 	fetchSchoolSubjects,
-	fetchSchools
+	fetchSchools,
+	fetchSubjectDetail,
+	fetchSubjectSchools
 } from './dashboard';
 
 const { transport } = vi.hoisted(() => ({ transport: vi.fn<typeof fetch>() }));
@@ -82,6 +84,14 @@ describe('dashboard API requests', () => {
 		await fetchSchools({ pageNumber: 1, pageSize: 10, sort: 'mapUpdatedAt', order: 'desc' });
 		expect(transport.mock.calls[0]?.[0]).toMatchObject({
 			url: 'http://frontend.test/api/v1/dashboard/schools?pageNumber=1&pageSize=10&sort=mapUpdatedAt&order=desc'
+		});
+	});
+
+	it('forwards the province filter to the schools request', async () => {
+		transport.mockResolvedValue(Response.json({ items: [] }));
+		await fetchSchools({ pageNumber: 1, pageSize: 25, province: 'NORTH WEST' });
+		expect(transport.mock.calls[0]?.[0]).toMatchObject({
+			url: 'http://frontend.test/api/v1/dashboard/schools?pageNumber=1&pageSize=25&province=NORTH%20WEST'
 		});
 	});
 
@@ -193,5 +203,133 @@ describe('dashboard API requests', () => {
 	it('rejects missing success bodies rather than casting undefined to a dashboard model', async () => {
 		transport.mockResolvedValue(new Response(null, { status: 204 }));
 		await expect(fetchSchools()).rejects.toThrow('Failed to fetch schools');
+	});
+});
+
+describe('subject API requests', () => {
+	const detail = {
+		code: 'mathematics',
+		name: 'Mathematics',
+		isGateway: true,
+		scope: 'district',
+		scopeName: 'Fezile Dabi',
+		province: 'FREE STATE',
+		district: 'Fezile Dabi',
+		year: 2024,
+		availableYears: [2023, 2024],
+		schoolCount: 40,
+		totalWrote: 2000,
+		achieved: 1200,
+		percentAchieved: 60,
+		trend: [
+			{ year: 2023, schoolCount: 39, totalWrote: 1900, achieved: null, percentAchieved: null },
+			{ year: 2024, schoolCount: 40, totalWrote: 2000, achieved: 1200, percentAchieved: 60 }
+		],
+		provinces: [
+			{
+				name: 'FREE STATE',
+				schoolCount: 300,
+				totalWrote: 9000,
+				achieved: 5400,
+				percentAchieved: 60
+			}
+		],
+		districts: [
+			{
+				name: 'Fezile Dabi',
+				schoolCount: 40,
+				totalWrote: 2000,
+				achieved: 1200,
+				percentAchieved: 60
+			}
+		]
+	};
+
+	it('requests a subject with its encoded scope and returns the typed detail', async () => {
+		transport.mockResolvedValue(Response.json(detail));
+		expect(
+			await fetchSubjectDetail('mathematics', {
+				province: 'FREE STATE',
+				district: 'Fezile Dabi',
+				year: 2024
+			})
+		).toEqual(detail);
+		expect(transport.mock.calls[0]?.[0]).toMatchObject({
+			url: 'http://frontend.test/api/v1/dashboard/subjects/mathematics?province=FREE%20STATE&district=Fezile%20Dabi&year=2024'
+		});
+	});
+
+	it('omits null scope filters from the subject request', async () => {
+		transport.mockImplementation(async () => Response.json(detail));
+		await fetchSubjectDetail('mathematics', { province: null, district: null, year: null });
+		await fetchSubjectDetail('mathematics');
+		expect(transport.mock.calls[0]?.[0]).toMatchObject({
+			url: 'http://frontend.test/api/v1/dashboard/subjects/mathematics'
+		});
+		expect(transport.mock.calls[1]?.[0]).toMatchObject({
+			url: 'http://frontend.test/api/v1/dashboard/subjects/mathematics'
+		});
+	});
+
+	it('returns null for an unknown subject, but rejects upstream failures', async () => {
+		transport.mockResolvedValueOnce(Response.json({ status: 404 }, { status: 404 }));
+		expect(await fetchSubjectDetail('unknown')).toBeNull();
+		transport.mockResolvedValueOnce(Response.json({ status: 503 }, { status: 503 }));
+		await expect(fetchSubjectDetail('mathematics')).rejects.toThrow('Failed to fetch subject');
+	});
+
+	it('requests the schools that wrote a subject with scope, search, paging and sort', async () => {
+		const body = {
+			year: 2024,
+			items: [
+				{
+					id: '200500039',
+					name: 'Example High School',
+					province: 'GAUTENG',
+					district: 'Ekurhuleni North',
+					quintile: 3,
+					totalWrote: 56,
+					achieved: 54,
+					percentAchieved: 96.4
+				}
+			],
+			totalCount: 1,
+			pageNumber: 2,
+			pageSize: 20,
+			totalPages: 2,
+			hasPreviousPage: true,
+			hasNextPage: false
+		};
+		transport.mockResolvedValue(Response.json(body));
+		expect(
+			await fetchSubjectSchools('mathematics', {
+				province: 'GAUTENG',
+				district: null,
+				year: 2024,
+				search: 'High & Low',
+				pageNumber: 2,
+				pageSize: 20,
+				sort: 'name',
+				order: 'asc'
+			})
+		).toEqual(body);
+		expect(transport.mock.calls[0]?.[0]).toMatchObject({
+			url: 'http://frontend.test/api/v1/dashboard/subjects/mathematics/schools?province=GAUTENG&year=2024&search=High%20%26%20Low&pageNumber=2&pageSize=20&sort=name&order=asc'
+		});
+	});
+
+	it('omits an empty search and forwards cancellation for subject schools', async () => {
+		const controller = new AbortController();
+		transport.mockResolvedValue(Response.json({ items: [] }));
+		await fetchSubjectSchools('mathematics', { search: '' }, undefined, controller.signal);
+		const request = transport.mock.calls[0]?.[0] as Request;
+		expect(request.url).toBe('http://frontend.test/api/v1/dashboard/subjects/mathematics/schools');
+		controller.abort();
+		expect(request.signal.aborted).toBe(true);
+	});
+
+	it('rejects upstream failures for subject schools', async () => {
+		transport.mockResolvedValue(Response.json({ status: 404 }, { status: 404 }));
+		await expect(fetchSubjectSchools('unknown')).rejects.toThrow('Failed to fetch subject schools');
 	});
 });

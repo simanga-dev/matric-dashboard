@@ -100,6 +100,77 @@ describe('school directory requests', () => {
 	});
 });
 
+describe('school directory filters and shareable state', () => {
+	it('starts from the route province, sort and page', async () => {
+		await render({
+			externalProvince: 'GAUTENG',
+			externalSort: 'passRate',
+			externalOrder: 'desc',
+			externalPage: 3
+		});
+		await tick();
+
+		expect(fetchSchoolsMock).toHaveBeenCalledTimes(1);
+		expect(fetchSchoolsMock.mock.calls[0]?.[0]).toMatchObject({
+			pageNumber: 3,
+			province: 'GAUTENG',
+			sort: 'passRate',
+			order: 'desc'
+		});
+		const header = [...document.querySelectorAll('th')].find((th) =>
+			th.textContent?.includes('Pass Rate')
+		);
+		expect(header?.getAttribute('aria-sort')).toBe('descending');
+	});
+
+	it('only shows the province filter when options are provided', async () => {
+		const plain = await render();
+		expect(plain.querySelector('[aria-label="Province"]')).toBeNull();
+		await unmount(component!);
+		component = undefined;
+		document.body.replaceChildren();
+
+		const filtered = await render({ provinces: ['GAUTENG', 'LIMPOPO'] });
+		expect(filtered.querySelector('[aria-label="Province"]')?.textContent).toContain(
+			'All provinces'
+		);
+	});
+
+	it('labels a deep-linked province before the option list has loaded', async () => {
+		const target = await render({ provinces: [], externalProvince: 'NORTH WEST' });
+		expect(target.querySelector('[aria-label="Province"]')?.textContent).toContain('North West');
+	});
+
+	it('reports the applied view so the page can mirror it in the URL', async () => {
+		fetchSchoolsMock.mockResolvedValue({ ...schoolList(), totalPages: 2, hasNextPage: true });
+		const onQueryChange = vi.fn();
+		const target = await render({
+			externalSearch: 'pretoria',
+			externalProvince: 'GAUTENG',
+			onQueryChange
+		});
+		await tick();
+		expect(onQueryChange).toHaveBeenLastCalledWith({
+			search: 'pretoria',
+			province: 'GAUTENG',
+			sort: null,
+			order: null,
+			page: 1
+		});
+
+		const next = [...target.querySelectorAll('button')].find((button) =>
+			button.textContent?.includes('Next')
+		);
+		next?.click();
+		await tick();
+		expect(onQueryChange).toHaveBeenLastCalledWith(expect.objectContaining({ page: 2 }));
+		expect(fetchSchoolsMock.mock.calls.at(-1)?.[0]).toMatchObject({
+			pageNumber: 2,
+			province: 'GAUTENG'
+		});
+	});
+});
+
 function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
 	let resolve!: (value: T) => void;
 	const promise = new Promise<T>((next) => {

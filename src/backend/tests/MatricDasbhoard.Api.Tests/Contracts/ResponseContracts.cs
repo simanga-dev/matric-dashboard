@@ -37,6 +37,34 @@ internal record RegionSubjectContract(string Code, string Name, int TotalWrote, 
 internal record RegionSubjectsContract(string Scope, string Name, string? Province, int? Year,
     List<int> AvailableYears, int SchoolCount, List<RegionSubjectContract> Subjects);
 
+/// <summary>Frozen per-year subject aggregate contract.</summary>
+internal record SubjectYearContract(int Year, int SchoolCount, int TotalWrote, int? Achieved, double? PercentAchieved);
+
+/// <summary>Frozen per-province or per-district subject aggregate contract.</summary>
+internal record SubjectRegionContract(string Name, int SchoolCount, int TotalWrote, int? Achieved,
+    double? PercentAchieved);
+
+/// <summary>Frozen single-subject detail contract.</summary>
+internal record SubjectDetailContract(string Code, string Name, bool IsGateway, string Scope, string ScopeName,
+    string? Province, string? District, int? Year, List<int> AvailableYears, int SchoolCount, int TotalWrote,
+    int? Achieved, double? PercentAchieved, List<SubjectYearContract> Trend, List<SubjectRegionContract> Provinces,
+    List<SubjectRegionContract> Districts);
+
+/// <summary>Frozen school result row in a subject school list.</summary>
+internal record SubjectSchoolContract(string Id, string Name, string Province, string District, int Quintile,
+    int TotalWrote, int? Achieved, double? PercentAchieved);
+
+/// <summary>Frozen paginated subject school list contract.</summary>
+internal record SubjectSchoolListContract(int? Year, List<SubjectSchoolContract> Items, int TotalCount,
+    int PageNumber, int PageSize, int TotalPages, bool HasPreviousPage, bool HasNextPage);
+
+/// <summary>Frozen school directory row fields used by the province filter test.</summary>
+internal record SchoolListItemContract(string Id, string Name, string Province);
+
+/// <summary>Frozen paginated school directory contract.</summary>
+internal record SchoolListContract(List<SchoolListItemContract> Items, int TotalCount, int PageNumber, int PageSize,
+    int TotalPages, bool HasPreviousPage, bool HasNextPage);
+
 // Auth
 internal record AuthTokensResponse(string AccessToken, string RefreshToken, bool RequiresTwoFactor, string? ChallengeToken);
 internal record TwoFactorSetupContract(string SharedKey, string AuthenticatorUri);

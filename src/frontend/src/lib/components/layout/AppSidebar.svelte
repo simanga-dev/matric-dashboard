@@ -15,7 +15,6 @@
 		BookOpen,
 		BookMarked,
 		MapPinned,
-		Trophy,
 		List,
 		UserRound,
 		Settings,
@@ -58,11 +57,12 @@
 			href: resolve(routes.schools),
 			icon: GraduationCap
 		},
-		{
-			title: () => 'Top Achievers',
-			href: '/top-achievers',
-			icon: Trophy
-		},
+		// Hidden for now - re-enable when the Top Achievers page is ready.
+		// {
+		// 	title: () => 'Top Achievers',
+		// 	href: '/top-achievers',
+		// 	icon: Trophy
+		// },
 		{
 			title: () => 'Subjects',
 			href: '/subjects',

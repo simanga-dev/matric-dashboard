@@ -16,13 +16,17 @@
 		value: string;
 		trend: number | null;
 		icon: Component<IconProps>;
+		/** Optional CSS colour for the headline value, e.g. a pass-rate band colour. */
+		valueColor?: string;
+		/** Suffix for the trend badge. Use ' pts' for percentage-point changes. */
+		trendUnit?: string;
 	}
 
-	let { title, value, trend, icon: Icon }: Props = $props();
+	let { title, value, trend, icon: Icon, valueColor, trendUnit = '%' }: Props = $props();
 
 	let trendLabel = $derived.by(() => {
 		if (trend === null) return 'N/A';
-		return `${trend > 0 ? '+' : ''}${trend}%`;
+		return `${trend > 0 ? '+' : ''}${trend}${trendUnit}`;
 	});
 
 	let isPositive = $derived(trend !== null && trend >= 0);
@@ -35,7 +39,10 @@
 			<CardDescription>{title}</CardDescription>
 			<Icon class="size-4 text-muted-foreground" />
 		</div>
-		<CardTitle class="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
+		<CardTitle
+			class="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl"
+			style={valueColor ? `color: ${valueColor}` : undefined}
+		>
 			{value}
 		</CardTitle>
 	</CardHeader>

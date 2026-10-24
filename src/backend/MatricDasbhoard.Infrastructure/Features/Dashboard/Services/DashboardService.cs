@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using System.Text.Json.Serialization;
 using MatricDasbhoard.Application.Features.Dashboard;
 using MatricDasbhoard.Application.Features.Dashboard.Dtos;
@@ -19,6 +20,12 @@ internal sealed class DashboardService : IDashboardService
 {
     /// <summary>Name of the Meilisearch index populated by scripts/upload_to_meilisearch.py.</summary>
     private const string SchoolsIndex = "schools";
+
+    /// <summary>Largest page the subject school list serves in one request.</summary>
+    private const int MaxSubjectSchoolsPageSize = 100;
+
+    /// <summary>Default and fallback sort key for the subject school list.</summary>
+    private const string SubjectPercentSort = "percentAchieved";
 
     private static readonly IReadOnlyList<PassRateTrendOutput> PassRateTrends = new List<PassRateTrendOutput>
     {
@@ -188,25 +195,8 @@ internal sealed class DashboardService : IDashboardService
         int? year = null,
         CancellationToken cancellationToken = default)
     {
-        // Only subjects with learners who wrote count as offered.
-        var scoped = _dbContext.SchoolSubjectPerformances
-            .Where(p => !p.IsDeleted && p.TotalWrote > 0 && p.School != null && !p.School.IsDeleted);
-
-        var scope = "country";
-        var name = "South Africa";
-        if (!string.IsNullOrWhiteSpace(province))
-        {
-            scoped = scoped.Where(p => p.School != null && p.School.Province == province);
-            scope = "province";
-            name = province;
-        }
-
-        if (!string.IsNullOrWhiteSpace(district))
-        {
-            scoped = scoped.Where(p => p.School != null && p.School.DistrictName == district);
-            scope = "district";
-            name = district;
-        }
+        var provinceFilter = string.IsNullOrWhiteSpace(province) ? null : province;
+        var (scoped, scope, name) = ScopeSubjectRows(OfferedSubjectRows(), provinceFilter, district);
 
         var availableYears = await scoped
             .Select(p => p.Year)
@@ -217,47 +207,29 @@ internal sealed class DashboardService : IDashboardService
         var selectedYear = year ?? (availableYears.Count > 0 ? (int?)availableYears[^1] : null);
         if (selectedYear is null)
         {
-            return new RegionSubjectsOutput(scope, name, province, null, availableYears, 0, []);
+            return new RegionSubjectsOutput(scope, name, provinceFilter, null, availableYears, 0, []);
         }
 
-        var rows = await scoped
-            .Where(p => p.Year == selectedYear)
-            .Select(p => new
+        var inYear = scoped.Where(p => p.Year == selectedYear);
+        var schoolCount = await inYear.Select(p => p.SchoolId).Distinct().CountAsync(cancellationToken);
+        var totals = await AggregateSubjectRows(inYear, p => new
             {
-                p.SchoolId,
                 Code = p.Subject == null ? string.Empty : p.Subject.Code,
-                SubjectName = p.Subject == null ? string.Empty : p.Subject.Name,
-                p.TotalWrote,
-                p.Achieved,
-                p.PercentAchieved
+                Name = p.Subject == null ? string.Empty : p.Subject.Name
             })
             .ToListAsync(cancellationToken);
 
-        var schoolCount = rows.Select(r => r.SchoolId).Distinct().Count();
-
-        // Historical reports can provide rates without exact achievement counts.
-        // Weight those rates by cohort size; never interpret unknown results as failures.
-        var subjects = rows
-            .GroupBy(r => new { r.Code, r.SubjectName })
-            .Select(g =>
+        var subjects = totals
+            .Select(t =>
             {
-                var wrote = g.Sum(r => r.TotalWrote);
-                var achieved = g.All(r => r.Achieved.HasValue)
-                    ? g.Sum(r => r.Achieved!.Value)
-                    : (int?)null;
-                var hasCompleteResults = g.All(r => r.Achieved.HasValue || r.PercentAchieved.HasValue);
-                var percent = hasCompleteResults && wrote > 0
-                    ? (double?)Math.Round(g.Sum(r => r.Achieved.HasValue
-                        ? (decimal)r.Achieved.Value
-                        : r.PercentAchieved!.Value * r.TotalWrote / 100m) / wrote * 100m, 1)
-                    : null;
+                var aggregate = Summarize(t);
                 return new RegionSubjectOutput(
-                    g.Key.Code,
-                    g.Key.SubjectName,
-                    wrote,
-                    achieved,
-                    percent,
-                    g.Select(r => r.SchoolId).Distinct().Count());
+                    t.Key.Code,
+                    t.Key.Name,
+                    aggregate.TotalWrote,
+                    aggregate.Achieved,
+                    aggregate.PercentAchieved,
+                    aggregate.SchoolCount);
             })
             .OrderBy(s => s.Name)
             .ToList();
@@ -265,7 +237,7 @@ internal sealed class DashboardService : IDashboardService
         return new RegionSubjectsOutput(
             scope,
             name,
-            string.IsNullOrWhiteSpace(province) ? null : province,
+            provinceFilter,
             selectedYear,
             availableYears,
             schoolCount,
@@ -273,15 +245,315 @@ internal sealed class DashboardService : IDashboardService
     }
 
     /// <inheritdoc />
+    public async Task<MatricDasbhoard.Shared.Result<SubjectDetailOutput>> GetSubjectDetailAsync(
+        string code,
+        string? province,
+        string? district,
+        int? year = null,
+        CancellationToken cancellationToken = default)
+    {
+        var subject = await FindSubjectAsync(code, cancellationToken);
+        if (subject is null)
+        {
+            return MatricDasbhoard.Shared.Result<SubjectDetailOutput>.Failure(
+                ErrorMessages.Dashboard.SubjectNotFound, ErrorType.NotFound);
+        }
+
+        var provinceFilter = string.IsNullOrWhiteSpace(province) ? null : province;
+        var districtFilter = string.IsNullOrWhiteSpace(district) ? null : district;
+        var national = OfferedSubjectRows().Where(p => p.SubjectId == subject.Id);
+        var (scoped, scope, scopeName) = ScopeSubjectRows(national, provinceFilter, districtFilter);
+
+        var trend = (await AggregateSubjectRows(scoped, p => p.Year).ToListAsync(cancellationToken))
+            .OrderBy(t => t.Key)
+            .Select(t =>
+            {
+                var aggregate = Summarize(t);
+                return new SubjectYearOutput(
+                    t.Key,
+                    aggregate.SchoolCount,
+                    aggregate.TotalWrote,
+                    aggregate.Achieved,
+                    aggregate.PercentAchieved);
+            })
+            .ToList();
+
+        var availableYears = trend.Select(t => t.Year).ToList();
+        var selectedYear = year ?? (availableYears.Count > 0 ? (int?)availableYears[^1] : null);
+        if (selectedYear is null)
+        {
+            return MatricDasbhoard.Shared.Result<SubjectDetailOutput>.Success(new SubjectDetailOutput(
+                subject.Code, subject.Name, subject.IsGateway, scope, scopeName, provinceFilter, districtFilter,
+                null, availableYears, 0, 0, null, null, trend, [], []));
+        }
+
+        // Province comparison is always national so a scoped view can still be
+        // placed against every province for the same year.
+        var inYear = national.Where(p => p.Year == selectedYear);
+        var provinces = await AggregateRegionsAsync(inYear, p => p.School!.Province, cancellationToken);
+        var districts = provinceFilter is null
+            ? []
+            : await AggregateRegionsAsync(
+                inYear.Where(p => p.School!.Province == provinceFilter),
+                p => p.School!.DistrictName,
+                cancellationToken);
+
+        var selected = trend.FirstOrDefault(t => t.Year == selectedYear);
+
+        return MatricDasbhoard.Shared.Result<SubjectDetailOutput>.Success(new SubjectDetailOutput(
+            subject.Code,
+            subject.Name,
+            subject.IsGateway,
+            scope,
+            scopeName,
+            provinceFilter,
+            districtFilter,
+            selectedYear,
+            availableYears,
+            selected?.SchoolCount ?? 0,
+            selected?.TotalWrote ?? 0,
+            selected?.Achieved,
+            selected?.PercentAchieved,
+            trend,
+            provinces,
+            districts));
+    }
+
+    /// <inheritdoc />
+    public async Task<MatricDasbhoard.Shared.Result<SubjectSchoolListOutput>> GetSubjectSchoolsAsync(
+        string code,
+        SubjectSchoolsInput input,
+        CancellationToken cancellationToken = default)
+    {
+        var subject = await FindSubjectAsync(code, cancellationToken);
+        if (subject is null)
+        {
+            return MatricDasbhoard.Shared.Result<SubjectSchoolListOutput>.Failure(
+                ErrorMessages.Dashboard.SubjectNotFound, ErrorType.NotFound);
+        }
+
+        var pageSize = Math.Clamp(input.PageSize, 1, MaxSubjectSchoolsPageSize);
+        // Cap the page so the row offset always fits in an int; pages past the
+        // end simply come back empty.
+        var pageNumber = Math.Clamp(input.PageNumber, 1, int.MaxValue / pageSize);
+        var (scoped, _, _) = ScopeSubjectRows(
+            OfferedSubjectRows().Where(p => p.SubjectId == subject.Id), input.Province, input.District);
+
+        var selectedYear = input.Year ?? await scoped.MaxAsync(p => (int?)p.Year, cancellationToken);
+        if (selectedYear is null)
+        {
+            return MatricDasbhoard.Shared.Result<SubjectSchoolListOutput>.Success(
+                new SubjectSchoolListOutput(null, [], 0, pageNumber, pageSize));
+        }
+
+        // A school has at most one row per subject and year (unique index), so
+        // each row is one school. Percent falls back to the exact count when the
+        // report published counts without a rate.
+        var rows = scoped
+            .Where(p => p.Year == selectedYear)
+            .Select(p => new SubjectSchoolRow
+            {
+                Id = p.School!.EmisNumber,
+                Name = p.School.CentreName,
+                Province = p.School.Province,
+                District = p.School.DistrictName,
+                Quintile = p.School.Quintile,
+                TotalWrote = p.TotalWrote,
+                Achieved = p.Achieved,
+                PercentAchieved = p.PercentAchieved ?? (decimal?)p.Achieved * 100m / p.TotalWrote
+            });
+
+        var term = string.IsNullOrWhiteSpace(input.Search) ? null : input.Search.Trim().ToLowerInvariant();
+        if (term is not null)
+        {
+            // Contains binds the term as a parameter and matches it literally,
+            // so LIKE wildcards in user input have no special meaning.
+            rows = rows.Where(r => r.Name.ToLower().Contains(term) || r.Id.ToLower().Contains(term));
+        }
+
+        var totalCount = await rows.CountAsync(cancellationToken);
+        var key = NormalizeSubjectSchoolSort(input.Sort);
+        var page = await OrderSubjectSchools(rows, key, IsSubjectSchoolSortDescending(key, input.Order))
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
+
+        var items = page
+            .Select(r => new SubjectSchoolOutput(
+                r.Id,
+                r.Name,
+                r.Province,
+                r.District,
+                r.Quintile,
+                r.TotalWrote,
+                r.Achieved,
+                r.PercentAchieved is null ? null : (double)Math.Round(r.PercentAchieved.Value, 1)))
+            .ToList();
+
+        return MatricDasbhoard.Shared.Result<SubjectSchoolListOutput>.Success(
+            new SubjectSchoolListOutput(selectedYear, items, totalCount, pageNumber, pageSize));
+    }
+
+    /// <summary>Maps an untrusted sort parameter onto a supported column, defaulting to pass percentage.</summary>
+    private static string NormalizeSubjectSchoolSort(string? sort) => sort?.Trim().ToLowerInvariant() switch
+    {
+        "name" => "name",
+        "province" => "province",
+        "totalwrote" => "totalWrote",
+        "achieved" => "achieved",
+        _ => SubjectPercentSort
+    };
+
+    /// <summary>Explicit asc/desc wins; otherwise metrics read highest-first and names ascending.</summary>
+    private static bool IsSubjectSchoolSortDescending(string sort, string? order) =>
+        order?.Trim().ToLowerInvariant() switch
+        {
+            "asc" => false,
+            "desc" => true,
+            _ => sort is not ("name" or "province")
+        };
+
+    /// <summary>
+    /// Orders subject school rows. Missing metrics sort last in either direction,
+    /// and stable tie-breakers keep pages from overlapping.
+    /// </summary>
+    private static IQueryable<SubjectSchoolRow> OrderSubjectSchools(
+        IQueryable<SubjectSchoolRow> rows,
+        string sort,
+        bool descending)
+    {
+        var ordered = sort switch
+        {
+            "name" => descending ? rows.OrderByDescending(r => r.Name) : rows.OrderBy(r => r.Name),
+            "province" => descending ? rows.OrderByDescending(r => r.Province) : rows.OrderBy(r => r.Province),
+            "totalWrote" => descending ? rows.OrderByDescending(r => r.TotalWrote) : rows.OrderBy(r => r.TotalWrote),
+            "achieved" => descending
+                ? rows.OrderBy(r => r.Achieved == null).ThenByDescending(r => r.Achieved)
+                : rows.OrderBy(r => r.Achieved == null).ThenBy(r => r.Achieved),
+            _ => (descending
+                    ? rows.OrderBy(r => r.PercentAchieved == null).ThenByDescending(r => r.PercentAchieved)
+                    : rows.OrderBy(r => r.PercentAchieved == null).ThenBy(r => r.PercentAchieved))
+                .ThenByDescending(r => r.TotalWrote)
+        };
+
+        return ordered.ThenBy(r => r.Name).ThenBy(r => r.Id);
+    }
+
+    /// <summary>Looks up a non-deleted subject by its stable code.</summary>
+    private async Task<SubjectRef?> FindSubjectAsync(string code, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+        {
+            return null;
+        }
+
+        return await _dbContext.Subjects
+            .AsNoTracking()
+            .Where(s => s.Code == code && !s.IsDeleted)
+            .Select(s => new SubjectRef(s.Id, s.Code, s.Name, s.IsGateway))
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Subject rows that count as offered: learners wrote the subject and neither
+    /// the row nor its school is soft-deleted.
+    /// </summary>
+    private IQueryable<SchoolSubjectPerformance> OfferedSubjectRows() =>
+        _dbContext.SchoolSubjectPerformances
+            .AsNoTracking()
+            .Where(p => !p.IsDeleted && p.TotalWrote > 0 && p.School != null && !p.School.IsDeleted);
+
+    /// <summary>
+    /// Narrows subject rows to a province and/or district and names the resulting scope.
+    /// </summary>
+    private static (IQueryable<SchoolSubjectPerformance> Rows, string Scope, string Name) ScopeSubjectRows(
+        IQueryable<SchoolSubjectPerformance> rows,
+        string? province,
+        string? district)
+    {
+        var scope = "country";
+        var name = "South Africa";
+        if (!string.IsNullOrWhiteSpace(province))
+        {
+            rows = rows.Where(p => p.School != null && p.School.Province == province);
+            scope = "province";
+            name = province;
+        }
+
+        if (!string.IsNullOrWhiteSpace(district))
+        {
+            rows = rows.Where(p => p.School != null && p.School.DistrictName == district);
+            scope = "district";
+            name = district;
+        }
+
+        return (rows, scope, name);
+    }
+
+    /// <summary>
+    /// Groups subject rows in the database and returns the partial sums the
+    /// aggregation rule needs. <see cref="Summarize{TKey}"/> turns them into results.
+    /// </summary>
+    private static IQueryable<SubjectTotals<TKey>> AggregateSubjectRows<TKey>(
+        IQueryable<SchoolSubjectPerformance> rows,
+        Expression<Func<SchoolSubjectPerformance, TKey>> key) =>
+        rows.GroupBy(key).Select(g => new SubjectTotals<TKey>(
+            g.Key,
+            g.Select(p => p.SchoolId).Distinct().Count(),
+            g.Sum(p => p.TotalWrote),
+            g.Count(p => p.Achieved == null),
+            g.Sum(p => p.Achieved ?? 0),
+            g.Count(p => p.Achieved == null && p.PercentAchieved == null),
+            g.Sum(p => p.Achieved != null
+                ? (decimal)p.Achieved.Value
+                : (p.PercentAchieved ?? 0m) * p.TotalWrote / 100m)));
+
+    /// <summary>
+    /// Applies the subject aggregation rule. Historical reports can provide rates
+    /// without exact achievement counts, so rates are weighted by cohort size;
+    /// unknown results are never interpreted as failures. The achieved count is
+    /// only known when every row has one, and the percentage only when every row
+    /// has either a count or a rate.
+    /// </summary>
+    private static SubjectAggregate Summarize<TKey>(SubjectTotals<TKey> totals)
+    {
+        var achieved = totals.MissingAchieved == 0 ? totals.AchievedSum : (int?)null;
+        var percent = totals.MissingResults == 0 && totals.TotalWrote > 0
+            ? (double?)Math.Round(totals.WeightedAchieved / totals.TotalWrote * 100m, 1)
+            : null;
+        return new SubjectAggregate(totals.SchoolCount, totals.TotalWrote, achieved, percent);
+    }
+
+    /// <summary>Aggregates subject rows per region name, ordered by name.</summary>
+    private static async Task<IReadOnlyList<SubjectRegionOutput>> AggregateRegionsAsync(
+        IQueryable<SchoolSubjectPerformance> rows,
+        Expression<Func<SchoolSubjectPerformance, string>> region,
+        CancellationToken cancellationToken) =>
+        (await AggregateSubjectRows(rows, region).ToListAsync(cancellationToken))
+            .Select(t =>
+            {
+                var aggregate = Summarize(t);
+                return new SubjectRegionOutput(
+                    t.Key,
+                    aggregate.SchoolCount,
+                    aggregate.TotalWrote,
+                    aggregate.Achieved,
+                    aggregate.PercentAchieved);
+            })
+            .OrderBy(r => r.Name)
+            .ToList();
+
+    /// <inheritdoc />
     public async Task<SchoolListOutput> GetSchoolsAsync(int pageNumber, int pageSize, string? search = null,
-        string? sort = null, string? order = null)
+        string? sort = null, string? order = null, string? province = null)
     {
         var key = NormalizeSort(sort);
         var descending = IsDescending(key, order);
+        var provinceFilter = string.IsNullOrWhiteSpace(province) ? null : province;
 
         var page = key == MapUpdatedSort
-            ? await GetSchoolsByRecentUpdateAsync(pageNumber, pageSize, search, descending)
-            : await GetSchoolDirectoryPageAsync(pageNumber, pageSize, search, key, descending);
+            ? await GetSchoolsByRecentUpdateAsync(pageNumber, pageSize, search, provinceFilter, descending)
+            : await GetSchoolDirectoryPageAsync(pageNumber, pageSize, search, provinceFilter, key, descending);
 
         return await WithMapUpdatesAsync(page);
     }
@@ -317,15 +589,16 @@ internal sealed class DashboardService : IDashboardService
     }
 
     /// <summary>
-    /// Directory page. Without an explicit sort, free-text search prefers the
-    /// Meilisearch relevance index and falls back to the database when it is
-    /// unreachable.
+    /// Directory page. Without an explicit sort or province filter, free-text
+    /// search prefers the Meilisearch relevance index and falls back to the
+    /// database when it is unreachable. The index ranks identifiers only, so a
+    /// province filter is applied in the database to keep counts and pages exact.
     /// </summary>
     private async Task<SchoolListOutput> GetSchoolDirectoryPageAsync(int pageNumber, int pageSize, string? search,
-        string? sort, bool descending)
+        string? province, string? sort, bool descending)
     {
         var term = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
-        if (term is not null && sort is null)
+        if (term is not null && sort is null && province is null)
         {
             var fromIndex = await SearchSchoolsAsync(term, pageNumber, pageSize);
             if (fromIndex is not null)
@@ -351,6 +624,11 @@ internal sealed class DashboardService : IDashboardService
                 """).AsNoTracking().Where(s => !s.IsDeleted);
         }
 
+        if (province is not null)
+        {
+            query = query.Where(s => s.Province == province);
+        }
+
         var totalCount = await query.CountAsync();
         var latestYear = await GetLatestYearAsync(CancellationToken.None);
 
@@ -372,7 +650,7 @@ internal sealed class DashboardService : IDashboardService
     /// it cannot preserve a global timestamp order across pages.
     /// </summary>
     private async Task<SchoolListOutput> GetSchoolsByRecentUpdateAsync(int pageNumber, int pageSize, string? search,
-        bool descending)
+        string? province, bool descending)
     {
         var term = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
 
@@ -380,13 +658,14 @@ internal sealed class DashboardService : IDashboardService
         // PostGIS ordering join; keep them on the directory order.
         if (!_dbContext.Database.IsNpgsql())
         {
-            return await GetSchoolDirectoryPageAsync(pageNumber, pageSize, term, null, false);
+            return await GetSchoolDirectoryPageAsync(pageNumber, pageSize, term, province, null, false);
         }
 
         var totalCount = await _dbContext.Database.SqlQuery<int>($"""
             SELECT count(*)::int AS "Value"
             FROM marks."Schools" s
             WHERE NOT s."IsDeleted"
+              AND ({province}::text IS NULL OR s."Province" = {province}::text)
               AND ({term}::text IS NULL
                 OR strpos(lower(public.unaccent('public.unaccent'::regdictionary, s."CentreName")),
                      lower(public.unaccent('public.unaccent'::regdictionary, {term}::text))) > 0
@@ -399,6 +678,7 @@ internal sealed class DashboardService : IDashboardService
             FROM marks."Schools" s
             LEFT JOIN geo.school_spatial_profiles p ON p.school_id = s."Id"
             WHERE NOT s."IsDeleted"
+              AND ({province}::text IS NULL OR s."Province" = {province}::text)
               AND ({term}::text IS NULL
                 OR strpos(lower(public.unaccent('public.unaccent'::regdictionary, s."CentreName")),
                      lower(public.unaccent('public.unaccent'::regdictionary, {term}::text))) > 0
@@ -786,6 +1066,61 @@ internal sealed class DashboardService : IDashboardService
     {
         [JsonPropertyName("school_id")]
         public string? Id { get; set; }
+    }
+
+    /// <summary>Identity and display fields of a subject resolved from its code.</summary>
+    private sealed record SubjectRef(Guid Id, string Code, string Name, bool IsGateway);
+
+    /// <summary>Database-side partial sums for one group of subject rows.</summary>
+    /// <param name="Key">Group key (year, region name, or subject).</param>
+    /// <param name="SchoolCount">Distinct schools in the group.</param>
+    /// <param name="TotalWrote">Learners who wrote across the group.</param>
+    /// <param name="MissingAchieved">Rows without an exact achieved count.</param>
+    /// <param name="AchievedSum">Sum of known achieved counts.</param>
+    /// <param name="MissingResults">Rows with neither an achieved count nor a rate.</param>
+    /// <param name="WeightedAchieved">Achieved counts, or rates weighted by cohort size when counts are missing.</param>
+    private sealed record SubjectTotals<TKey>(
+        TKey Key,
+        int SchoolCount,
+        int TotalWrote,
+        int MissingAchieved,
+        int AchievedSum,
+        int MissingResults,
+        decimal WeightedAchieved);
+
+    /// <summary>Final aggregate for a group of subject rows.</summary>
+    private readonly record struct SubjectAggregate(
+        int SchoolCount,
+        int TotalWrote,
+        int? Achieved,
+        double? PercentAchieved);
+
+    /// <summary>Row shape for one school's result in the subject school list.</summary>
+    private sealed class SubjectSchoolRow
+    {
+        /// <summary>School EMIS number.</summary>
+        public string Id { get; init; } = string.Empty;
+
+        /// <summary>School name.</summary>
+        public string Name { get; init; } = string.Empty;
+
+        /// <summary>School province.</summary>
+        public string Province { get; init; } = string.Empty;
+
+        /// <summary>School education district.</summary>
+        public string District { get; init; } = string.Empty;
+
+        /// <summary>School quintile.</summary>
+        public int Quintile { get; init; }
+
+        /// <summary>Learners who wrote the subject.</summary>
+        public int TotalWrote { get; init; }
+
+        /// <summary>Learners who achieved the subject, null when unavailable.</summary>
+        public int? Achieved { get; init; }
+
+        /// <summary>Unrounded pass percentage, null when unavailable.</summary>
+        public decimal? PercentAchieved { get; init; }
     }
 
     /// <summary>Row shape for the map-correction timestamp lookup.</summary>

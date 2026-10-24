@@ -16,7 +16,9 @@
 	import SubjectPerformanceBars, {
 		type SubjectBar
 	} from '$lib/components/dashboard/SubjectPerformanceBars.svelte';
+	import YearPills from '$lib/components/dashboard/YearPills.svelte';
 	import { passRateColor } from '$lib/components/dashboard/school-hierarchy';
+	import { subjectHref } from '$lib/components/dashboard/subject-url';
 	import {
 		fetchRegionSubjects,
 		fetchSchoolById,
@@ -25,7 +27,16 @@
 	} from '$lib/api/dashboard';
 	import { cn, toTitleCase } from '$lib/utils';
 	import type { RegionSubjects, School, SchoolSubjects } from '$lib/types/dashboard';
-	import { BookMarked, MapPin, Search, X } from '@lucide/svelte';
+	import {
+		ArrowDown,
+		ArrowUp,
+		BookMarked,
+		ChevronsUpDown,
+		ListFilter,
+		MapPin,
+		Search,
+		X
+	} from '@lucide/svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -93,6 +104,7 @@
 
 	interface SubjectRow {
 		key: string;
+		code: string;
 		name: string;
 		totalWrote: number;
 		achieved: number | null;
@@ -106,6 +118,7 @@
 					.filter((subject) => subject.totalWrote > 0)
 					.map((subject) => ({
 						key: subject.subjectId,
+						code: subject.code,
 						name: subject.name,
 						totalWrote: subject.totalWrote,
 						achieved: subject.achieved,
@@ -114,6 +127,7 @@
 					}))
 			: (region?.subjects ?? []).map((subject) => ({
 					key: subject.code,
+					code: subject.code,
 					name: subject.name,
 					totalWrote: subject.totalWrote,
 					achieved: subject.achieved,
@@ -122,15 +136,71 @@
 				}))
 	);
 
+	// Subject links keep the current region and year. A school is not a scope
+	// on the subject page, so school-scoped rows link to the national view.
+	function rowHref(code: string) {
+		return isSchoolScope ? subjectHref(code) : subjectHref(code, { province, district, year });
+	}
+
+	let filterQuery = $state('');
+	let filteredRows = $derived.by(() => {
+		const needle = filterQuery.trim().toLowerCase();
+		return needle ? rows.filter((row) => row.name.toLowerCase().includes(needle)) : rows;
+	});
+
+	type SortKey = 'name' | 'totalWrote' | 'achieved' | 'percentAchieved' | 'schoolCount';
+	let sortKey = $state<SortKey>('name');
+	let sortDir = $state<'asc' | 'desc'>('asc');
+
+	let sortedRows = $derived.by(() => {
+		const direction = sortDir === 'asc' ? 1 : -1;
+		return [...filteredRows].sort((a, b) => {
+			if (sortKey === 'name') return a.name.localeCompare(b.name) * direction;
+			const left = a[sortKey];
+			const right = b[sortKey];
+			// Unavailable values stay at the bottom in either direction.
+			if (left === null && right === null) return a.name.localeCompare(b.name);
+			if (left === null) return 1;
+			if (right === null) return -1;
+			return (left - right) * direction || a.name.localeCompare(b.name);
+		});
+	});
+
+	function toggleSort(key: SortKey) {
+		if (sortKey === key) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+		else {
+			sortKey = key;
+			sortDir = key === 'name' ? 'asc' : 'desc';
+		}
+	}
+
+	function ariaSort(key: SortKey): 'ascending' | 'descending' | 'none' {
+		if (sortKey !== key) return 'none';
+		return sortDir === 'asc' ? 'ascending' : 'descending';
+	}
+
 	let bars = $derived<SubjectBar[]>(
-		rows.map((row) => ({
+		filteredRows.map((row) => ({
 			name: row.name,
 			totalWrote: row.totalWrote,
-			percentAchieved: row.percentAchieved
+			percentAchieved: row.percentAchieved,
+			href: resolve(rowHref(row.code))
 		}))
 	);
 
 	let totalWrote = $derived(rows.reduce((sum, row) => sum + row.totalWrote, 0));
+
+	// Learner-weighted across subjects with a reported achievement count.
+	let overallPassRate = $derived.by(() => {
+		let wrote = 0;
+		let achieved = 0;
+		for (const row of rows) {
+			if (row.achieved === null) continue;
+			wrote += row.totalWrote;
+			achieved += row.achieved;
+		}
+		return wrote > 0 ? (achieved / wrote) * 100 : null;
+	});
 
 	// Query-only navigation reuses this page, so adopt the URL on every
 	// navigation, including the first one after hydration.
@@ -281,6 +351,16 @@
 		reload(year);
 	}
 </script>
+
+{#snippet sortIcon(key: SortKey)}
+	{#if sortKey === key && sortDir === 'asc'}
+		<ArrowUp class="size-3" />
+	{:else if sortKey === key}
+		<ArrowDown class="size-3" />
+	{:else}
+		<ChevronsUpDown class="size-3 text-muted-foreground/50" />
+	{/if}
+{/snippet}
 
 <svelte:head>
 	<title>Subjects • MatricDashboard</title>
@@ -435,30 +515,56 @@
 			{:else if availableYears.length === 0}
 				<EmptyState icon={BookMarked} message="No subject data for this scope." />
 			{:else}
-				<div class="flex flex-wrap items-center gap-2">
-					<span class="text-xs font-medium text-muted-foreground">Year</span>
-					{#each availableYears as availableYear (availableYear)}
-						<button
-							type="button"
-							aria-pressed={year === availableYear}
-							onclick={() => selectYear(availableYear)}
-							class={cn(
-								'rounded-full border px-3 py-1 text-xs font-medium tabular-nums transition-colors',
-								year === availableYear
-									? 'border-transparent bg-primary text-primary-foreground'
-									: 'bg-background hover:bg-muted'
-							)}
-						>
-							{availableYear}
-						</button>
-					{/each}
-				</div>
+				<YearPills years={availableYears} selected={year} onSelect={selectYear} />
 
 				{#if rows.length === 0}
 					<p class="py-12 text-center text-sm text-muted-foreground">
 						No subject data for this scope/year.
 					</p>
 				{:else}
+					<dl class="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Scope summary">
+						<div class="rounded-lg border bg-muted/20 p-3">
+							<dt class="text-xs text-muted-foreground">Subjects offered</dt>
+							<dd class="mt-1 text-xl font-semibold tabular-nums">{rows.length}</dd>
+						</div>
+						<div class="rounded-lg border bg-muted/20 p-3">
+							<dt class="text-xs text-muted-foreground">
+								Subject entries<InfoTooltip
+									label="subject entries"
+									text={metricHelp.subjectEntries}
+								/>
+							</dt>
+							<dd class="mt-1 text-xl font-semibold tabular-nums">{totalWrote.toLocaleString()}</dd>
+						</div>
+						{#if schoolCount !== null}
+							<div class="rounded-lg border bg-muted/20 p-3">
+								<dt class="text-xs text-muted-foreground">
+									Schools<InfoTooltip label="subject data coverage" text={metricHelp.coverage} />
+								</dt>
+								<dd class="mt-1 text-xl font-semibold tabular-nums">
+									{schoolCount.toLocaleString()}
+								</dd>
+							</div>
+						{/if}
+						<div class="rounded-lg border bg-muted/20 p-3">
+							<dt class="text-xs text-muted-foreground">
+								Overall subject pass rate<InfoTooltip
+									label="overall subject pass rate"
+									text={metricHelp.subjectPassRate}
+								/>
+							</dt>
+							<dd class="mt-1 text-xl font-semibold tabular-nums">
+								{#if overallPassRate === null}
+									<span class="text-muted-foreground">-</span>
+								{:else}
+									<span style:color={passRateColor(overallPassRate)}>
+										{overallPassRate.toFixed(1)}%
+									</span>
+								{/if}
+							</dd>
+						</div>
+					</dl>
+
 					<section class="rounded-lg border bg-muted/20 p-4">
 						<div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
 							<h3 class="text-sm font-semibold">
@@ -468,69 +574,125 @@
 								{rows.length} subjects · {totalWrote.toLocaleString()} wrote
 							</span>
 						</div>
-						<SubjectPerformanceBars subjects={bars} headlineYear={year} />
+						<div class="relative mb-4 max-w-sm">
+							<ListFilter
+								class="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
+								aria-hidden="true"
+							/>
+							<Input
+								bind:value={filterQuery}
+								placeholder="Filter subjects..."
+								aria-label="Filter subjects by name"
+								class="h-8 pl-8"
+							/>
+						</div>
+						{#if filteredRows.length === 0}
+							<p class="py-8 text-center text-sm text-muted-foreground">
+								No subjects match "{filterQuery.trim()}".
+							</p>
+						{:else}
+							<SubjectPerformanceBars subjects={bars} headlineYear={year} />
+						{/if}
 					</section>
 
-					<Table.Root>
-						<Table.Header>
-							<Table.Row>
-								<Table.Head>Subject</Table.Head>
-								<Table.Head class="text-right"
-									>Wrote<InfoTooltip
-										label="subject learners who wrote"
-										text={metricHelp.subjectWrote}
-									/></Table.Head
-								>
-								<Table.Head class="text-right"
-									>Achieved<InfoTooltip
-										label="subject achievement"
-										text={metricHelp.achieved}
-									/></Table.Head
-								>
-								<Table.Head class="text-right"
-									>Pass rate<InfoTooltip
-										label="subject pass rate"
-										text={metricHelp.subjectPassRate}
-									/></Table.Head
-								>
-								{#if !isSchoolScope}
-									<Table.Head class="text-right"
-										>Schools<InfoTooltip
-											label="subject data coverage"
-											text={metricHelp.coverage}
-										/></Table.Head
-									>
-								{/if}
-							</Table.Row>
-						</Table.Header>
-						<Table.Body>
-							{#each rows as row (row.key)}
+					{#if filteredRows.length > 0}
+						<Table.Root>
+							<Table.Header>
 								<Table.Row>
-									<Table.Cell class="font-medium">{row.name}</Table.Cell>
-									<Table.Cell class="text-right tabular-nums">
-										{row.totalWrote.toLocaleString()}
-									</Table.Cell>
-									<Table.Cell class="text-right tabular-nums">
-										{row.achieved?.toLocaleString() ?? '-'}
-									</Table.Cell>
-									<Table.Cell class="text-right font-medium tabular-nums">
-										{#if row.percentAchieved === null}
-											<span class="text-muted-foreground">-</span>
-										{:else}
-											<span style:color={passRateColor(row.percentAchieved)}>
-												{row.percentAchieved.toFixed(1)}%
-											</span>
-										{/if}
-									</Table.Cell>
+									<Table.Head class="" aria-sort={ariaSort('name')}>
+										<button
+											type="button"
+											class="inline-flex items-center gap-1 font-medium transition-colors hover:text-foreground"
+											onclick={() => toggleSort('name')}
+										>
+											Subject{@render sortIcon('name')}
+										</button>
+									</Table.Head>
+									<Table.Head class="text-right" aria-sort={ariaSort('totalWrote')}>
+										<button
+											type="button"
+											class="inline-flex items-center gap-1 font-medium transition-colors hover:text-foreground"
+											onclick={() => toggleSort('totalWrote')}
+										>
+											Wrote{@render sortIcon('totalWrote')}
+										</button><InfoTooltip
+											label="subject learners who wrote"
+											text={metricHelp.subjectWrote}
+										/>
+									</Table.Head>
+									<Table.Head class="text-right" aria-sort={ariaSort('achieved')}>
+										<button
+											type="button"
+											class="inline-flex items-center gap-1 font-medium transition-colors hover:text-foreground"
+											onclick={() => toggleSort('achieved')}
+										>
+											Achieved{@render sortIcon('achieved')}
+										</button><InfoTooltip label="subject achievement" text={metricHelp.achieved} />
+									</Table.Head>
+									<Table.Head class="text-right" aria-sort={ariaSort('percentAchieved')}>
+										<button
+											type="button"
+											class="inline-flex items-center gap-1 font-medium transition-colors hover:text-foreground"
+											onclick={() => toggleSort('percentAchieved')}
+										>
+											Pass rate{@render sortIcon('percentAchieved')}
+										</button><InfoTooltip
+											label="subject pass rate"
+											text={metricHelp.subjectPassRate}
+										/>
+									</Table.Head>
 									{#if !isSchoolScope}
-										<Table.Cell class="text-right tabular-nums">
-											{row.schoolCount?.toLocaleString() ?? '-'}
-										</Table.Cell>
+										<Table.Head class="text-right" aria-sort={ariaSort('schoolCount')}>
+											<button
+												type="button"
+												class="inline-flex items-center gap-1 font-medium transition-colors hover:text-foreground"
+												onclick={() => toggleSort('schoolCount')}
+											>
+												Schools{@render sortIcon('schoolCount')}
+											</button><InfoTooltip
+												label="subject data coverage"
+												text={metricHelp.coverage}
+											/>
+										</Table.Head>
 									{/if}
 								</Table.Row>
-							{/each}
-						</Table.Body>
-					</Table.Root>
+							</Table.Header>
+							<Table.Body>
+								{#each sortedRows as row (row.key)}
+									<Table.Row>
+										<Table.Cell class="font-medium">
+											<a
+												href={resolve(rowHref(row.code))}
+												class="underline-offset-4 hover:text-primary hover:underline focus-visible:underline focus-visible:outline-none"
+											>
+												{row.name}
+											</a>
+										</Table.Cell>
+										<Table.Cell class="text-right tabular-nums">
+											{row.totalWrote.toLocaleString()}
+										</Table.Cell>
+										<Table.Cell class="text-right tabular-nums">
+											{row.achieved?.toLocaleString() ?? '-'}
+										</Table.Cell>
+										<Table.Cell class="text-right font-medium tabular-nums">
+											{#if row.percentAchieved === null}
+												<span class="text-muted-foreground">-</span>
+											{:else}
+												<span style:color={passRateColor(row.percentAchieved)}>
+													{row.percentAchieved.toFixed(1)}%
+												</span>
+											{/if}
+										</Table.Cell>
+										{#if !isSchoolScope}
+											<Table.Cell class="text-right tabular-nums">
+												{row.schoolCount?.toLocaleString() ?? '-'}
+											</Table.Cell>
+										{/if}
+									</Table.Row>
+								{/each}
+							</Table.Body>
+						</Table.Root>
+					{/if}
 				{/if}
 			{/if}
 		</Card.Content>

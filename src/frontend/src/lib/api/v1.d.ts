@@ -714,6 +714,8 @@ export interface paths {
 					pageNumber?: number;
 					pageSize?: number;
 					search?: string;
+					/** @description Optional province filter (exact name, e.g. "GAUTENG"). */
+					province?: string;
 					sort?: string;
 					order?: string;
 				};
@@ -823,6 +825,124 @@ export interface paths {
 					};
 				};
 				/** @description If no school matches the identifier. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/v1/dashboard/subjects/{code}': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Returns a single subject's NSC performance for the country, a province, or a district. */
+		get: {
+			parameters: {
+				query?: {
+					/** @description Optional province filter (exact name, e.g. "GAUTENG"). */
+					province?: string;
+					/** @description Optional district filter (exact name), typically with a province. */
+					district?: string;
+					/** @description Optional academic year; defaults to the latest year with subject data. */
+					year?: number;
+				};
+				header?: never;
+				path: {
+					/** @description Stable subject code (e.g. "accounting"). */
+					code: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Returns the subject performance. */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['SubjectDetailResponse'];
+					};
+				};
+				/** @description If no subject matches the code. */
+				404: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['ProblemDetails'];
+					};
+				};
+			};
+		};
+		put?: never;
+		post?: never;
+		delete?: never;
+		options?: never;
+		head?: never;
+		patch?: never;
+		trace?: never;
+	};
+	'/api/v1/dashboard/subjects/{code}/schools': {
+		parameters: {
+			query?: never;
+			header?: never;
+			path?: never;
+			cookie?: never;
+		};
+		/** Returns a paginated list of schools that wrote a subject in the selected year. */
+		get: {
+			parameters: {
+				query?: {
+					/** @description Optional province filter (exact name, e.g. "GAUTENG"). */
+					province?: string;
+					/** @description Optional district filter (exact name), typically with a province. */
+					district?: string;
+					/** @description Optional academic year; defaults to the latest year with subject data. */
+					year?: number;
+					/** @description Optional school name search. */
+					search?: string;
+					pageNumber?: number;
+					pageSize?: number;
+					/** @description One of "name", "province", "totalWrote", "achieved", or "percentAchieved". */
+					sort?: string;
+					/** @description "asc" or "desc"; defaults to percentAchieved descending. */
+					order?: string;
+				};
+				header?: never;
+				path: {
+					/** @description Stable subject code (e.g. "accounting"). */
+					code: string;
+				};
+				cookie?: never;
+			};
+			requestBody?: never;
+			responses: {
+				/** @description Returns the schools that wrote the subject. */
+				200: {
+					headers: {
+						[name: string]: unknown;
+					};
+					content: {
+						'application/json': components['schemas']['SubjectSchoolListResponse'];
+					};
+				};
+				/** @description If no subject matches the code. */
 				404: {
 					headers: {
 						[name: string]: unknown;
@@ -5074,6 +5194,177 @@ export interface components {
 			 * @description Percentage change trend, or null if not applicable.
 			 */
 			trend?: null | number;
+		};
+		/**
+		 * @description A single subject's NSC performance for a geographic scope and academic year,
+		 *     with its yearly trend and provincial or district breakdown.
+		 */
+		SubjectDetailResponse: {
+			/** @description Stable subject code (e.g. "accounting"). */
+			code?: string;
+			/** @description Display name of the subject. */
+			name?: string;
+			/** @description Whether the subject is one of the DBE gateway subjects. */
+			isGateway?: boolean;
+			/** @description One of "country", "province", or "district". */
+			scope?: string;
+			/** @description Display name of the scope. */
+			scopeName?: string;
+			/** @description Selected province, null for the country. */
+			province?: null | string;
+			/** @description Selected district, null unless a district is selected. */
+			district?: null | string;
+			/**
+			 * Format: int32
+			 * @description Academic year the aggregates cover, null when the scope has no data for the subject.
+			 */
+			year?: null | number;
+			/** @description Years with data for the subject in the scope, oldest first. */
+			availableYears?: number[];
+			/**
+			 * Format: int32
+			 * @description Schools that wrote the subject in the scope.
+			 */
+			schoolCount?: number;
+			/**
+			 * Format: int32
+			 * @description Learners who wrote the subject in the scope.
+			 */
+			totalWrote?: number;
+			/**
+			 * Format: int32
+			 * @description Learners who achieved (passed) the subject, null when unavailable.
+			 */
+			achieved?: null | number;
+			/**
+			 * Format: double
+			 * @description Learner-weighted pass percentage for the subject, null when unavailable.
+			 */
+			percentAchieved?: null | number;
+			/** @description Yearly results for the scope, oldest first. */
+			trend?: components['schemas']['SubjectYearResponse'][];
+			/** @description Every province for the selected year. */
+			provinces?: components['schemas']['SubjectRegionResponse'][];
+			/** @description Districts of the selected province for the selected year, empty without a province. */
+			districts?: components['schemas']['SubjectRegionResponse'][];
+		};
+		/** @description A subject's performance in one province or district for the selected year. */
+		SubjectRegionResponse: {
+			/** @description Province or district name. */
+			name?: string;
+			/**
+			 * Format: int32
+			 * @description Schools that wrote the subject in the region.
+			 */
+			schoolCount?: number;
+			/**
+			 * Format: int32
+			 * @description Learners who wrote the subject in the region.
+			 */
+			totalWrote?: number;
+			/**
+			 * Format: int32
+			 * @description Learners who achieved (passed) the subject, null when unavailable.
+			 */
+			achieved?: null | number;
+			/**
+			 * Format: double
+			 * @description Learner-weighted pass percentage for the subject, null when unavailable.
+			 */
+			percentAchieved?: null | number;
+		};
+		/** @description Paginated schools that wrote a subject. */
+		SubjectSchoolListResponse: {
+			/**
+			 * Format: int32
+			 * @description Academic year the results cover, null when the scope has no data for the subject.
+			 */
+			year?: null | number;
+			/** @description The schools for the current page. */
+			items?: components['schemas']['SubjectSchoolResponse'][];
+			/**
+			 * Format: int32
+			 * @description Total number of schools matching the query.
+			 */
+			totalCount?: number;
+			/**
+			 * Format: int32
+			 * @description Current page number.
+			 */
+			pageNumber?: number;
+			/**
+			 * Format: int32
+			 * @description Number of items per page.
+			 */
+			pageSize?: number;
+			/**
+			 * Format: int32
+			 * @description Total number of pages.
+			 */
+			totalPages?: number;
+			/** @description Whether there is a previous page. */
+			hasPreviousPage?: boolean;
+			/** @description Whether there is a next page. */
+			hasNextPage?: boolean;
+		};
+		/** @description A school's result in a single subject for the selected year. */
+		SubjectSchoolResponse: {
+			/** @description School identifier (EMIS number). */
+			id?: string;
+			/** @description School name. */
+			name?: string;
+			/** @description Province where the school is located. */
+			province?: string;
+			/** @description Education district. */
+			district?: string;
+			/**
+			 * Format: int32
+			 * @description Socio-economic quintile (1 poorest to 5 wealthiest).
+			 */
+			quintile?: number;
+			/**
+			 * Format: int32
+			 * @description Learners at the school who wrote the subject.
+			 */
+			totalWrote?: number;
+			/**
+			 * Format: int32
+			 * @description Learners who achieved (passed) the subject, null when unavailable.
+			 */
+			achieved?: null | number;
+			/**
+			 * Format: double
+			 * @description Pass percentage for the subject, null when unavailable.
+			 */
+			percentAchieved?: null | number;
+		};
+		/** @description One year of a subject's performance within a scope. */
+		SubjectYearResponse: {
+			/**
+			 * Format: int32
+			 * @description The academic year.
+			 */
+			year?: number;
+			/**
+			 * Format: int32
+			 * @description Schools that wrote the subject.
+			 */
+			schoolCount?: number;
+			/**
+			 * Format: int32
+			 * @description Learners who wrote the subject.
+			 */
+			totalWrote?: number;
+			/**
+			 * Format: int32
+			 * @description Learners who achieved (passed) the subject, null when unavailable.
+			 */
+			achieved?: null | number;
+			/**
+			 * Format: double
+			 * @description Learner-weighted pass percentage for the subject, null when unavailable.
+			 */
+			percentAchieved?: null | number;
 		};
 		/** @description Request to disable two-factor authentication for the current user. */
 		TwoFactorDisableRequest: {

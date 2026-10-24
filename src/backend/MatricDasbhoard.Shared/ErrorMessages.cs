@@ -205,6 +205,7 @@ public static class ErrorMessages
     public static class Dashboard
     {
         public const string SchoolNotFound = "School not found.";
+        public const string SubjectNotFound = "Subject not found.";
     }
 
     /// <summary>

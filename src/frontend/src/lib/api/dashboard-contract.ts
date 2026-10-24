@@ -7,7 +7,10 @@ import type {
 	SchoolList,
 	SchoolSort,
 	SchoolSortOrder,
-	SchoolSubjects
+	SchoolSubjects,
+	SubjectDetail,
+	SubjectSchoolList,
+	SubjectSchoolSort
 } from '$lib/types/dashboard';
 import type { components } from './v1';
 
@@ -41,6 +44,7 @@ export interface DashboardPaths {
 					pageNumber?: number;
 					pageSize?: number;
 					search?: string;
+					province?: string;
 					sort?: SchoolSort;
 					order?: SchoolSortOrder;
 				};
@@ -70,6 +74,33 @@ export interface DashboardPaths {
 		get: {
 			parameters: { query?: { province?: string; district?: string; year?: number } };
 			responses: GetResponse<RegionSubjects>;
+		};
+	};
+	'/api/v1/dashboard/subjects/{code}': {
+		get: {
+			parameters: {
+				path: { code: string };
+				query?: { province?: string; district?: string; year?: number };
+			};
+			responses: GetResponse<SubjectDetail>;
+		};
+	};
+	'/api/v1/dashboard/subjects/{code}/schools': {
+		get: {
+			parameters: {
+				path: { code: string };
+				query?: {
+					province?: string;
+					district?: string;
+					year?: number;
+					search?: string;
+					pageNumber?: number;
+					pageSize?: number;
+					sort?: SubjectSchoolSort;
+					order?: SchoolSortOrder;
+				};
+			};
+			responses: GetResponse<SubjectSchoolList>;
 		};
 	};
 	'/api/v1/search-index/schools': {

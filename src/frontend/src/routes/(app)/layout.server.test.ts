@@ -11,12 +11,15 @@ function event(id: string, hadSession = false) {
 }
 
 describe('public results access', () => {
-	it.each(['/(app)/overview', '/(app)/subjects', '/(app)/schools', '/(app)/schools/[id]'])(
-		'allows anonymous visitors to %s',
-		async (id) => {
-			await expect(load(event(id))).resolves.toMatchObject({ user: null });
-		}
-	);
+	it.each([
+		'/(app)/overview',
+		'/(app)/subjects',
+		'/(app)/subjects/[code]',
+		'/(app)/schools',
+		'/(app)/schools/[id]'
+	])('allows anonymous visitors to %s', async (id) => {
+		await expect(load(event(id))).resolves.toMatchObject({ user: null });
+	});
 
 	it('keeps administrative pages protected', async () => {
 		await expect(load(event('/(app)/admin/users'))).rejects.toMatchObject({
