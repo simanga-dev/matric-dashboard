@@ -95,7 +95,7 @@ public static class ApplicationBuilderExtensions
     {
         var roleManager = serviceProvider.GetRequiredService<RoleManager<ApplicationRole>>();
 
-        // Admin gets user management + role viewing by default.
+        // Admin gets user management, role viewing, and index maintenance by default.
         // Roles.Manage is deliberately excluded - only Superuser can create/edit/delete roles.
         // Schools.SpatialEdit is opt-in through custom editor roles, never a default User/Admin grant.
         var adminPermissions = new[]
@@ -103,7 +103,8 @@ public static class ApplicationBuilderExtensions
             AppPermissions.Users.View,
             AppPermissions.Users.Manage,
             AppPermissions.Users.AssignRoles,
-            AppPermissions.Roles.View
+            AppPermissions.Roles.View,
+            AppPermissions.SearchIndex.Manage
         };
 
         var adminRole = await roleManager.FindByNameAsync(AppRoles.Admin);

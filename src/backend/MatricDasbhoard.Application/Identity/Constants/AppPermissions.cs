@@ -22,6 +22,13 @@ public static class AppPermissions
         public const string SpatialEdit = "schools.spatial.edit";
     }
 
+    /// <summary>Search index maintenance permissions.</summary>
+    public static class SearchIndex
+    {
+        /// <summary>Rebuild the Meilisearch school directory index from the serving database.</summary>
+        public const string Manage = "search_index.manage";
+    }
+
     /// <summary>
     /// The claim type used for permission claims in JWT tokens and role claims.
     /// </summary>
