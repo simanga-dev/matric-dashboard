@@ -213,10 +213,10 @@ internal sealed class DashboardService : IDashboardService
         var inYear = scoped.Where(p => p.Year == selectedYear);
         var schoolCount = await inYear.Select(p => p.SchoolId).Distinct().CountAsync(cancellationToken);
         var totals = await AggregateSubjectRows(inYear, p => new
-            {
-                Code = p.Subject == null ? string.Empty : p.Subject.Code,
-                Name = p.Subject == null ? string.Empty : p.Subject.Name
-            })
+        {
+            Code = p.Subject == null ? string.Empty : p.Subject.Code,
+            Name = p.Subject == null ? string.Empty : p.Subject.Name
+        })
             .ToListAsync(cancellationToken);
 
         var subjects = totals
