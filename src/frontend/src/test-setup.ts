@@ -1,4 +1,14 @@
-import { vi } from 'vitest';
+import { afterEach, vi } from 'vitest';
+
+// bits-ui schedules a short body-scroll cleanup when a dialog unmounts. jsdom is
+// torn down as soon as a test finishes, so let that timer run while the document
+// still exists instead of failing the run with an unhandled "document is not
+// defined" error.
+afterEach(async () => {
+	if (typeof document !== 'undefined') {
+		await new Promise((resolve) => setTimeout(resolve, 50));
+	}
+});
 
 // Global mocks for SvelteKit $app/* modules.
 // These provide sensible defaults that individual tests can override via vi.mocked().
