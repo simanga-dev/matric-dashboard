@@ -111,7 +111,10 @@ def _float_or_none(val: str | None) -> float | None:
 
 def upload_documents(documents: list[dict], api_key: str) -> None:
     """Upload documents to MeiliSearch in batches."""
-    url = f"{MEILI_URL}/indexes/{INDEX_NAME}/documents"
+    # The API and this uploader both use the EMIS number in `id` as the primary
+    # key. `school_id` is published for the API but is not the primary key, so
+    # Meilisearch must be told which candidate to use.
+    url = f"{MEILI_URL}/indexes/{INDEX_NAME}/documents?primaryKey=id"
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}",

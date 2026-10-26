@@ -30,11 +30,13 @@ internal sealed class SchoolSearchIndexService(
     private const string IndexName = "schools";
 
     /// <summary>
-    /// Primary key of the existing <c>schools</c> index. The index was created by
-    /// <c>scripts/upload_to_meilisearch.py</c> with <c>school_id</c>; Meilisearch
-    /// rejects a different primary key on an existing index.
+    /// Primary key of the <c>schools</c> index. The index is created by
+    /// <c>scripts/upload_to_meilisearch.py</c>, which writes the EMIS number to
+    /// <c>id</c>; <c>school_id</c> is published alongside it because the API
+    /// reads that field from hits before hydrating them from PostgreSQL.
+    /// Meilisearch cannot change an index's primary key while documents exist.
     /// </summary>
-    private const string PrimaryKey = "school_id";
+    private const string PrimaryKey = "id";
 
     private const int BatchSize = 500;
     private const int TaskTimeoutMs = 120_000;
@@ -59,10 +61,18 @@ internal sealed class SchoolSearchIndexService(
             logger.LogInformation(
                 "Publishing {Count} schools to Meilisearch index '{Index}'", documents.Count, IndexName);
 
-            if (documents.Count > 0)
+            if (documents.Count == 0)
             {
-                await UploadDocumentsAsync(index, documents, cancellationToken);
+                // An empty projection usually means the wrong database was reached.
+                // Removing every document in that case would empty the live index.
+                stopwatch.Stop();
+                logger.LogWarning(
+                    "Skipped publishing to Meilisearch index '{Index}' because the database returned no schools",
+                    IndexName);
+                return IndexResult.Success(new SchoolSearchIndexOutput(0, 0, stopwatch.ElapsedMilliseconds));
             }
+
+            await UploadDocumentsAsync(index, documents, cancellationToken);
 
             var removed = await RemoveStaleDocumentsAsync(index, documents, cancellationToken);
 
@@ -79,6 +89,12 @@ internal sealed class SchoolSearchIndexService(
             logger.LogError(ex, "A Meilisearch task failed while rebuilding the school index");
             return IndexResult.Failure(
                 ErrorMessages.SearchIndex.RebuildFailed, ErrorType.ServiceUnavailable);
+        }
+        catch (MeilisearchTimeoutError ex)
+        {
+            logger.LogError(ex, "Timed out waiting for a Meilisearch task while rebuilding the school index");
+            return IndexResult.Failure(
+                ErrorMessages.SearchIndex.Unavailable, ErrorType.ServiceUnavailable);
         }
         catch (MeilisearchApiError ex)
         {
