@@ -24,6 +24,14 @@ const SORTS: readonly SchoolSort[] = [
 	'mapUpdatedAt'
 ];
 
+/** Metric and timestamp columns read best highest-first, names ascending. */
+const DESC_FIRST_SORTS: readonly SchoolSort[] = [
+	'totalWrote',
+	'totalPassed',
+	'passRate',
+	'mapUpdatedAt'
+];
+
 function isSort(value: string | null): value is SchoolSort {
 	return value !== null && (SORTS as readonly string[]).includes(value);
 }
@@ -39,7 +47,7 @@ export function parseSchoolsQuery(params: URLSearchParams): SchoolsViewQuery {
 		search: params.get('search') ?? '',
 		province: params.get('province')?.trim() || null,
 		sort,
-		order: sort ? (order ?? 'asc') : null,
+		order: sort ? (order ?? (DESC_FIRST_SORTS.includes(sort) ? 'desc' : 'asc')) : null,
 		page: Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1
 	};
 }

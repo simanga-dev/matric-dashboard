@@ -257,7 +257,9 @@
 				</aside>
 			</div>
 			<div class="absolute inset-0 z-0">
-				<SchoolLocationMap spatial={data.spatial} {schoolName} bottomInset={mapBottomInset} />
+				{#key school.id}
+					<SchoolLocationMap spatial={data.spatial} {schoolName} bottomInset={mapBottomInset} />
+				{/key}
 			</div>
 		</section>
 

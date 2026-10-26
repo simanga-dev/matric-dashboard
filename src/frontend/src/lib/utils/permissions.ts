@@ -16,6 +16,9 @@ export const Permissions = {
 	Schools: {
 		SpatialEdit: 'schools.spatial.edit'
 	},
+	SearchIndex: {
+		Manage: 'search_index.manage'
+	},
 	Users: {
 		View: 'users.view',
 		ViewPii: 'users.view_pii',

@@ -5,11 +5,13 @@
 	import { seedSchoolSearchIndex } from '$lib/api/search-index';
 	import { toast } from '$lib/components/ui/sonner';
 	import { createCooldown } from '$lib/state';
+	import { hasPermission, Permissions } from '$lib/utils';
 	import * as m from '$lib/paraglide/messages';
 
 	const cooldown = createCooldown();
 	let seeding = $state(false);
 	let user = $derived(page.data.user);
+	let canManageIndex = $derived(hasPermission(user, Permissions.SearchIndex.Manage));
 
 	async function seed() {
 		if (seeding || cooldown.active) return;
@@ -34,7 +36,7 @@
 	}
 </script>
 
-{#if user}
+{#if canManageIndex}
 	<button
 		type="button"
 		aria-label={m.search_index_seed()}

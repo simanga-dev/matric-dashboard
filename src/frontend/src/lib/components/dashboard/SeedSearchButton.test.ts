@@ -3,7 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mount, tick, unmount } from 'svelte';
 import SeedSearchButton from './SeedSearchButton.svelte';
 
-const auth = vi.hoisted(() => ({ user: null as { id: string } | null }));
+const auth = vi.hoisted(() => ({
+	user: null as { id: string; permissions?: string[]; roles?: string[] } | null
+}));
 const seed = vi.hoisted(() => vi.fn());
 const toast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
 
@@ -39,8 +41,15 @@ describe('SeedSearchButton', () => {
 		expect(document.querySelector('button')).toBeNull();
 	});
 
-	it('seeds the index for a signed-in user', async () => {
-		auth.user = { id: 'user-1' };
+	it('stays hidden for a signed-in user without the index permission', () => {
+		auth.user = { id: 'user-1', permissions: [] };
+		component = mount(SeedSearchButton, { target: document.body });
+
+		expect(document.querySelector('button')).toBeNull();
+	});
+
+	it('seeds the index for a user who can manage it', async () => {
+		auth.user = { id: 'user-1', permissions: ['search_index.manage'] };
 		seed.mockResolvedValue({
 			data: { indexed: 8237, removed: 4, durationMs: 900 },
 			error: undefined,
@@ -61,7 +70,7 @@ describe('SeedSearchButton', () => {
 	});
 
 	it('reports a failed seed without throwing', async () => {
-		auth.user = { id: 'user-1' };
+		auth.user = { id: 'user-1', permissions: ['search_index.manage'] };
 		seed.mockRejectedValue(new Error('offline'));
 		component = mount(SeedSearchButton, { target: document.body });
 

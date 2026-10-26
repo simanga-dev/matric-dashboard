@@ -37,6 +37,21 @@ describe('school directory URLs', () => {
 		expect(parseSchoolsQuery(new URLSearchParams('page=1.5')).page).toBe(1);
 	});
 
+	it('defaults metric sorts to descending and name sorts to ascending', () => {
+		expect(parseSchoolsQuery(new URLSearchParams('sort=passRate'))).toMatchObject({
+			sort: 'passRate',
+			order: 'desc'
+		});
+		expect(parseSchoolsQuery(new URLSearchParams('sort=mapUpdatedAt'))).toMatchObject({
+			sort: 'mapUpdatedAt',
+			order: 'desc'
+		});
+		expect(parseSchoolsQuery(new URLSearchParams('sort=province'))).toMatchObject({
+			sort: 'province',
+			order: 'asc'
+		});
+	});
+
 	it('serialises only non-default values', () => {
 		expect(
 			schoolsQueryString({ search: '', province: null, sort: null, order: null, page: 1 })
