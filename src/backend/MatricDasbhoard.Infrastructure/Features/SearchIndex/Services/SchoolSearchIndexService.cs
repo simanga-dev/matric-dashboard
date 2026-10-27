@@ -283,7 +283,7 @@ internal sealed class SchoolSearchIndexService(
         [JsonPropertyName("emis_number")] public string EmisNumber { get; init; } = string.Empty;
         [JsonPropertyName("centre_number")] public string CentreNumber { get; init; } = string.Empty;
         [JsonPropertyName("centre_name")] public string CentreName { get; init; } = string.Empty;
-        [JsonPropertyName("quintile")] public int Quintile { get; init; }
+        [JsonPropertyName("quintile")] public int? Quintile { get; init; }
         [JsonPropertyName("progressed_number_2022")] public int? ProgressedNumber2022 { get; init; }
         [JsonPropertyName("total_wrote_2022")] public int? TotalWrote2022 { get; init; }
         [JsonPropertyName("total_achieved_2022")] public int? TotalAchieved2022 { get; init; }

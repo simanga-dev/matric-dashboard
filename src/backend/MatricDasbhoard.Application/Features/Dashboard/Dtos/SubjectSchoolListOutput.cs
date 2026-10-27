@@ -23,7 +23,7 @@ public record SubjectSchoolListOutput(
 /// <param name="Name">School name.</param>
 /// <param name="Province">Province where the school is located.</param>
 /// <param name="District">Education district of the school.</param>
-/// <param name="Quintile">School quintile (1-5).</param>
+/// <param name="Quintile">School quintile (1-5), null when not published.</param>
 /// <param name="TotalWrote">Learners who wrote the subject.</param>
 /// <param name="Achieved">Learners who achieved the subject, null when unavailable.</param>
 /// <param name="PercentAchieved">Pass percentage for the subject, null when unavailable.</param>
@@ -32,7 +32,7 @@ public record SubjectSchoolOutput(
     string Name,
     string Province,
     string District,
-    int Quintile,
+    int? Quintile,
     int TotalWrote,
     int? Achieved,
     double? PercentAchieved

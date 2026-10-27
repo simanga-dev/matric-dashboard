@@ -28,7 +28,9 @@
 		Copy,
 		Scale,
 		Info,
-		Award
+		Award,
+		Mail,
+		ClipboardList
 	} from '@lucide/svelte';
 
 	let { data }: { data: PageData } = $props();
@@ -62,6 +64,50 @@
 		4: 'serves more affluent communities and is fee-paying',
 		5: 'serves the wealthiest communities and is fee-paying'
 	};
+
+	const phaseLabel: Record<string, string> = {
+		Primary: 'Primary school',
+		Secondary: 'Secondary school',
+		Combined: 'Combined school',
+		Intermediate: 'Intermediate school',
+		SpecialNeeds: 'Special needs',
+		Skills: 'School of skills',
+		Other: 'Other'
+	};
+
+	const ownershipLabel: Record<string, string> = {
+		Government: 'Government',
+		Private: 'Private',
+		Independent: 'Independent',
+		Unknown: 'Unknown'
+	};
+
+	const settlementLabel: Record<string, string> = {
+		Urban: 'Urban',
+		Rural: 'Rural',
+		Unknown: 'Unknown'
+	};
+
+	const sectorLabel: Record<string, string> = {
+		Public: 'Public',
+		Independent: 'Independent',
+		Unknown: 'Unknown'
+	};
+
+	function formatPhone(value: string): string {
+		const match = /^\+27(\d{2})(\d{3})(\d{4})$/.exec(value);
+		return match ? `+27 ${match[1]} ${match[2]} ${match[3]}` : value;
+	}
+
+	function yesNo(value: boolean | null | undefined): string {
+		return value === null || value === undefined ? 'n/a' : value ? 'Yes' : 'No';
+	}
+
+	let learnerEducatorRatio = $derived.by(() => {
+		const enrolment = school?.enrolment;
+		if (!enrolment?.learners || !enrolment?.educators) return null;
+		return (enrolment.learners / enrolment.educators).toFixed(1);
+	});
 
 	let schoolName = $derived(school ? toTitleCase(school.name) : '');
 	let headerCardHeight = $state(0);
@@ -194,7 +240,7 @@
 							<span
 								class="inline-flex items-center gap-0.5 rounded-md border border-border/60 bg-background/40 px-2 py-0.5 text-[11px] font-medium tabular-nums"
 							>
-								Quintile {school.quintile}
+								Quintile {school.quintile ?? 'n/a'}
 								<InfoTooltip label="quintile" text={metricHelp.quintile} />
 							</span>
 						</div>
@@ -439,9 +485,15 @@
 						{/each}
 					</div>
 					<p class="text-sm text-muted-foreground">
-						This is a <span class="font-medium text-foreground">Quintile {school.quintile}</span>
-						school, which {quintileText[school.quintile] ?? 'is classified by relative poverty'}.
-						Quintile 1 is the poorest and Quintile 5 the wealthiest.
+						{#if school.quintile === null}
+							No numeric quintile is published for this school{school.quintileCode
+								? ` (masterlist value: ${school.quintileCode})`
+								: ''}. Quintile 1 is the poorest and Quintile 5 the wealthiest.
+						{:else}
+							This is a <span class="font-medium text-foreground">Quintile {school.quintile}</span>
+							school, which {quintileText[school.quintile] ?? 'is classified by relative poverty'}.
+							Quintile 1 is the poorest and Quintile 5 the wealthiest.
+						{/if}
 					</p>
 				</div>
 			</section>
@@ -472,7 +524,123 @@
 					</div>
 					<div class="flex items-baseline justify-between gap-4">
 						<dt class="text-xs text-muted-foreground">Quintile</dt>
-						<dd class="font-medium tabular-nums">{school.quintile}</dd>
+						<dd class="font-medium tabular-nums">{school.quintile ?? 'n/a'}</dd>
+					</div>
+				</dl>
+			</section>
+
+			<section class="space-y-4">
+				<header class="space-y-1">
+					<h2 class="flex items-center gap-2 text-base font-semibold">
+						<Mail class="size-4 text-primary" />
+						Contact
+					</h2>
+					<p class="text-sm text-muted-foreground">From the DBE school masterlist.</p>
+				</header>
+				<dl class="space-y-2.5 text-sm">
+					<div class="flex items-baseline justify-between gap-4">
+						<dt class="text-xs text-muted-foreground">Email</dt>
+						<dd class="min-w-0 text-right font-medium break-all">
+							{#if school.email}
+								<a
+									class="underline-offset-4 hover:text-primary hover:underline"
+									href={`mailto:${school.email}`}>{school.email}</a
+								>
+							{:else}
+								<span class="text-muted-foreground">n/a</span>
+							{/if}
+						</dd>
+					</div>
+					<div class="flex items-baseline justify-between gap-4">
+						<dt class="text-xs text-muted-foreground">Telephone</dt>
+						<dd class="text-right font-medium tabular-nums">
+							{#if school.telephone}
+								<a
+									class="underline-offset-4 hover:text-primary hover:underline"
+									href={`tel:${school.telephone}`}>{formatPhone(school.telephone)}</a
+								>
+							{:else}
+								<span class="text-muted-foreground">n/a</span>
+							{/if}
+						</dd>
+					</div>
+					{#if school.enrolment}
+						<div class="flex items-baseline justify-between gap-4">
+							<dt class="text-xs text-muted-foreground">Learners ({school.enrolment.year})</dt>
+							<dd class="font-medium tabular-nums">
+								{school.enrolment.learners?.toLocaleString() ?? 'n/a'}
+							</dd>
+						</div>
+						<div class="flex items-baseline justify-between gap-4">
+							<dt class="text-xs text-muted-foreground">Educators ({school.enrolment.year})</dt>
+							<dd class="font-medium tabular-nums">
+								{school.enrolment.educators?.toLocaleString() ?? 'n/a'}
+							</dd>
+						</div>
+						{#if learnerEducatorRatio}
+							<div class="flex items-baseline justify-between gap-4">
+								<dt class="text-xs text-muted-foreground">Learners per educator</dt>
+								<dd class="font-medium tabular-nums">{learnerEducatorRatio}</dd>
+							</div>
+						{/if}
+					{/if}
+				</dl>
+			</section>
+
+			<section class="space-y-4">
+				<header class="space-y-1">
+					<h2 class="flex items-center gap-2 text-base font-semibold">
+						<ClipboardList class="size-4 text-primary" />
+						School profile
+					</h2>
+					<p class="text-sm text-muted-foreground">
+						Classification and ownership recorded by the department.
+					</p>
+				</header>
+				<dl class="space-y-2.5 text-sm">
+					<div class="flex items-baseline justify-between gap-4">
+						<dt class="text-xs text-muted-foreground">Sector</dt>
+						<dd class="text-right font-medium">
+							{school.sector ? (sectorLabel[school.sector] ?? school.sector) : 'n/a'}
+						</dd>
+					</div>
+					<div class="flex items-baseline justify-between gap-4">
+						<dt class="text-xs text-muted-foreground">Phase</dt>
+						<dd class="text-right font-medium">
+							{school.phase ? (phaseLabel[school.phase] ?? school.phase) : 'n/a'}
+						</dd>
+					</div>
+					<div class="flex items-baseline justify-between gap-4">
+						<dt class="text-xs text-muted-foreground">Urban / rural</dt>
+						<dd class="text-right font-medium">
+							{school.urbanRural
+								? (settlementLabel[school.urbanRural] ?? school.urbanRural)
+								: 'n/a'}
+						</dd>
+					</div>
+					<div class="flex items-baseline justify-between gap-4">
+						<dt class="text-xs text-muted-foreground">Land ownership</dt>
+						<dd class="text-right font-medium">
+							{school.landOwnership
+								? (ownershipLabel[school.landOwnership] ?? school.landOwnership)
+								: 'n/a'}
+						</dd>
+					</div>
+					<div class="flex items-baseline justify-between gap-4">
+						<dt class="text-xs text-muted-foreground">Building ownership</dt>
+						<dd class="text-right font-medium">
+							{school.buildingOwnership
+								? (ownershipLabel[school.buildingOwnership] ?? school.buildingOwnership)
+								: 'n/a'}
+						</dd>
+					</div>
+					<div class="flex items-baseline justify-between gap-4">
+						<dt class="text-xs text-muted-foreground">Section 21 school</dt>
+						<dd class="font-medium">{yesNo(school.isSection21)}</dd>
+					</div>
+					<div class="flex items-baseline justify-between gap-4">
+						<dt class="text-xs text-muted-foreground">No-fee school</dt>
+						<dd class="font-medium">{yesNo(school.isNoFeeSchool)}</dd>
 					</div>
 				</dl>
 			</section>

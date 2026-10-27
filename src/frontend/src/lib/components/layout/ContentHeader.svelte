@@ -73,7 +73,10 @@
 </script>
 
 <header
-	class="flex h-(--header-height) shrink-0 items-center gap-2 border-border/50 bg-card px-4 lg:px-6"
+	class={[
+		'flex h-(--header-height) shrink-0 items-center gap-2 border-border/50 px-4 lg:px-6',
+		borderless ? 'bg-transparent' : 'bg-card'
+	]}
 	class:border-b={!borderless}
 >
 	<div class="flex flex-1 items-center gap-2">

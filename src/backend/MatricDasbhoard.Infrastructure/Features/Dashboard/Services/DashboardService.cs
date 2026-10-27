@@ -855,6 +855,21 @@ internal sealed class DashboardService : IDashboardService
                 s.DistrictName,
                 s.CentreNumber,
                 s.Quintile,
+                s.QuintileCode,
+                s.Email,
+                s.Telephone,
+                s.Sector,
+                s.Phase,
+                s.LandOwnership,
+                s.BuildingOwnership,
+                s.IsSection21,
+                s.IsNoFeeSchool,
+                s.UrbanRural,
+                Enrolment = s.Enrolments
+                    .Where(e => !e.IsDeleted)
+                    .OrderByDescending(e => e.Year)
+                    .Select(e => new { e.Year, e.Learners, e.Educators })
+                    .FirstOrDefault(),
                 Performances = s.Performances
                     .Where(p => !p.IsDeleted)
                     .OrderBy(p => p.Year)
@@ -941,7 +956,23 @@ internal sealed class DashboardService : IDashboardService
             years,
             comparison,
             SubjectsOfferedYear: subjectsOfferedYear,
-            SubjectsOffered: subjectsOffered);
+            SubjectsOffered: subjectsOffered,
+            QuintileCode: school.QuintileCode,
+            Email: school.Email,
+            Telephone: school.Telephone,
+            Sector: school.Sector?.ToString(),
+            Phase: school.Phase?.ToString(),
+            LandOwnership: school.LandOwnership?.ToString(),
+            BuildingOwnership: school.BuildingOwnership?.ToString(),
+            IsSection21: school.IsSection21,
+            IsNoFeeSchool: school.IsNoFeeSchool,
+            UrbanRural: school.UrbanRural?.ToString(),
+            Enrolment: school.Enrolment is null
+                ? null
+                : new SchoolEnrolmentOutput(
+                    school.Enrolment.Year,
+                    school.Enrolment.Learners,
+                    school.Enrolment.Educators));
 
         return MatricDasbhoard.Shared.Result<SchoolDetailOutput>.Success(detail);
     }
@@ -1110,8 +1141,8 @@ internal sealed class DashboardService : IDashboardService
         /// <summary>School education district.</summary>
         public string District { get; init; } = string.Empty;
 
-        /// <summary>School quintile.</summary>
-        public int Quintile { get; init; }
+        /// <summary>School quintile, null when not published.</summary>
+        public int? Quintile { get; init; }
 
         /// <summary>Learners who wrote the subject.</summary>
         public int TotalWrote { get; init; }

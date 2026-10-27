@@ -17,8 +17,8 @@ public class SubjectSchoolResponse
     /// <summary>Education district of the school.</summary>
     public string District { get; init; } = string.Empty;
 
-    /// <summary>School quintile (1-5).</summary>
-    public int Quintile { get; init; }
+    /// <summary>School quintile (1-5), null when not published.</summary>
+    public int? Quintile { get; init; }
 
     /// <summary>Learners who wrote the subject.</summary>
     public int TotalWrote { get; init; }

@@ -37,6 +37,10 @@ clean-school-names:
 clean-school-names-apply:
     ./scripts/apply_clean_school_names.sh
 
+# Import contact details and learner/educator counts from the DBE EMIS masterlist
+school-profiles:
+    ./scripts/import_school_profiles.sh
+
 # Add a new EF Core migration
 migrate name:
     dotnet ef migrations add {{name}} \

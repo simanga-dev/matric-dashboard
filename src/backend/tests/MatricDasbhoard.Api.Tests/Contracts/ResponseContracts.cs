@@ -51,7 +51,7 @@ internal record SubjectDetailContract(string Code, string Name, bool IsGateway, 
     List<SubjectRegionContract> Districts);
 
 /// <summary>Frozen school result row in a subject school list.</summary>
-internal record SubjectSchoolContract(string Id, string Name, string Province, string District, int Quintile,
+internal record SubjectSchoolContract(string Id, string Name, string Province, string District, int? Quintile,
     int TotalWrote, int? Achieved, double? PercentAchieved);
 
 /// <summary>Frozen paginated subject school list contract.</summary>

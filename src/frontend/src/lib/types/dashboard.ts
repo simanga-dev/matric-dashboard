@@ -72,7 +72,10 @@ export interface SchoolDetail {
 	province: string;
 	circuit: string;
 	centreNumber: string;
-	quintile: number;
+	/** Socio-economic quintile (1–5), null when no source publishes one. */
+	quintile: number | null;
+	/** Raw DBE masterlist quintile value (e.g. "Q3", "N/A"), null when absent. */
+	quintileCode?: string | null;
 	totalWrote: number;
 	totalPassed: number;
 	passRate: number;
@@ -81,6 +84,31 @@ export interface SchoolDetail {
 	comparison: SchoolComparison;
 	subjectsOfferedYear: number | null;
 	subjectsOffered: OfferedSubject[];
+	/** School email address, null when the masterlist has none. */
+	email?: string | null;
+	/** Telephone in E.164 form, null when the masterlist has none. */
+	telephone?: string | null;
+	/** "Public" or "Independent", null when unknown. */
+	sector?: string | null;
+	/** Phase of schooling, null when unknown. */
+	phase?: string | null;
+	/** Normalized land ownership, null when unknown. */
+	landOwnership?: string | null;
+	/** Normalized building ownership, null when unknown. */
+	buildingOwnership?: string | null;
+	isSection21?: boolean | null;
+	isNoFeeSchool?: boolean | null;
+	/** "Urban" or "Rural", null when unknown. */
+	urbanRural?: string | null;
+	/** Latest learner and educator counts, null when no masterlist data exists. */
+	enrolment?: SchoolEnrolment | null;
+}
+
+/** Learner and educator counts for a single year. */
+export interface SchoolEnrolment {
+	year: number;
+	learners: number | null;
+	educators: number | null;
 }
 
 export interface SchoolList {
@@ -198,7 +226,8 @@ export interface SubjectSchool {
 	name: string;
 	province: string;
 	district: string;
-	quintile: number;
+	/** School quintile (1–5), null when not published. */
+	quintile: number | null;
 	totalWrote: number;
 	achieved: number | null;
 	percentAchieved: number | null;

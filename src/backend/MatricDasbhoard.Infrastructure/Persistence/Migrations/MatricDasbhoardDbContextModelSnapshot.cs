@@ -29,6 +29,14 @@ namespace MatricDasbhoard.Infrastructure.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("BuildingOwnership")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("BuildingOwnershipRaw")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("CentreName")
                         .IsRequired()
                         .HasMaxLength(500)
@@ -56,6 +64,10 @@ namespace MatricDasbhoard.Infrastructure.Persistence.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("Email")
+                        .HasMaxLength(320)
+                        .HasColumnType("character varying(320)");
+
                     b.Property<string>("EmisNumber")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -66,19 +78,56 @@ namespace MatricDasbhoard.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
+                    b.Property<bool?>("IsNoFeeSchool")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool?>("IsSection21")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("LandOwnership")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("LandOwnershipRaw")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int?>("MasterlistDataYear")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Phase")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<string>("Province")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<int>("Quintile")
+                    b.Property<int?>("Quintile")
                         .HasColumnType("integer");
+
+                    b.Property<string>("QuintileCode")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
+                    b.Property<string>("Sector")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Telephone")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid?>("UpdatedBy")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("UrbanRural")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.HasKey("Id");
 
@@ -95,6 +144,61 @@ namespace MatricDasbhoard.Infrastructure.Persistence.Migrations
                         .HasDatabaseName("IX_Schools_Province");
 
                     b.ToTable("Schools", "marks");
+                });
+
+            modelBuilder.Entity("MatricDasbhoard.Domain.Entities.SchoolEnrolment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CreatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("DeletedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<int?>("Educators")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<int?>("Learners")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("SchoolId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("UpdatedBy")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IsDeleted");
+
+                    b.HasIndex("Year")
+                        .HasDatabaseName("IX_SchoolEnrolments_Year");
+
+                    b.HasIndex("SchoolId", "Year")
+                        .IsUnique()
+                        .HasDatabaseName("IX_SchoolEnrolments_SchoolId_Year");
+
+                    b.ToTable("SchoolEnrolments", "marks");
                 });
 
             modelBuilder.Entity("MatricDasbhoard.Domain.Entities.SchoolPerformance", b =>
@@ -775,6 +879,17 @@ namespace MatricDasbhoard.Infrastructure.Persistence.Migrations
                     b.ToTable("UserTokens", "auth");
                 });
 
+            modelBuilder.Entity("MatricDasbhoard.Domain.Entities.SchoolEnrolment", b =>
+                {
+                    b.HasOne("MatricDasbhoard.Domain.Entities.School", "School")
+                        .WithMany("Enrolments")
+                        .HasForeignKey("SchoolId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("School");
+                });
+
             modelBuilder.Entity("MatricDasbhoard.Domain.Entities.SchoolPerformance", b =>
                 {
                     b.HasOne("MatricDasbhoard.Domain.Entities.School", "School")
@@ -901,6 +1016,8 @@ namespace MatricDasbhoard.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("MatricDasbhoard.Domain.Entities.School", b =>
                 {
+                    b.Navigation("Enrolments");
+
                     b.Navigation("Performances");
 
                     b.Navigation("SubjectPerformances");

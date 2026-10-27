@@ -111,7 +111,25 @@ internal static class DashboardMapper
         Years = output.Years.Select(y => y.ToResponse()).ToList(),
         Comparison = output.Comparison.ToResponse(),
         SubjectsOfferedYear = output.SubjectsOfferedYear,
-        SubjectsOffered = output.SubjectsOffered?.Select(s => s.ToResponse()).ToList() ?? []
+        SubjectsOffered = output.SubjectsOffered?.Select(s => s.ToResponse()).ToList() ?? [],
+        QuintileCode = output.QuintileCode,
+        Email = output.Email,
+        Telephone = output.Telephone,
+        Sector = output.Sector,
+        Phase = output.Phase,
+        LandOwnership = output.LandOwnership,
+        BuildingOwnership = output.BuildingOwnership,
+        IsSection21 = output.IsSection21,
+        IsNoFeeSchool = output.IsNoFeeSchool,
+        UrbanRural = output.UrbanRural,
+        Enrolment = output.Enrolment is null
+            ? null
+            : new SchoolEnrolmentResponse
+            {
+                Year = output.Enrolment.Year,
+                Learners = output.Enrolment.Learners,
+                Educators = output.Enrolment.Educators
+            }
     };
 
     extension(OfferedSubjectOutput output)

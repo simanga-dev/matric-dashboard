@@ -10,7 +10,8 @@
 	let { children, data } = $props();
 
 	// The overview is a full-bleed workspace: it manages its own height and
-	// wants no page padding or card frame around it.
+	// wants no page padding. Its header sits on the shell background and the
+	// workspace below it is framed as a single bordered card.
 	let fullBleed = $derived(page.route.id === '/(app)/overview');
 
 	// The school profile already lives inside the inset surface. Adding a
@@ -39,7 +40,7 @@
 	<AppSidebar user={data.user} />
 	<Sidebar.Inset
 		class={fullBleed
-			? 'md:m-0 md:rounded-none md:shadow-none'
+			? 'bg-transparent md:m-0 md:rounded-none md:shadow-none'
 			: 'md:my-2 md:me-2 md:rounded-xl md:shadow-sm'}
 	>
 		<ContentHeader borderless={fullBleed} />
@@ -50,7 +51,8 @@
 		<div
 			class={cn(
 				'flex min-h-0 flex-1 flex-col bg-background',
-				framedPage && 'md:m-2 md:rounded-xl md:shadow-sm'
+				framedPage && 'md:m-2 md:rounded-xl md:shadow-sm',
+				fullBleed && 'overflow-hidden md:mb-2 md:me-2 md:rounded-xl md:border md:border-border/60'
 			)}
 		>
 			<div

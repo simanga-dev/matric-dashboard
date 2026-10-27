@@ -2,6 +2,7 @@ using System.Text.Json;
 using MatricDasbhoard.Api.Tests.Contracts;
 using MatricDasbhoard.Application.Features.Dashboard.Dtos;
 using MatricDasbhoard.WebApi.Features.Dashboard;
+using MatricDasbhoard.WebApi.Features.Dashboard.Dtos;
 
 namespace MatricDasbhoard.Api.Tests.Features.Dashboard;
 
@@ -30,7 +31,18 @@ public class DashboardMapperTests
             SubjectsOffered:
             [
                 new OfferedSubjectOutput("history", "History", 2023, 20, 85.0)
-            ]);
+            ],
+            QuintileCode: "Q3",
+            Email: "admin@alpha.co.za",
+            Telephone: "+27111234567",
+            Sector: "Public",
+            Phase: "Secondary",
+            LandOwnership: "Government",
+            BuildingOwnership: "Government",
+            IsSection21: true,
+            IsNoFeeSchool: true,
+            UrbanRural: "Urban",
+            Enrolment: new SchoolEnrolmentOutput(2025, 1200, 40));
 
         var response = output.ToResponse();
 
@@ -68,9 +80,57 @@ public class DashboardMapperTests
         var offeredJson = document.RootElement.GetProperty("subjectsOffered");
         Assert.Equal(JsonValueKind.Array, offeredJson.ValueKind);
         Assert.Equal("history", offeredJson[0].GetProperty("code").GetString());
+        Assert.Equal("Q3", response.QuintileCode);
+        Assert.Equal("admin@alpha.co.za", response.Email);
+        Assert.Equal("+27111234567", response.Telephone);
+        Assert.Equal("Public", response.Sector);
+        Assert.Equal("Secondary", response.Phase);
+        Assert.Equal("Government", response.LandOwnership);
+        Assert.Equal("Government", response.BuildingOwnership);
+        Assert.True(response.IsSection21);
+        Assert.True(response.IsNoFeeSchool);
+        Assert.Equal("Urban", response.UrbanRural);
+        var enrolment = Assert.IsType<SchoolEnrolmentResponse>(response.Enrolment);
+        Assert.Equal(2025, enrolment.Year);
+        Assert.Equal(1200, enrolment.Learners);
+        Assert.Equal(40, enrolment.Educators);
+        Assert.Equal("admin@alpha.co.za", document.RootElement.GetProperty("email").GetString());
+        Assert.Equal(1200, document.RootElement.GetProperty("enrolment").GetProperty("learners").GetInt32());
         Assert.Equal(2023, offeredJson[0].GetProperty("year").GetInt32());
         Assert.Equal(85.0, offeredJson[0].GetProperty("percentAchieved").GetDouble());
         Assert.Equal(2024, document.RootElement.GetProperty("subjectsOfferedYear").GetInt32());
+    }
+
+    [Fact]
+    public void SchoolDetail_WithoutMasterlistProfile_MapsNulls()
+    {
+        var output = new SchoolDetailOutput(
+            "1003",
+            "GAMMA PRIMARY",
+            "NORTH WEST",
+            "Bojanala",
+            "7654321",
+            Quintile: null,
+            TotalWrote: 0,
+            TotalPassed: 0,
+            PassRate: 0,
+            Years: [],
+            Comparison: new SchoolComparisonOutput(0, 0, null, null, 2024));
+
+        var response = output.ToResponse();
+
+        Assert.Null(response.Quintile);
+        Assert.Null(response.QuintileCode);
+        Assert.Null(response.Email);
+        Assert.Null(response.Telephone);
+        Assert.Null(response.Sector);
+        Assert.Null(response.Phase);
+        Assert.Null(response.LandOwnership);
+        Assert.Null(response.BuildingOwnership);
+        Assert.Null(response.IsSection21);
+        Assert.Null(response.IsNoFeeSchool);
+        Assert.Null(response.UrbanRural);
+        Assert.Null(response.Enrolment);
     }
 
     [Fact]

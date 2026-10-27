@@ -275,7 +275,7 @@
 									</span>
 								</Table.Cell>
 								<Table.Cell class="hidden text-right tabular-nums lg:table-cell">
-									{school.quintile > 0 ? school.quintile : '-'}
+									{school.quintile !== null && school.quintile > 0 ? school.quintile : '-'}
 								</Table.Cell>
 								<Table.Cell class="text-right tabular-nums">
 									{school.totalWrote.toLocaleString()}

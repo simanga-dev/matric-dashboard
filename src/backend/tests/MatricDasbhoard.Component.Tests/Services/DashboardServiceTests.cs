@@ -1,6 +1,7 @@
 using MatricDasbhoard.Component.Tests.Fixtures;
 using MatricDasbhoard.Application.Features.Dashboard.Dtos;
 using MatricDasbhoard.Domain.Entities;
+using MatricDasbhoard.Domain.Enums;
 using MatricDasbhoard.Infrastructure.Features.Dashboard.Services;
 using MatricDasbhoard.Infrastructure.Persistence;
 using MatricDasbhoard.Shared;
@@ -1057,6 +1058,57 @@ public class DashboardServiceTests
         db.Schools.AddRange(a, b, c, d, e, notOffered);
         await db.SaveChangesAsync();
         return new DashboardService(db, new MeilisearchClient(UnreachableSearch()));
+    }
+
+    /// <summary>Detail returns the masterlist profile and the most recent enrolment row.</summary>
+    [Fact]
+    public async Task Detail_ReturnsProfileAndMostRecentEnrolment()
+    {
+        await using var db = TestDbContextFactory.Create();
+        var school = School("100", "Profile School");
+        school.AddPerformance(new SchoolPerformance(2024, 0, 10, 8, 80));
+        school.ApplyMasterlistProfile(new SchoolMasterlistProfile(
+            Email: "admin@profile.co.za",
+            Telephone: "+27111234567",
+            LandOwnership: OwnershipType.Government,
+            LandOwnershipRaw: "Govt",
+            BuildingOwnership: OwnershipType.Government,
+            BuildingOwnershipRaw: "Govt Education",
+            IsSection21: true,
+            IsNoFeeSchool: true,
+            UrbanRural: SettlementType.Urban,
+            Sector: SchoolSector.Public,
+            Phase: SchoolPhase.Secondary,
+            Quintile: 4,
+            QuintileCode: "Q4",
+            DataYear: 2025));
+        school.AddEnrolment(new SchoolEnrolment(2024, 1100, 38));
+        school.AddEnrolment(new SchoolEnrolment(2025, 1200, 40));
+        db.Schools.Add(school);
+        await db.SaveChangesAsync();
+        using var http = UnreachableSearch();
+        var service = new DashboardService(db, new MeilisearchClient(http));
+
+        var result = await service.GetSchoolByIdAsync("100");
+
+        Assert.True(result.IsSuccess);
+        var detail = result.Value;
+        // The report's quintile wins over the masterlist's, but the raw code is kept.
+        Assert.Equal(3, detail.Quintile);
+        Assert.Equal("Q4", detail.QuintileCode);
+        Assert.Equal("admin@profile.co.za", detail.Email);
+        Assert.Equal("+27111234567", detail.Telephone);
+        Assert.Equal("Public", detail.Sector);
+        Assert.Equal("Secondary", detail.Phase);
+        Assert.Equal("Government", detail.LandOwnership);
+        Assert.Equal("Government", detail.BuildingOwnership);
+        Assert.True(detail.IsSection21);
+        Assert.True(detail.IsNoFeeSchool);
+        Assert.Equal("Urban", detail.UrbanRural);
+        Assert.NotNull(detail.Enrolment);
+        Assert.Equal(2025, detail.Enrolment.Year);
+        Assert.Equal(1200, detail.Enrolment.Learners);
+        Assert.Equal(40, detail.Enrolment.Educators);
     }
 
     private static School School(string id, string name, string province = "GAUTENG") =>

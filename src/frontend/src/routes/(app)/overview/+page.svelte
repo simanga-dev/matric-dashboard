@@ -200,10 +200,10 @@
 		min-width: 0;
 	}
 	/* Wide layout is side-by-side, so let it fill the app shell. The shell
-	   reserves only the header above the workspace. */
+	   reserves the header above the workspace and the card's bottom margin. */
 	@media (min-width: 1200px) {
 		.workspace {
-			height: calc(100dvh - var(--header-height, 3rem));
+			height: calc(100dvh - var(--header-height, 3rem) - 0.5rem);
 		}
 	}
 </style>
