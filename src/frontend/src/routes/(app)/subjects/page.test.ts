@@ -63,18 +63,7 @@ async function render(path: string) {
 	const target = document.createElement('div');
 	document.body.append(target);
 	component = mount(SubjectsPage, {
-		target,
-		props: {
-			data: {
-				schools: [],
-				user: null,
-				backendError: null,
-				hadSession: false,
-				locale: 'en',
-				apiUrl: undefined,
-				sidebarOpen: true
-			}
-		}
+		target
 	});
 	await tick();
 	await navigate(path);
@@ -278,20 +267,6 @@ describe('subject list', () => {
 		expect(summary?.textContent).toContain('42');
 		// (150 + 90) / (300 + 100): History has no achievement count and is excluded.
 		expect(summary?.textContent).toContain('60.0%');
-	});
-
-	it('filters subjects by name', async () => {
-		await render('/subjects');
-		const input = document.querySelector<HTMLInputElement>(
-			'input[aria-label="Filter subjects by name"]'
-		);
-		expect(input).not.toBeNull();
-		input!.value = 'MATH';
-		input!.dispatchEvent(new Event('input', { bubbles: true }));
-		await tick();
-
-		expect(tableNames()).toEqual(['Mathematics']);
-		expect(document.querySelectorAll('[data-subject-bar]')).toHaveLength(1);
 	});
 
 	it('sorts the table by column with unavailable values last', async () => {

@@ -7,23 +7,17 @@
 	import { EmptyState } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card';
 	import * as Table from '$lib/components/ui/table';
-	import * as Select from '$lib/components/ui/select';
 	import { Button } from '$lib/components/ui/button';
-	import { Input } from '$lib/components/ui/input';
+	import { Skeleton } from '$lib/components/ui/skeleton';
 	import StatCard from '$lib/components/dashboard/StatCard.svelte';
 	import SubjectPassRateChart from '$lib/components/dashboard/SubjectPassRateChart.svelte';
 	import type { SubjectBar } from '$lib/components/dashboard/subject-bar';
 	import YearPills from '$lib/components/dashboard/YearPills.svelte';
 	import { passRateColor } from '$lib/components/dashboard/school-hierarchy';
 	import { subjectHref } from '$lib/components/dashboard/subject-url';
-	import {
-		fetchRegionSubjects,
-		fetchSchoolById,
-		fetchSchoolSubjects,
-		fetchSchools
-	} from '$lib/api/dashboard';
-	import { cn, toTitleCase } from '$lib/utils';
-	import type { RegionSubjects, School, SchoolSubjects } from '$lib/types/dashboard';
+	import { fetchRegionSubjects, fetchSchoolById, fetchSchoolSubjects } from '$lib/api/dashboard';
+	import { toTitleCase } from '$lib/utils';
+	import type { RegionSubjects, SchoolSubjects } from '$lib/types/dashboard';
 	import {
 		ArrowDown,
 		ArrowUp,
@@ -31,15 +25,8 @@
 		Building2,
 		ChevronsUpDown,
 		Percent,
-		Search,
-		Users,
-		X
+		Users
 	} from '@lucide/svelte';
-	import type { PageData } from './$types';
-
-	let { data }: { data: PageData } = $props();
-
-	const ALL = '__all__';
 	const searchParams = page.url.searchParams;
 	const initialSchoolId = searchParams.get('school');
 
@@ -55,27 +42,6 @@
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 	let requestId = 0;
-
-	let searchQuery = $state('');
-	let searching = $state(false);
-	let searched = $state(false);
-	let searchError = $state<string | null>(null);
-	let results = $state<School[]>([]);
-
-	let provinces = $derived(
-		[...new Set(data.schools.map((school) => school.province))].sort((a, b) => a.localeCompare(b))
-	);
-	let districts = $derived(
-		province
-			? [
-					...new Set(
-						data.schools
-							.filter((school) => school.province === province)
-							.map((school) => school.circuit)
-					)
-				].sort((a, b) => a.localeCompare(b))
-			: []
-	);
 
 	let isSchoolScope = $derived(schoolId !== null);
 	let availableYears = $derived(
@@ -140,19 +106,13 @@
 		return isSchoolScope ? subjectHref(code) : subjectHref(code, { province, district, year });
 	}
 
-	let filterQuery = $state('');
-	let filteredRows = $derived.by(() => {
-		const needle = filterQuery.trim().toLowerCase();
-		return needle ? rows.filter((row) => row.name.toLowerCase().includes(needle)) : rows;
-	});
-
 	type SortKey = 'name' | 'totalWrote' | 'achieved' | 'percentAchieved' | 'schoolCount';
 	let sortKey = $state<SortKey>('name');
 	let sortDir = $state<'asc' | 'desc'>('asc');
 
 	let sortedRows = $derived.by(() => {
 		const direction = sortDir === 'asc' ? 1 : -1;
-		return [...filteredRows].sort((a, b) => {
+		return [...rows].sort((a, b) => {
 			if (sortKey === 'name') return a.name.localeCompare(b.name) * direction;
 			const left = a[sortKey];
 			const right = b[sortKey];
@@ -178,7 +138,7 @@
 	}
 
 	let bars = $derived<SubjectBar[]>(
-		filteredRows.map((row) => ({
+		rows.map((row) => ({
 			name: row.name,
 			totalWrote: row.totalWrote,
 			percentAchieved: row.percentAchieved,
@@ -211,10 +171,6 @@
 		year = Number(params.get('year')) || null;
 		region = null;
 		schoolSubjects = null;
-		searchQuery = '';
-		results = [];
-		searched = false;
-		searchError = null;
 		reload(year);
 		ready = true;
 	});
@@ -288,62 +244,13 @@
 		}
 	}
 
-	function selectProvince(value: string | undefined) {
-		province = value === ALL || !value ? null : value;
-		district = null;
-		reload();
-	}
-
-	function selectDistrict(value: string | undefined) {
-		district = value === ALL || !value ? null : value;
-		reload();
-	}
-
 	function selectYear(value: number) {
 		year = value;
 		reload(value);
 	}
 
-	function selectSchool(school: School) {
-		schoolId = school.id;
-		schoolName = school.name;
-		province = null;
-		district = null;
-		searchQuery = school.name;
-		results = [];
-		searched = false;
-		searchError = null;
-		reload();
-	}
-
-	function clearSchool() {
-		schoolId = null;
-		schoolName = null;
-		searchQuery = '';
-		reload();
-	}
-
-	async function searchSchools() {
-		const query = searchQuery.trim();
-		if (!query) {
-			results = [];
-			searched = false;
-			searchError = null;
-			return;
-		}
-		searching = true;
-		searched = true;
-		searchError = null;
-		try {
-			const list = await fetchSchools({ pageNumber: 1, pageSize: 10, search: query });
-			results = list.items;
-		} catch (e) {
-			results = [];
-			searchError = e instanceof Error ? e.message : 'Failed to search schools';
-		} finally {
-			searching = false;
-		}
-	}
+	// Placeholder bar heights for the loading chart, descending like the real one.
+	const skeletonBars = [96, 90, 88, 85, 82, 78, 76, 74, 70, 66, 58];
 
 	function retryLoad() {
 		reload(year);
@@ -368,154 +275,94 @@
 <div class="flex flex-1 flex-col">
 	<div class="@container/main flex flex-1 flex-col gap-2">
 		<div class="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-			<div class="space-y-3 px-4 lg:px-6">
-				<div class="flex flex-wrap items-center gap-2">
-					<Select.Root
-						type="single"
-						value={province ?? ALL}
-						onValueChange={selectProvince}
-						disabled={isSchoolScope}
-					>
-						<Select.Trigger class="h-8 w-48" aria-label="Province">
-							<span class={cn(!province && 'text-muted-foreground')}>
-								{province ? toTitleCase(province) : 'All provinces'}
-							</span>
-						</Select.Trigger>
-						<Select.Content>
-							<Select.Item value={ALL}>All provinces</Select.Item>
-							{#each provinces as option (option)}
-								<Select.Item value={option}>{toTitleCase(option)}</Select.Item>
-							{/each}
-						</Select.Content>
-					</Select.Root>
-
-					<Select.Root
-						type="single"
-						value={district ?? ALL}
-						onValueChange={selectDistrict}
-						disabled={!province || isSchoolScope}
-					>
-						<Select.Trigger class="h-8 w-52" aria-label="District">
-							<span class={cn(!district && 'text-muted-foreground')}>
-								{district ? toTitleCase(district) : 'All districts'}
-							</span>
-						</Select.Trigger>
-						<Select.Content>
-							<Select.Item value={ALL}>All districts</Select.Item>
-							{#each districts as option (option)}
-								<Select.Item value={option}>{toTitleCase(option)}</Select.Item>
-							{/each}
-						</Select.Content>
-					</Select.Root>
-
-					{#if isSchoolScope}
-						<Button variant="outline" size="sm" onclick={clearSchool}>
-							<X class="size-3.5" />
-							Clear school
-						</Button>
-					{/if}
-
-					<form
-						class="flex items-center gap-2"
-						onsubmit={(event) => {
-							event.preventDefault();
-							void searchSchools();
-						}}
-					>
-						<Input
-							bind:value={searchQuery}
-							placeholder="Or search for a school..."
-							aria-label="Search schools"
-							class="h-8 w-64"
-						/>
-						<Button
-							type="submit"
-							variant="outline"
-							size="icon-sm"
-							disabled={searching}
-							aria-label="Search schools"
-						>
-							<Search class="size-3.5" />
-						</Button>
-					</form>
-
-					<Input
-						bind:value={filterQuery}
-						placeholder="Filter subjects..."
-						aria-label="Filter subjects by name"
-						class="ms-auto h-8 w-56"
-					/>
-				</div>
-
-				{#if searching}
-					<p role="status" class="text-sm text-muted-foreground">Searching…</p>
-				{:else if searchError}
-					<p role="alert" class="text-sm text-destructive">{searchError}</p>
-				{:else if results.length > 0}
-					<ul class="divide-y rounded-md border">
-						{#each results as result (result.id)}
-							<li>
-								<button
-									type="button"
-									class="flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm transition-colors hover:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-									onclick={() => selectSchool(result)}
-								>
-									<span class="min-w-0 flex-1 truncate font-medium">{toTitleCase(result.name)}</span
-									>
-									<span class="shrink-0 text-xs text-muted-foreground">
-										{toTitleCase(result.province)} · {result.totalWrote.toLocaleString()} wrote
-									</span>
-								</button>
-							</li>
-						{/each}
-					</ul>
-				{:else if searched}
-					<p class="text-sm text-muted-foreground">No schools match "{searchQuery.trim()}".</p>
-				{/if}
-			</div>
-
 			<div
 				class="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card"
 				aria-label="Scope summary"
 			>
-				<StatCard title="Subjects offered" value={rows.length.toLocaleString()} icon={BookMarked} />
-				<StatCard title="Subject entries" value={totalWrote.toLocaleString()} icon={Users} />
-				{#if schoolCount !== null}
-					<StatCard title="Schools" value={schoolCount.toLocaleString()} icon={Building2} />
+				{#if loading}
+					{#each { length: 4 }, index (index)}
+						<Card.Root class="@container/card" aria-hidden="true">
+							<Card.Header class="gap-3">
+								<div class="flex items-center justify-between">
+									<Skeleton class="h-4 w-28" />
+									<Skeleton class="size-4 rounded-full" />
+								</div>
+								<Skeleton class="h-8 w-24" />
+							</Card.Header>
+						</Card.Root>
+					{/each}
+				{:else}
+					<StatCard
+						title="Subjects offered"
+						value={rows.length.toLocaleString()}
+						icon={BookMarked}
+					/>
+					<StatCard title="Subject entries" value={totalWrote.toLocaleString()} icon={Users} />
+					{#if schoolCount !== null}
+						<StatCard title="Schools" value={schoolCount.toLocaleString()} icon={Building2} />
+					{/if}
+					<StatCard
+						title="Overall subject pass rate"
+						value={overallPassRate === null ? '–' : `${overallPassRate.toFixed(1)}%`}
+						valueColor={overallPassRate === null ? undefined : passRateColor(overallPassRate)}
+						icon={Percent}
+					/>
 				{/if}
-				<StatCard
-					title="Overall subject pass rate"
-					value={overallPassRate === null ? '–' : `${overallPassRate.toFixed(1)}%`}
-					valueColor={overallPassRate === null ? undefined : passRateColor(overallPassRate)}
-					icon={Percent}
-				/>
 			</div>
 
 			<div class="px-4 lg:px-6">
 				<Card.Root class="@container/card">
 					<Card.Header>
 						<div class="flex flex-wrap items-start justify-between gap-3">
-							<div>
-								<Card.Title class="flex items-center gap-2 text-base">
-									<BookMarked class="size-4 text-primary" />
-									{scopeName}
-								</Card.Title>
-								<Card.Description>
-									Subject pass rate · {scopeKind}{year ? ` · ${year}` : ''}{schoolCount !== null
-										? ` · ${schoolCount.toLocaleString()} schools`
-										: ''}
-								</Card.Description>
-							</div>
-							{#if availableYears.length > 0}
+							{#if loading}
+								<div class="space-y-2" aria-hidden="true">
+									<Skeleton class="h-5 w-40" />
+									<Skeleton class="h-4 w-64" />
+								</div>
+							{:else}
+								<div>
+									<Card.Title class="flex items-center gap-2 text-base">
+										<BookMarked class="size-4 text-primary" />
+										{scopeName}
+									</Card.Title>
+									<Card.Description>
+										Subject pass rate · {scopeKind}{year ? ` · ${year}` : ''}{schoolCount !== null
+											? ` · ${schoolCount.toLocaleString()} schools`
+											: ''}
+									</Card.Description>
+								</div>
+							{/if}
+							{#if loading}
+								<div class="flex gap-2" aria-hidden="true">
+									{#each { length: 6 }, index (index)}
+										<Skeleton class="h-6 w-14 rounded-full" />
+									{/each}
+								</div>
+							{:else if availableYears.length > 0}
 								<YearPills years={availableYears} selected={year} onSelect={selectYear} />
 							{/if}
 						</div>
 					</Card.Header>
 					<Card.Content>
 						{#if loading}
-							<p role="status" class="flex h-64 items-center justify-center text-muted-foreground">
-								Loading subject results…
-							</p>
+							<div role="status" aria-label="Loading subject results">
+								<div class="mb-3 flex gap-4">
+									<Skeleton class="h-3 w-24" />
+									<Skeleton class="h-3 w-24" />
+								</div>
+								<div class="ms-9 flex h-56 items-end gap-2 pt-6">
+									{#each skeletonBars as height, index (index)}
+										<Skeleton class="min-w-16 flex-1 rounded-b-none" style="height: {height}%" />
+									{/each}
+								</div>
+								<div class="ms-9 mt-2 flex gap-2">
+									{#each skeletonBars, index (index)}
+										<div class="flex min-w-16 flex-1 justify-center">
+											<Skeleton class="h-3 w-3/4" />
+										</div>
+									{/each}
+								</div>
+							</div>
 						{:else if error}
 							<div class="flex h-64 flex-col items-center justify-center gap-3">
 								<p role="alert" class="text-sm text-destructive">{error}</p>
@@ -523,10 +370,6 @@
 							</div>
 						{:else if availableYears.length === 0}
 							<EmptyState icon={BookMarked} message="No subject data for this scope." />
-						{:else if filteredRows.length === 0}
-							<p class="py-12 text-center text-sm text-muted-foreground">
-								No subjects match "{filterQuery.trim()}".
-							</p>
 						{:else}
 							<SubjectPassRateChart subjects={bars} headlineYear={year} />
 						{/if}
@@ -534,13 +377,34 @@
 				</Card.Root>
 			</div>
 
-			{#if !loading && !error && rows.length > 0 && filteredRows.length > 0}
+			{#if loading}
+				<div class="px-4 lg:px-6" aria-hidden="true">
+					<Card.Root>
+						<Card.Header class="gap-2">
+							<Skeleton class="h-5 w-36" />
+							<Skeleton class="h-4 w-48" />
+						</Card.Header>
+						<Card.Content class="space-y-3">
+							<Skeleton class="h-8 w-full" />
+							{#each { length: 6 }, index (index)}
+								<div class="flex items-center gap-6">
+									<Skeleton class="h-4 flex-1" />
+									<Skeleton class="h-4 w-20" />
+									<Skeleton class="h-4 w-20" />
+									<Skeleton class="h-4 w-16" />
+									<Skeleton class="h-4 w-16" />
+								</div>
+							{/each}
+						</Card.Content>
+					</Card.Root>
+				</div>
+			{:else if !error && rows.length > 0}
 				<div class="px-4 lg:px-6">
 					<Card.Root>
 						<Card.Header>
 							<Card.Title class="text-base">Subject results</Card.Title>
 							<Card.Description>
-								{filteredRows.length} of {rows.length} subjects · {totalWrote.toLocaleString()} wrote
+								{rows.length} subjects · {totalWrote.toLocaleString()} wrote
 							</Card.Description>
 						</Card.Header>
 						<Card.Content>

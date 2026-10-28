@@ -150,250 +150,250 @@
 	/>
 </svelte:head>
 
-<div class="mx-auto w-full max-w-7xl space-y-6">
-	<Breadcrumb.Root>
-		<Breadcrumb.List>
-			<Breadcrumb.Item>
-				<Breadcrumb.Link href={resolve(subjectsListHref(scope))}>Subjects</Breadcrumb.Link>
-			</Breadcrumb.Item>
-			<Breadcrumb.Separator />
-			<Breadcrumb.Item>
-				<Breadcrumb.Page>{subjectName}</Breadcrumb.Page>
-			</Breadcrumb.Item>
-		</Breadcrumb.List>
-	</Breadcrumb.Root>
-
-	<div class="flex flex-col gap-2">
-		<div class="flex flex-wrap items-center gap-3">
-			<h1 class="text-2xl font-semibold tracking-tight">{subjectName}</h1>
-			{#if detail?.isGateway}
-				<Badge variant="secondary">Gateway subject</Badge>
-			{/if}
-		</div>
-		<p class="max-w-2xl text-sm text-muted-foreground">
-			{#if detail}
-				{scopeKind} results for {scopeLabel}{detail.year ? ` in ${detail.year}` : ''}. Pick a
-				province, district or year below, or drill into a region.
-			{:else}
-				NSC results for this subject.
-			{/if}
-		</p>
-	</div>
-
-	{#if data.loadError || !detail}
-		<Card.Root>
-			<Card.Content class="flex h-48 flex-col items-center justify-center gap-3">
-				<p role="alert" class="text-sm text-destructive">
-					{data.loadError ?? 'Failed to load subject results'}
-				</p>
-				<Button variant="outline" size="sm" onclick={retry}>Try again</Button>
-			</Card.Content>
-		</Card.Root>
-	{:else}
-		<Card.Root>
-			<Card.Header>
-				<Card.Title class="flex items-center gap-2 text-base">
-					<MapPin class="size-4 text-primary" />
-					Scope
-				</Card.Title>
-				<Card.Description>Narrow the results to a province or district and year.</Card.Description>
-			</Card.Header>
-			<Card.Content class="space-y-4">
-				<div class="flex flex-wrap items-center gap-2">
-					<Select.Root
-						type="single"
-						value={scope.province ?? ALL}
-						onValueChange={selectProvince}
-						disabled={updating}
-					>
-						<Select.Trigger class="h-8 w-full sm:w-48" aria-label="Province">
-							<span class={cn(!scope.province && 'text-muted-foreground')}>
-								{scope.province ? toTitleCase(scope.province) : 'All provinces'}
-							</span>
-						</Select.Trigger>
-						<Select.Content>
-							<Select.Item value={ALL}>All provinces</Select.Item>
-							{#each provinceOptions as option (option)}
-								<Select.Item value={option}>{toTitleCase(option)}</Select.Item>
-							{/each}
-						</Select.Content>
-					</Select.Root>
-
-					{#if scope.province}
+<div class="flex flex-1 flex-col">
+	<div class="@container/main flex flex-1 flex-col gap-2">
+		<div class="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+			<div class="flex flex-wrap items-end justify-between gap-4 px-4 lg:px-6">
+				<div class="space-y-2">
+					<Breadcrumb.Root>
+						<Breadcrumb.List>
+							<Breadcrumb.Item>
+								<Breadcrumb.Link href={resolve(subjectsListHref(scope))}>Subjects</Breadcrumb.Link>
+							</Breadcrumb.Item>
+							<Breadcrumb.Separator />
+							<Breadcrumb.Item>
+								<Breadcrumb.Page>{subjectName}</Breadcrumb.Page>
+							</Breadcrumb.Item>
+						</Breadcrumb.List>
+					</Breadcrumb.Root>
+					<div class="flex flex-wrap items-center gap-3">
+						<h1 class="text-2xl font-semibold tracking-tight">{subjectName}</h1>
+						{#if detail?.isGateway}
+							<Badge variant="secondary">Gateway subject</Badge>
+						{/if}
+					</div>
+					<p class="text-sm text-muted-foreground">
+						{scopeKind} · {scopeLabel}{detail?.year ? ` · ${detail.year}` : ''}
+					</p>
+				</div>
+				{#if detail}
+					<div class="flex flex-wrap items-center gap-2">
 						<Select.Root
 							type="single"
-							value={scope.district ?? ALL}
-							onValueChange={selectDistrict}
+							value={scope.province ?? ALL}
+							onValueChange={selectProvince}
 							disabled={updating}
 						>
-							<Select.Trigger class="h-8 w-full sm:w-52" aria-label="District">
-								<span class={cn(!scope.district && 'text-muted-foreground')}>
-									{scope.district ? toTitleCase(scope.district) : 'All districts'}
+							<Select.Trigger class="h-8 w-full sm:w-48" aria-label="Province">
+								<span class={cn(!scope.province && 'text-muted-foreground')}>
+									{scope.province ? toTitleCase(scope.province) : 'All provinces'}
 								</span>
 							</Select.Trigger>
 							<Select.Content>
-								<Select.Item value={ALL}>All districts</Select.Item>
-								{#each districtOptions as option (option)}
+								<Select.Item value={ALL}>All provinces</Select.Item>
+								{#each provinceOptions as option (option)}
 									<Select.Item value={option}>{toTitleCase(option)}</Select.Item>
 								{/each}
 							</Select.Content>
 						</Select.Root>
 
-						<Button variant="outline" size="sm" onclick={clearScope} disabled={updating}>
-							<X class="size-3.5" />
-							National view
-						</Button>
-					{/if}
+						{#if scope.province}
+							<Select.Root
+								type="single"
+								value={scope.district ?? ALL}
+								onValueChange={selectDistrict}
+								disabled={updating}
+							>
+								<Select.Trigger class="h-8 w-full sm:w-52" aria-label="District">
+									<span class={cn(!scope.district && 'text-muted-foreground')}>
+										{scope.district ? toTitleCase(scope.district) : 'All districts'}
+									</span>
+								</Select.Trigger>
+								<Select.Content>
+									<Select.Item value={ALL}>All districts</Select.Item>
+									{#each districtOptions as option (option)}
+										<Select.Item value={option}>{toTitleCase(option)}</Select.Item>
+									{/each}
+								</Select.Content>
+							</Select.Root>
 
-					{#if updating}
-						<span role="status" class="text-xs text-muted-foreground">Updating...</span>
-					{/if}
-				</div>
+							<Button variant="outline" size="sm" onclick={clearScope} disabled={updating}>
+								<X class="size-3.5" />
+								National view
+							</Button>
+						{/if}
 
-				{#if detail.availableYears.length > 0}
+						{#if updating}
+							<span role="status" class="text-xs text-muted-foreground">Updating...</span>
+						{/if}
+					</div>
+				{/if}
+			</div>
+
+			{#if detail && detail.availableYears.length > 0}<div class="px-4 lg:px-6">
 					<YearPills
 						years={detail.availableYears}
 						selected={detail.year}
 						onSelect={selectYear}
 						disabled={updating}
 					/>
-				{/if}
-			</Card.Content>
-		</Card.Root>
-
-		{#if !hasResults}
-			<Card.Root>
-				<Card.Content>
-					<EmptyState
-						icon={BookMarked}
-						message={`No ${detail.name} results for ${scopeLabel}${scope.year ? ` in ${scope.year}` : ''}.`}
-					/>
-				</Card.Content>
-			</Card.Root>
-		{:else}
-			<div
-				aria-busy={updating}
-				class={cn('space-y-6 motion-safe:transition-opacity', updating && 'opacity-60')}
-			>
-				<div
-					class="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs sm:grid-cols-2 lg:grid-cols-4 dark:*:data-[slot=card]:bg-card"
-				>
-					<StatCard
-						title="Learners who wrote"
-						value={detail.totalWrote.toLocaleString()}
-						trend={relativeChange(current?.totalWrote, previous?.totalWrote)}
-						icon={Users}
-					/>
-					<StatCard
-						title="Achieved (30%+)"
-						value={detail.achieved?.toLocaleString() ?? '-'}
-						trend={relativeChange(current?.achieved, previous?.achieved)}
-						icon={CheckCircle2}
-					/>
-					<StatCard
-						title="Pass rate"
-						value={formatRate(detail.percentAchieved)}
-						valueColor={detail.percentAchieved !== null
-							? passRateColor(detail.percentAchieved)
-							: undefined}
-						trend={passRateDelta}
-						trendUnit=" pts"
-						icon={Percent}
-					/>
-					<StatCard
-						title="Schools offering"
-						value={detail.schoolCount.toLocaleString()}
-						trend={relativeChange(current?.schoolCount, previous?.schoolCount)}
-						icon={Building2}
-					/>
 				</div>
+			{/if}
 
-				<div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+			{#if data.loadError || !detail}
+				<div class="px-4 lg:px-6">
 					<Card.Root>
-						<Card.Header>
-							<Card.Title class="flex items-center gap-2 text-base">
-								<TrendingUp class="size-4 text-primary" />
-								Trend
-							</Card.Title>
-							<Card.Description>
-								Pass rate<InfoTooltip label="subject pass rate" text={metricHelp.subjectPassRate} /> and
-								learners who wrote, {scopeLabel}
-							</Card.Description>
-						</Card.Header>
-						<Card.Content class="space-y-5">
-							<SmoothTrendChart years={trendPoints} height={200} />
-							<div>
-								<p class="mb-2 text-xs font-medium text-muted-foreground">
-									Learners who wrote<InfoTooltip
-										label="subject learners who wrote"
-										text={metricHelp.subjectWrote}
-									/>
-								</p>
-								<ul class="flex h-20 items-end gap-1" aria-label="Learners who wrote by year">
-									{#each detail.trend as point (point.year)}
-										<li class="flex h-full min-w-0 flex-1 flex-col justify-end">
-											<span class="sr-only"
-												>{point.year}: {point.totalWrote.toLocaleString()} wrote</span
-											>
-											<div
-												aria-hidden="true"
-												title={`${point.year}: ${point.totalWrote.toLocaleString()} wrote`}
-												class={cn(
-													'w-full rounded-t-sm motion-safe:transition-[height] motion-safe:duration-500',
-													point.year === detail.year ? 'bg-primary' : 'bg-primary/25'
-												)}
-												style:height={`${Math.max(2, (point.totalWrote / maxTrendWrote) * 100)}%`}
-											></div>
-										</li>
-									{/each}
-								</ul>
-								<div
-									class="mt-1 flex justify-between text-[11px] text-muted-foreground tabular-nums"
-									aria-hidden="true"
-								>
-									<span>{detail.trend[0]?.year}</span>
-									<span>{detail.trend.at(-1)?.year}</span>
-								</div>
-							</div>
+						<Card.Content class="flex h-48 flex-col items-center justify-center gap-3">
+							<p role="alert" class="text-sm text-destructive">
+								{data.loadError ?? 'Failed to load subject results'}
+							</p>
+							<Button variant="outline" size="sm" onclick={retry}>Try again</Button>
 						</Card.Content>
 					</Card.Root>
-
+				</div>
+			{:else if !hasResults}
+				<div class="px-4 lg:px-6">
 					<Card.Root>
-						<Card.Header>
-							<Card.Title class="flex items-center gap-2 text-base">
-								<MapPin class="size-4 text-primary" />
-								{breakdownKind === 'district' ? 'By district' : 'By province'}
-							</Card.Title>
-							<Card.Description>
-								{breakdownKind === 'district'
-									? `Districts in ${toTitleCase(scope.province ?? '')}`
-									: 'Every province'}{detail.year ? ` · ${detail.year}` : ''}. Select a row to drill
-								in.
-							</Card.Description>
-						</Card.Header>
 						<Card.Content>
-							{#if breakdownRows.length === 0}
-								<EmptyState icon={MapPin} message="No regional results for this year." />
-							{:else}
-								<SubjectRegionBreakdown
-									rows={breakdownRows}
-									kind={breakdownKind}
-									selected={breakdownKind === 'district' ? scope.district : scope.province}
-									onSelect={drillInto}
-								/>
-							{/if}
+							<EmptyState
+								icon={BookMarked}
+								message={`No ${detail.name} results for ${scopeLabel}${scope.year ? ` in ${scope.year}` : ''}.`}
+							/>
 						</Card.Content>
 					</Card.Root>
 				</div>
-			</div>
+			{:else}
+				<div
+					aria-busy={updating}
+					class={cn(
+						'flex flex-col gap-4 motion-safe:transition-opacity md:gap-6',
+						updating && 'opacity-60'
+					)}
+				>
+					<div
+						class="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card"
+					>
+						<StatCard
+							title="Learners who wrote"
+							value={detail.totalWrote.toLocaleString()}
+							trend={relativeChange(current?.totalWrote, previous?.totalWrote)}
+							icon={Users}
+						/>
+						<StatCard
+							title="Achieved (30%+)"
+							value={detail.achieved?.toLocaleString() ?? '-'}
+							trend={relativeChange(current?.achieved, previous?.achieved)}
+							icon={CheckCircle2}
+						/>
+						<StatCard
+							title="Pass rate"
+							value={formatRate(detail.percentAchieved)}
+							valueColor={detail.percentAchieved !== null
+								? passRateColor(detail.percentAchieved)
+								: undefined}
+							trend={passRateDelta}
+							trendUnit=" pts"
+							icon={Percent}
+						/>
+						<StatCard
+							title="Schools offering"
+							value={detail.schoolCount.toLocaleString()}
+							trend={relativeChange(current?.schoolCount, previous?.schoolCount)}
+							icon={Building2}
+						/>
+					</div>
 
-			<SubjectSchoolsTable
-				code={data.code}
-				{subjectName}
-				province={scope.province}
-				district={scope.district}
-				year={detail.year}
-			/>
-		{/if}
-	{/if}
+					<div class="grid grid-cols-1 gap-4 px-4 md:gap-6 lg:px-6 @5xl/main:grid-cols-2">
+						<Card.Root>
+							<Card.Header>
+								<Card.Title class="flex items-center gap-2 text-base">
+									<TrendingUp class="size-4 text-primary" />
+									Trend
+								</Card.Title>
+								<Card.Description>
+									Pass rate<InfoTooltip
+										label="subject pass rate"
+										text={metricHelp.subjectPassRate}
+									/> and learners who wrote, {scopeLabel}
+								</Card.Description>
+							</Card.Header>
+							<Card.Content class="space-y-5">
+								<SmoothTrendChart years={trendPoints} height={200} />
+								<div>
+									<p class="mb-2 text-xs font-medium text-muted-foreground">
+										Learners who wrote<InfoTooltip
+											label="subject learners who wrote"
+											text={metricHelp.subjectWrote}
+										/>
+									</p>
+									<ul class="flex h-20 items-end gap-1" aria-label="Learners who wrote by year">
+										{#each detail.trend as point (point.year)}
+											<li class="flex h-full min-w-0 flex-1 flex-col justify-end">
+												<span class="sr-only"
+													>{point.year}: {point.totalWrote.toLocaleString()} wrote</span
+												>
+												<div
+													aria-hidden="true"
+													title={`${point.year}: ${point.totalWrote.toLocaleString()} wrote`}
+													class={cn(
+														'w-full rounded-t-sm motion-safe:transition-[height] motion-safe:duration-500',
+														point.year === detail.year ? 'bg-primary' : 'bg-primary/25'
+													)}
+													style:height={`${Math.max(2, (point.totalWrote / maxTrendWrote) * 100)}%`}
+												></div>
+											</li>
+										{/each}
+									</ul>
+									<div
+										class="mt-1 flex justify-between text-[11px] text-muted-foreground tabular-nums"
+										aria-hidden="true"
+									>
+										<span>{detail.trend[0]?.year}</span>
+										<span>{detail.trend.at(-1)?.year}</span>
+									</div>
+								</div>
+							</Card.Content>
+						</Card.Root>
+
+						<Card.Root>
+							<Card.Header>
+								<Card.Title class="flex items-center gap-2 text-base">
+									<MapPin class="size-4 text-primary" />
+									{breakdownKind === 'district' ? 'By district' : 'By province'}
+								</Card.Title>
+								<Card.Description>
+									{breakdownKind === 'district'
+										? `Districts in ${toTitleCase(scope.province ?? '')}`
+										: 'Every province'}{detail.year ? ` · ${detail.year}` : ''}. Select a row to
+									drill in.
+								</Card.Description>
+							</Card.Header>
+							<Card.Content>
+								{#if breakdownRows.length === 0}
+									<EmptyState icon={MapPin} message="No regional results for this year." />
+								{:else}
+									<SubjectRegionBreakdown
+										rows={breakdownRows}
+										kind={breakdownKind}
+										selected={breakdownKind === 'district' ? scope.district : scope.province}
+										onSelect={drillInto}
+									/>
+								{/if}
+							</Card.Content>
+						</Card.Root>
+					</div>
+				</div>
+
+				<div class="px-4 lg:px-6">
+					<SubjectSchoolsTable
+						code={data.code}
+						{subjectName}
+						province={scope.province}
+						district={scope.district}
+						year={detail.year}
+					/>
+				</div>
+			{/if}
+		</div>
+	</div>
 </div>
