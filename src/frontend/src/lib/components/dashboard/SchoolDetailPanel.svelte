@@ -243,7 +243,7 @@
 	aria-label="School details"
 	class="@container/details flex h-full min-h-0 flex-col bg-card text-card-foreground"
 >
-	<header class="flex min-h-14 shrink-0 items-center gap-2 bg-muted/60 px-3">
+	<header class="flex min-h-10 shrink-0 items-center gap-2 bg-muted/60 px-2">
 		<Building2 class="size-4 shrink-0 text-muted-foreground" />
 		<div class="min-w-0 flex-1">
 			<h2 class="text-sm font-semibold">
@@ -425,6 +425,7 @@
 								subjects={regionSubjects.subjects}
 								headlineYear={regionSubjects.year}
 								class="space-y-3"
+								showSummary={false}
 							/>
 						{:else}
 							<p class="text-sm text-muted-foreground">
@@ -645,6 +646,7 @@
 								subjects={offered}
 								headlineYear={school.subjectsOfferedYear}
 								class="space-y-3"
+								showSummary={false}
 							/>
 						{/if}
 					</section>

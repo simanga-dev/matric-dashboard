@@ -174,9 +174,6 @@
 					{/snippet}
 				</Sidebar.MenuButton>
 			</Sidebar.MenuItem>
-			<Sidebar.MenuItem>
-				<Sidebar.Trigger class="size-8 shrink-0" />
-			</Sidebar.MenuItem>
 		</Sidebar.Menu>
 	</Sidebar.Header>
 

@@ -9,14 +9,10 @@
 
 	let { children, data } = $props();
 
-	// The overview is a full-bleed workspace: it manages its own height and
-	// wants no page padding. Its header sits on the shell background and the
-	// workspace below it is framed as a single bordered card.
+	// The overview is full-bleed and manages its own padding. Every page still
+	// shares one chrome: the header sits directly on the shell background and
+	// the page content below it is the single rounded, bordered surface.
 	let fullBleed = $derived(page.route.id === '/(app)/overview');
-
-	// The school profile already lives inside the inset surface. Adding a
-	// second rounded, shadowed frame around it reads as a card inside a card.
-	let framedPage = $derived(!fullBleed && page.route.id !== '/(app)/schools/[id]');
 
 	// When health polling detects the backend went down, re-run server loads.
 	// The (app) layout.server.ts will throw 503, showing the error page with
@@ -38,12 +34,8 @@
 	style="--sidebar-width: 19.5rem; --header-height: calc(var(--spacing) * 12);"
 >
 	<AppSidebar user={data.user} />
-	<Sidebar.Inset
-		class={fullBleed
-			? 'bg-transparent md:m-0 md:rounded-none md:shadow-none'
-			: 'md:my-2 md:me-2 md:rounded-xl md:shadow-sm'}
-	>
-		<ContentHeader borderless={fullBleed} />
+	<Sidebar.Inset class="bg-transparent md:m-0 md:rounded-none md:shadow-none">
+		<ContentHeader borderless />
 		{#if data.user && !data.user.emailConfirmed}
 			<EmailVerificationBanner />
 		{/if}
@@ -51,8 +43,7 @@
 		<div
 			class={cn(
 				'flex min-h-0 flex-1 flex-col bg-background',
-				framedPage && 'md:m-2 md:rounded-xl md:shadow-sm',
-				fullBleed && 'overflow-hidden md:mb-2 md:me-2 md:rounded-xl md:border md:border-border/60'
+				'overflow-hidden md:me-2 md:mb-2 md:rounded-xl md:border md:border-sidebar-border'
 			)}
 		>
 			<div

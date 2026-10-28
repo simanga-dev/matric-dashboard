@@ -4,7 +4,7 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { fetchSchools } from '$lib/api/dashboard';
-	import { routes } from '$lib/config';
+	import { routes, schoolPath } from '$lib/config';
 	import type { School } from '$lib/types/dashboard';
 	import { toTitleCase } from '$lib/utils';
 	import {
@@ -70,8 +70,16 @@
 		open = false;
 		query = toTitleCase(school.name);
 		results = [];
-		// Deep-link into the explorer so the school is selected on the map and
-		// revealed in the hierarchy tree.
+
+		// On a school's own page the search is a jump to another school's page,
+		// not a trip back to the explorer.
+		if (page.route.id === '/(app)/schools/[id]') {
+			if (school.id !== page.params.id) void goto(resolve(schoolPath(school.id)));
+			return;
+		}
+
+		// Everywhere else, deep-link into the explorer so the school is selected
+		// on the map and revealed in the hierarchy tree.
 		const current = overviewHistoryState(page.url.search, page.state.overview);
 		const queryString = serializeOverviewState(revealOverviewSchool(current, school));
 		goto(resolve(`${routes.overview}?${queryString}`), {

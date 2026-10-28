@@ -1,6 +1,4 @@
 <script lang="ts">
-	import InfoTooltip from '$lib/components/common/InfoTooltip.svelte';
-	import { metricHelp } from '$lib/components/common/metric-help';
 	import { untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { afterNavigate, replaceState } from '$app/navigation';
@@ -10,12 +8,11 @@
 	import * as Card from '$lib/components/ui/card';
 	import * as Table from '$lib/components/ui/table';
 	import * as Select from '$lib/components/ui/select';
-	import { Separator } from '$lib/components/ui/separator';
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
-	import SubjectPerformanceBars, {
-		type SubjectBar
-	} from '$lib/components/dashboard/SubjectPerformanceBars.svelte';
+	import StatCard from '$lib/components/dashboard/StatCard.svelte';
+	import SubjectPassRateChart from '$lib/components/dashboard/SubjectPassRateChart.svelte';
+	import type { SubjectBar } from '$lib/components/dashboard/subject-bar';
 	import YearPills from '$lib/components/dashboard/YearPills.svelte';
 	import { passRateColor } from '$lib/components/dashboard/school-hierarchy';
 	import { subjectHref } from '$lib/components/dashboard/subject-url';
@@ -31,10 +28,11 @@
 		ArrowDown,
 		ArrowUp,
 		BookMarked,
+		Building2,
 		ChevronsUpDown,
-		ListFilter,
-		MapPin,
+		Percent,
 		Search,
+		Users,
 		X
 	} from '@lucide/svelte';
 	import type { PageData } from './$types';
@@ -367,102 +365,90 @@
 	<meta name="description" content="NSC subject performance by province, district or school." />
 </svelte:head>
 
-<div class="space-y-6">
-	<div>
-		<h1 class="text-2xl font-semibold tracking-tight">Subject performance</h1>
-		<p class="mt-1 max-w-2xl text-sm text-muted-foreground">
-			NSC results per subject for the whole country, a province, a district or a single school.
-			Narrow the scope below.
-		</p>
-	</div>
-
-	<Card.Root>
-		<Card.Header>
-			<Card.Title class="flex items-center gap-2 text-base">
-				<MapPin class="size-4 text-primary" />
-				Scope
-			</Card.Title>
-			<Card.Description
-				>Drill from national down to a province, district or school.</Card.Description
-			>
-		</Card.Header>
-		<Card.Content class="space-y-4">
-			<div class="flex flex-wrap items-center gap-2">
-				<Select.Root
-					type="single"
-					value={province ?? ALL}
-					onValueChange={selectProvince}
-					disabled={isSchoolScope}
-				>
-					<Select.Trigger class="h-8 w-48" aria-label="Province">
-						<span class={cn(!province && 'text-muted-foreground')}>
-							{province ? toTitleCase(province) : 'All provinces'}
-						</span>
-					</Select.Trigger>
-					<Select.Content>
-						<Select.Item value={ALL}>All provinces</Select.Item>
-						{#each provinces as option (option)}
-							<Select.Item value={option}>{toTitleCase(option)}</Select.Item>
-						{/each}
-					</Select.Content>
-				</Select.Root>
-
-				<Select.Root
-					type="single"
-					value={district ?? ALL}
-					onValueChange={selectDistrict}
-					disabled={!province || isSchoolScope}
-				>
-					<Select.Trigger class="h-8 w-52" aria-label="District">
-						<span class={cn(!district && 'text-muted-foreground')}>
-							{district ? toTitleCase(district) : 'All districts'}
-						</span>
-					</Select.Trigger>
-					<Select.Content>
-						<Select.Item value={ALL}>All districts</Select.Item>
-						{#each districts as option (option)}
-							<Select.Item value={option}>{toTitleCase(option)}</Select.Item>
-						{/each}
-					</Select.Content>
-				</Select.Root>
-
-				{#if isSchoolScope}
-					<Button variant="outline" size="sm" onclick={clearSchool}>
-						<X class="size-3.5" />
-						Clear school
-					</Button>
-				{/if}
-			</div>
-
-			<Separator />
-
-			<div class="space-y-3">
-				<form
-					class="flex items-center gap-2"
-					onsubmit={(event) => {
-						event.preventDefault();
-						void searchSchools();
-					}}
-				>
-					<Input
-						bind:value={searchQuery}
-						placeholder="Or search for a school..."
-						aria-label="Search schools"
-						class="h-8 max-w-sm"
-					/>
-					<Button
-						type="submit"
-						variant="outline"
-						size="icon-sm"
-						disabled={searching}
-						aria-label="Search schools"
+<div class="flex flex-1 flex-col">
+	<div class="@container/main flex flex-1 flex-col gap-2">
+		<div class="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+			<div class="space-y-3 px-4 lg:px-6">
+				<div class="flex flex-wrap items-center gap-2">
+					<Select.Root
+						type="single"
+						value={province ?? ALL}
+						onValueChange={selectProvince}
+						disabled={isSchoolScope}
 					>
-						<Search class="size-3.5" />
-					</Button>
-				</form>
+						<Select.Trigger class="h-8 w-48" aria-label="Province">
+							<span class={cn(!province && 'text-muted-foreground')}>
+								{province ? toTitleCase(province) : 'All provinces'}
+							</span>
+						</Select.Trigger>
+						<Select.Content>
+							<Select.Item value={ALL}>All provinces</Select.Item>
+							{#each provinces as option (option)}
+								<Select.Item value={option}>{toTitleCase(option)}</Select.Item>
+							{/each}
+						</Select.Content>
+					</Select.Root>
+
+					<Select.Root
+						type="single"
+						value={district ?? ALL}
+						onValueChange={selectDistrict}
+						disabled={!province || isSchoolScope}
+					>
+						<Select.Trigger class="h-8 w-52" aria-label="District">
+							<span class={cn(!district && 'text-muted-foreground')}>
+								{district ? toTitleCase(district) : 'All districts'}
+							</span>
+						</Select.Trigger>
+						<Select.Content>
+							<Select.Item value={ALL}>All districts</Select.Item>
+							{#each districts as option (option)}
+								<Select.Item value={option}>{toTitleCase(option)}</Select.Item>
+							{/each}
+						</Select.Content>
+					</Select.Root>
+
+					{#if isSchoolScope}
+						<Button variant="outline" size="sm" onclick={clearSchool}>
+							<X class="size-3.5" />
+							Clear school
+						</Button>
+					{/if}
+
+					<form
+						class="flex items-center gap-2"
+						onsubmit={(event) => {
+							event.preventDefault();
+							void searchSchools();
+						}}
+					>
+						<Input
+							bind:value={searchQuery}
+							placeholder="Or search for a school..."
+							aria-label="Search schools"
+							class="h-8 w-64"
+						/>
+						<Button
+							type="submit"
+							variant="outline"
+							size="icon-sm"
+							disabled={searching}
+							aria-label="Search schools"
+						>
+							<Search class="size-3.5" />
+						</Button>
+					</form>
+
+					<Input
+						bind:value={filterQuery}
+						placeholder="Filter subjects..."
+						aria-label="Filter subjects by name"
+						class="ms-auto h-8 w-56"
+					/>
+				</div>
 
 				{#if searching}
-					<p role="status" class="text-sm text-muted-foreground">Searching...</p>
+					<p role="status" class="text-sm text-muted-foreground">Searching…</p>
 				{:else if searchError}
 					<p role="alert" class="text-sm text-destructive">{searchError}</p>
 				{:else if results.length > 0}
@@ -487,214 +473,168 @@
 					<p class="text-sm text-muted-foreground">No schools match "{searchQuery.trim()}".</p>
 				{/if}
 			</div>
-		</Card.Content>
-	</Card.Root>
 
-	<Card.Root>
-		<Card.Header>
-			<Card.Title class="flex items-center gap-2 text-base">
-				<BookMarked class="size-4 text-primary" />
-				{scopeName}
-			</Card.Title>
-			<Card.Description>
-				{scopeKind}{year ? ` · ${year}` : ''}{schoolCount !== null
-					? ` · ${schoolCount.toLocaleString()} schools`
-					: ''}
-			</Card.Description>
-		</Card.Header>
-		<Card.Content class="space-y-4">
-			{#if loading}
-				<p role="status" class="flex h-48 items-center justify-center text-muted-foreground">
-					Loading subject results...
-				</p>
-			{:else if error}
-				<div class="flex h-48 flex-col items-center justify-center gap-3">
-					<p role="alert" class="text-sm text-destructive">{error}</p>
-					<Button variant="outline" size="sm" onclick={retryLoad}>Try again</Button>
-				</div>
-			{:else if availableYears.length === 0}
-				<EmptyState icon={BookMarked} message="No subject data for this scope." />
-			{:else}
-				<YearPills years={availableYears} selected={year} onSelect={selectYear} />
+			<div
+				class="grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4 dark:*:data-[slot=card]:bg-card"
+				aria-label="Scope summary"
+			>
+				<StatCard title="Subjects offered" value={rows.length.toLocaleString()} icon={BookMarked} />
+				<StatCard title="Subject entries" value={totalWrote.toLocaleString()} icon={Users} />
+				{#if schoolCount !== null}
+					<StatCard title="Schools" value={schoolCount.toLocaleString()} icon={Building2} />
+				{/if}
+				<StatCard
+					title="Overall subject pass rate"
+					value={overallPassRate === null ? '–' : `${overallPassRate.toFixed(1)}%`}
+					valueColor={overallPassRate === null ? undefined : passRateColor(overallPassRate)}
+					icon={Percent}
+				/>
+			</div>
 
-				{#if rows.length === 0}
-					<p class="py-12 text-center text-sm text-muted-foreground">
-						No subject data for this scope/year.
-					</p>
-				{:else}
-					<dl class="grid grid-cols-2 gap-3 lg:grid-cols-4" aria-label="Scope summary">
-						<div class="rounded-lg border bg-muted/20 p-3">
-							<dt class="text-xs text-muted-foreground">Subjects offered</dt>
-							<dd class="mt-1 text-xl font-semibold tabular-nums">{rows.length}</dd>
-						</div>
-						<div class="rounded-lg border bg-muted/20 p-3">
-							<dt class="text-xs text-muted-foreground">
-								Subject entries<InfoTooltip
-									label="subject entries"
-									text={metricHelp.subjectEntries}
-								/>
-							</dt>
-							<dd class="mt-1 text-xl font-semibold tabular-nums">{totalWrote.toLocaleString()}</dd>
-						</div>
-						{#if schoolCount !== null}
-							<div class="rounded-lg border bg-muted/20 p-3">
-								<dt class="text-xs text-muted-foreground">
-									Schools<InfoTooltip label="subject data coverage" text={metricHelp.coverage} />
-								</dt>
-								<dd class="mt-1 text-xl font-semibold tabular-nums">
-									{schoolCount.toLocaleString()}
-								</dd>
+			<div class="px-4 lg:px-6">
+				<Card.Root class="@container/card">
+					<Card.Header>
+						<div class="flex flex-wrap items-start justify-between gap-3">
+							<div>
+								<Card.Title class="flex items-center gap-2 text-base">
+									<BookMarked class="size-4 text-primary" />
+									{scopeName}
+								</Card.Title>
+								<Card.Description>
+									Subject pass rate · {scopeKind}{year ? ` · ${year}` : ''}{schoolCount !== null
+										? ` · ${schoolCount.toLocaleString()} schools`
+										: ''}
+								</Card.Description>
 							</div>
-						{/if}
-						<div class="rounded-lg border bg-muted/20 p-3">
-							<dt class="text-xs text-muted-foreground">
-								Overall subject pass rate<InfoTooltip
-									label="overall subject pass rate"
-									text={metricHelp.subjectPassRate}
-								/>
-							</dt>
-							<dd class="mt-1 text-xl font-semibold tabular-nums">
-								{#if overallPassRate === null}
-									<span class="text-muted-foreground">-</span>
-								{:else}
-									<span style:color={passRateColor(overallPassRate)}>
-										{overallPassRate.toFixed(1)}%
-									</span>
-								{/if}
-							</dd>
+							{#if availableYears.length > 0}
+								<YearPills years={availableYears} selected={year} onSelect={selectYear} />
+							{/if}
 						</div>
-					</dl>
-
-					<section class="rounded-lg border bg-muted/20 p-4">
-						<div class="mb-3 flex flex-wrap items-baseline justify-between gap-2">
-							<h3 class="text-sm font-semibold">
-								Subject results<InfoTooltip label="subject coverage" text={metricHelp.gateway} />
-							</h3>
-							<span class="text-xs text-muted-foreground tabular-nums">
-								{rows.length} subjects · {totalWrote.toLocaleString()} wrote
-							</span>
-						</div>
-						<div class="relative mb-4 max-w-sm">
-							<ListFilter
-								class="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground"
-								aria-hidden="true"
-							/>
-							<Input
-								bind:value={filterQuery}
-								placeholder="Filter subjects..."
-								aria-label="Filter subjects by name"
-								class="h-8 pl-8"
-							/>
-						</div>
-						{#if filteredRows.length === 0}
-							<p class="py-8 text-center text-sm text-muted-foreground">
+					</Card.Header>
+					<Card.Content>
+						{#if loading}
+							<p role="status" class="flex h-64 items-center justify-center text-muted-foreground">
+								Loading subject results…
+							</p>
+						{:else if error}
+							<div class="flex h-64 flex-col items-center justify-center gap-3">
+								<p role="alert" class="text-sm text-destructive">{error}</p>
+								<Button variant="outline" size="sm" onclick={retryLoad}>Try again</Button>
+							</div>
+						{:else if availableYears.length === 0}
+							<EmptyState icon={BookMarked} message="No subject data for this scope." />
+						{:else if filteredRows.length === 0}
+							<p class="py-12 text-center text-sm text-muted-foreground">
 								No subjects match "{filterQuery.trim()}".
 							</p>
 						{:else}
-							<SubjectPerformanceBars subjects={bars} headlineYear={year} />
+							<SubjectPassRateChart subjects={bars} headlineYear={year} />
 						{/if}
-					</section>
+					</Card.Content>
+				</Card.Root>
+			</div>
 
-					{#if filteredRows.length > 0}
-						<Table.Root>
-							<Table.Header>
-								<Table.Row>
-									<Table.Head class="" aria-sort={ariaSort('name')}>
-										<button
-											type="button"
-											class="inline-flex items-center gap-1 font-medium transition-colors hover:text-foreground"
-											onclick={() => toggleSort('name')}
-										>
-											Subject{@render sortIcon('name')}
-										</button>
-									</Table.Head>
-									<Table.Head class="text-right" aria-sort={ariaSort('totalWrote')}>
-										<button
-											type="button"
-											class="inline-flex items-center gap-1 font-medium transition-colors hover:text-foreground"
-											onclick={() => toggleSort('totalWrote')}
-										>
-											Wrote{@render sortIcon('totalWrote')}
-										</button><InfoTooltip
-											label="subject learners who wrote"
-											text={metricHelp.subjectWrote}
-										/>
-									</Table.Head>
-									<Table.Head class="text-right" aria-sort={ariaSort('achieved')}>
-										<button
-											type="button"
-											class="inline-flex items-center gap-1 font-medium transition-colors hover:text-foreground"
-											onclick={() => toggleSort('achieved')}
-										>
-											Achieved{@render sortIcon('achieved')}
-										</button><InfoTooltip label="subject achievement" text={metricHelp.achieved} />
-									</Table.Head>
-									<Table.Head class="text-right" aria-sort={ariaSort('percentAchieved')}>
-										<button
-											type="button"
-											class="inline-flex items-center gap-1 font-medium transition-colors hover:text-foreground"
-											onclick={() => toggleSort('percentAchieved')}
-										>
-											Pass rate{@render sortIcon('percentAchieved')}
-										</button><InfoTooltip
-											label="subject pass rate"
-											text={metricHelp.subjectPassRate}
-										/>
-									</Table.Head>
-									{#if !isSchoolScope}
-										<Table.Head class="text-right" aria-sort={ariaSort('schoolCount')}>
+			{#if !loading && !error && rows.length > 0 && filteredRows.length > 0}
+				<div class="px-4 lg:px-6">
+					<Card.Root>
+						<Card.Header>
+							<Card.Title class="text-base">Subject results</Card.Title>
+							<Card.Description>
+								{filteredRows.length} of {rows.length} subjects · {totalWrote.toLocaleString()} wrote
+							</Card.Description>
+						</Card.Header>
+						<Card.Content>
+							<Table.Root>
+								<Table.Header>
+									<Table.Row>
+										<Table.Head class="" aria-sort={ariaSort('name')}>
 											<button
 												type="button"
 												class="inline-flex items-center gap-1 font-medium transition-colors hover:text-foreground"
-												onclick={() => toggleSort('schoolCount')}
+												onclick={() => toggleSort('name')}
 											>
-												Schools{@render sortIcon('schoolCount')}
-											</button><InfoTooltip
-												label="subject data coverage"
-												text={metricHelp.coverage}
-											/>
+												Subject{@render sortIcon('name')}
+											</button>
 										</Table.Head>
-									{/if}
-								</Table.Row>
-							</Table.Header>
-							<Table.Body>
-								{#each sortedRows as row (row.key)}
-									<Table.Row>
-										<Table.Cell class="font-medium">
-											<a
-												href={resolve(rowHref(row.code))}
-												class="underline-offset-4 hover:text-primary hover:underline focus-visible:underline focus-visible:outline-none"
+										<Table.Head class="text-right" aria-sort={ariaSort('totalWrote')}>
+											<button
+												type="button"
+												class="inline-flex items-center gap-1 font-medium transition-colors hover:text-foreground"
+												onclick={() => toggleSort('totalWrote')}
 											>
-												{row.name}
-											</a>
-										</Table.Cell>
-										<Table.Cell class="text-right tabular-nums">
-											{row.totalWrote.toLocaleString()}
-										</Table.Cell>
-										<Table.Cell class="text-right tabular-nums">
-											{row.achieved?.toLocaleString() ?? '-'}
-										</Table.Cell>
-										<Table.Cell class="text-right font-medium tabular-nums">
-											{#if row.percentAchieved === null}
-												<span class="text-muted-foreground">-</span>
-											{:else}
-												<span style:color={passRateColor(row.percentAchieved)}>
-													{row.percentAchieved.toFixed(1)}%
-												</span>
-											{/if}
-										</Table.Cell>
+												Wrote{@render sortIcon('totalWrote')}
+											</button>
+										</Table.Head>
+										<Table.Head class="text-right" aria-sort={ariaSort('achieved')}>
+											<button
+												type="button"
+												class="inline-flex items-center gap-1 font-medium transition-colors hover:text-foreground"
+												onclick={() => toggleSort('achieved')}
+											>
+												Achieved{@render sortIcon('achieved')}
+											</button>
+										</Table.Head>
+										<Table.Head class="text-right" aria-sort={ariaSort('percentAchieved')}>
+											<button
+												type="button"
+												class="inline-flex items-center gap-1 font-medium transition-colors hover:text-foreground"
+												onclick={() => toggleSort('percentAchieved')}
+											>
+												Pass rate{@render sortIcon('percentAchieved')}
+											</button>
+										</Table.Head>
 										{#if !isSchoolScope}
-											<Table.Cell class="text-right tabular-nums">
-												{row.schoolCount?.toLocaleString() ?? '-'}
-											</Table.Cell>
+											<Table.Head class="text-right" aria-sort={ariaSort('schoolCount')}>
+												<button
+													type="button"
+													class="inline-flex items-center gap-1 font-medium transition-colors hover:text-foreground"
+													onclick={() => toggleSort('schoolCount')}
+												>
+													Schools{@render sortIcon('schoolCount')}
+												</button>
+											</Table.Head>
 										{/if}
 									</Table.Row>
-								{/each}
-							</Table.Body>
-						</Table.Root>
-					{/if}
-				{/if}
+								</Table.Header>
+								<Table.Body>
+									{#each sortedRows as row (row.key)}
+										<Table.Row>
+											<Table.Cell class="font-medium">
+												<a
+													href={resolve(rowHref(row.code))}
+													class="underline-offset-4 hover:text-primary hover:underline focus-visible:underline focus-visible:outline-none"
+												>
+													{row.name}
+												</a>
+											</Table.Cell>
+											<Table.Cell class="text-right tabular-nums">
+												{row.totalWrote.toLocaleString()}
+											</Table.Cell>
+											<Table.Cell class="text-right tabular-nums">
+												{row.achieved?.toLocaleString() ?? '-'}
+											</Table.Cell>
+											<Table.Cell class="text-right font-medium tabular-nums">
+												{#if row.percentAchieved === null}
+													<span class="text-muted-foreground">-</span>
+												{:else}
+													<span style:color={passRateColor(row.percentAchieved)}>
+														{row.percentAchieved.toFixed(1)}%
+													</span>
+												{/if}
+											</Table.Cell>
+											{#if !isSchoolScope}
+												<Table.Cell class="text-right tabular-nums">
+													{row.schoolCount?.toLocaleString() ?? '-'}
+												</Table.Cell>
+											{/if}
+										</Table.Row>
+									{/each}
+								</Table.Body>
+							</Table.Root>
+						</Card.Content>
+					</Card.Root>
+				</div>
 			{/if}
-		</Card.Content>
-	</Card.Root>
+		</div>
+	</div>
 </div>

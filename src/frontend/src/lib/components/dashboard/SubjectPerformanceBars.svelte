@@ -3,29 +3,19 @@
 	import { metricHelp } from '$lib/components/common/metric-help';
 	import { TrendingUp } from '@lucide/svelte';
 	import * as Tooltip from '$lib/components/ui/tooltip';
-
-	/**
-	 * A single subject row for the bar chart. `year` is optional and only shown
-	 * when it differs from the headline year, so subjects last offered earlier
-	 * stay legible.
-	 */
-	export interface SubjectBar {
-		name: string;
-		totalWrote: number;
-		percentAchieved: number | null;
-		year?: number;
-		/** Optional resolved link, e.g. to the subject's detail page. The bar renders as a link. */
-		href?: string;
-	}
+	import type { SubjectBar } from './subject-bar';
 
 	let {
 		subjects,
 		headlineYear = null,
-		class: className = ''
+		class: className = '',
+		showSummary = true
 	}: {
 		subjects: SubjectBar[];
 		headlineYear?: number | null;
 		class?: string;
+		/** Shows the totals and approximation note under the bars. */
+		showSummary?: boolean;
 	} = $props();
 
 	let ordered = $derived(
@@ -172,19 +162,21 @@
 		</ul>
 	</Tooltip.Provider>
 
-	<div class="mt-3 flex items-start gap-2 border-t pt-2.5">
-		<TrendingUp class="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-		<div class="text-xs">
-			<p class="font-medium">
-				{subjects.reduce((total, s) => total + s.totalWrote, 0).toLocaleString()} subject entries<InfoTooltip
-					label="subject entries"
-					text={metricHelp.subjectEntries}
-				/>
-			</p>
-			<p class="text-muted-foreground">
-				Across {subjects.length} subjects{headlineYear ? ` in ${headlineYear}` : ''}
-			</p>
-			<p class="mt-1 text-muted-foreground">Pass counts estimated from reported pass rates.</p>
+	{#if showSummary}
+		<div class="mt-3 flex items-start gap-2 border-t pt-2.5">
+			<TrendingUp class="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+			<div class="text-xs">
+				<p class="font-medium">
+					{subjects.reduce((total, s) => total + s.totalWrote, 0).toLocaleString()} subject entries<InfoTooltip
+						label="subject entries"
+						text={metricHelp.subjectEntries}
+					/>
+				</p>
+				<p class="text-muted-foreground">
+					Across {subjects.length} subjects{headlineYear ? ` in ${headlineYear}` : ''}
+				</p>
+				<p class="mt-1 text-muted-foreground">Pass counts estimated from reported pass rates.</p>
+			</div>
 		</div>
-	</div>
+	{/if}
 </div>

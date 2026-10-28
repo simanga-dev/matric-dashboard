@@ -359,18 +359,18 @@
 		class="row-measure pointer-events-none invisible absolute"
 		bind:clientHeight={rowHeight}
 	></div>
-	<header class="flex min-h-14 shrink-0 items-center gap-2 bg-muted/60 px-3">
+	<header class="flex min-h-10 shrink-0 items-center gap-2 bg-muted/60 px-2">
 		<Network class="size-4 shrink-0 text-muted-foreground" />
 		<h2 class="min-w-0 flex-1 text-sm font-semibold">School browser</h2>
-		<span class="rounded-md bg-muted/70 px-2 py-1 text-xs text-muted-foreground tabular-nums"
+		<span class="rounded-md bg-muted/70 px-1.5 py-0.5 text-xs text-muted-foreground tabular-nums"
 			>{initialSchools.length.toLocaleString()}</span
 		>
 		{@render headerAction?.()}
 	</header>
-	<div class="space-y-3 p-3 pb-2">
+	<div class="space-y-2 p-2 pb-1">
 		<div class="relative">
 			<Search
-				class="pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+				class="pointer-events-none absolute start-2.5 top-1/2 size-3.5 -translate-y-1/2 text-muted-foreground"
 			/>
 			<input
 				bind:this={searchInput}
@@ -379,14 +379,14 @@
 				value={search}
 				oninput={(event) => setFilter(event.currentTarget.value)}
 				onkeydown={handleSearchKeydown}
-				class="min-h-[44px] w-full rounded-lg border border-transparent bg-muted/50 ps-9 pe-12 text-xs outline-none focus-visible:border-ring/30 focus-visible:ring-2 focus-visible:ring-ring"
+				class="h-9 w-full rounded-md border border-transparent bg-muted/50 ps-8 pe-9 text-xs outline-none focus-visible:border-ring/30 focus-visible:ring-2 focus-visible:ring-ring"
 			/>
 			{#if search}<button
 					type="button"
 					aria-label="Clear school filter"
 					onclick={() => setFilter('')}
-					class="absolute end-0 top-1/2 flex size-11 -translate-y-1/2 items-center justify-center rounded-md hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
-					><X class="size-4" /></button
+					class="absolute end-0.5 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-md hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring"
+					><X class="size-3.5" /></button
 				>{/if}
 		</div>
 		{#if query && !searchError}
@@ -576,12 +576,12 @@
 								? `${label(row)} · EMIS ${row.school.id} · ${row.school.passRate.toFixed(1)}% pass rate`
 								: label(row)}
 						>
-							{#if row.kind === 'country'}<Globe class="size-3.5 shrink-0 text-primary" />
+							{#if row.kind === 'country'}<Globe class="size-4 shrink-0 text-primary" />
 							{:else if row.kind === 'province'}<MapPin
-									class="size-3.5 shrink-0 text-muted-foreground"
+									class="size-4 shrink-0 text-muted-foreground"
 								/>
 							{:else if row.kind === 'school'}<SchoolIcon
-									class="size-3.5 shrink-0 {passRateTextClass(row.school.passRate)}"
+									class="size-4 shrink-0 {passRateTextClass(row.school.passRate)}"
 								/>{/if}
 							<span class="row-label truncate">{label(row)}</span>
 							{#if row.kind !== 'school'}<span
@@ -631,8 +631,8 @@
 
 <style>
 	.row-measure {
-		/* Match the sidebar nav row height (h-9) so the tree and nav items align. */
-		height: 2.25rem;
+		/* A sidebar nav row (h-9) plus the 4px gap between nav menu items. */
+		height: 2.5rem;
 	}
 	.tree-scroll {
 		overflow-anchor: none;
@@ -643,7 +643,9 @@
 		inset-inline: 0;
 		display: flex;
 		align-items: center;
-		height: var(--tree-row);
+		/* The row itself is h-9; the remaining 4px is the gap between rows,
+		   matching the sidebar menu's gap-1. */
+		height: calc(var(--tree-row) - 0.25rem);
 		border-radius: var(--radius);
 	}
 	.node {
@@ -652,21 +654,29 @@
 		height: 100%;
 		flex: 1;
 		align-items: center;
-		gap: 0.5rem;
+		gap: 0.625rem;
 		border-radius: var(--radius);
-		padding: 0.5rem;
+		padding-inline: 0.5rem;
 		text-align: start;
-		font-size: max(0.75rem, 12px);
+		font-size: 0.875rem;
 	}
 	.disclosure {
+		position: relative;
 		display: flex;
 		height: 100%;
-		width: 44px;
+		width: 1.25rem;
 		justify-content: center;
 		flex-shrink: 0;
 		align-items: center;
 		border-radius: var(--radius);
-		padding: 0.5rem;
+	}
+	/* Keep a comfortable hit target without widening the row's visual gutter. */
+	@media (pointer: coarse) {
+		.disclosure::after {
+			content: '';
+			position: absolute;
+			inset: -0.25rem -0.5rem;
+		}
 	}
 	.tree-row:hover {
 		background: hsl(var(--muted));

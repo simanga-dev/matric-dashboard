@@ -75,4 +75,58 @@ describe('component shortcut handlers', () => {
 		unregister();
 		shortcuts.destroy();
 	});
+
+	it('ignores the key for custom editors and fields that re-dispatch key events', () => {
+		const handler = vi.fn();
+		const unregister = registerShortcutHandler(ShortcutAction.OpenMapEditor, handler);
+		const shortcuts = globalShortcuts(window);
+
+		const editor = document.createElement('div');
+		editor.setAttribute('role', 'textbox');
+		editor.tabIndex = 0;
+		document.body.append(editor);
+		editor.focus();
+		editor.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE', bubbles: true }));
+		expect(handler).not.toHaveBeenCalled();
+
+		const input = document.createElement('input');
+		document.body.append(input);
+		input.focus();
+		// Even when a control re-dispatches the event from elsewhere, the focused
+		// text field still owns the key.
+		const redispatched = new KeyboardEvent('keydown', { code: 'KeyE', cancelable: true });
+		window.dispatchEvent(redispatched);
+		expect(handler).not.toHaveBeenCalled();
+		expect(redispatched.defaultPrevented).toBe(false);
+
+		unregister();
+		shortcuts.destroy();
+	});
+
+	it('still runs page shortcuts while a non-editable control has focus', () => {
+		const handler = vi.fn();
+		const unregister = registerShortcutHandler(ShortcutAction.OpenMapEditor, handler);
+		const shortcuts = globalShortcuts(window);
+		const treeItem = document.createElement('div');
+		treeItem.setAttribute('role', 'treeitem');
+		treeItem.tabIndex = 0;
+		document.body.append(treeItem);
+		treeItem.focus();
+
+		treeItem.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyE', bubbles: true }));
+		expect(handler).toHaveBeenCalledTimes(1);
+
+		unregister();
+		shortcuts.destroy();
+	});
+
+	it('does not consume the key when no handler is mounted', () => {
+		const shortcuts = globalShortcuts(window);
+		const event = new KeyboardEvent('keydown', { code: 'KeyE', cancelable: true });
+
+		window.dispatchEvent(event);
+
+		expect(event.defaultPrevented).toBe(false);
+		shortcuts.destroy();
+	});
 });

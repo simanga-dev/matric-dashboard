@@ -324,12 +324,26 @@
 		filter: grayscale(1) invert(1) brightness(0.9) contrast(0.85);
 	}
 
-	.school-location-map :global(.school-hero-basemap)::after {
+	/* Tint both raster basemaps so the hero map sits inside the page palette:
+	   a theme-hued wash with a soft vignette around the school, which also
+	   darkens the edges so the profile card and attribution stay legible. */
+	.school-location-map :global(.school-hero-basemap)::after,
+	.school-location-map :global(.school-hero-imagery)::after {
 		content: '';
 		position: absolute;
 		inset: 0;
-		background: hsl(var(--primary) / 0.05);
 		pointer-events: none;
+		background:
+			radial-gradient(
+				ellipse 120% 100% at 72% 45%,
+				transparent 28%,
+				hsl(var(--theme-hue) 20% 10% / 0.45) 100%
+			),
+			linear-gradient(
+				to bottom,
+				hsl(var(--theme-hue) 45% 32% / 0.26),
+				hsl(var(--theme-hue) 45% 32% / 0.1)
+			);
 	}
 
 	.school-location-map :global(.ol-control) {

@@ -514,24 +514,33 @@
 				return result;
 			};
 
-			const regionStyle = () =>
-				new Style({
-					fill: new Fill({ color: 'rgba(29, 78, 216, 0.15)' }),
-					stroke: new Stroke({ color: '#1d4ed8', width: 2 })
-				});
+			// Boundary outlines are always white: the basemap is grayscaled in the
+			// light theme and inverted in the dark one, so any theme-derived colour
+			// would read as white in one theme and black in the other. Without an
+			// explicit style OpenLayers also falls back to its blue default.
+			const provinceOutline = new Style({
+				stroke: new Stroke({ color: '#ffffff', width: 2.5 })
+			});
+			const districtOutline = new Style({
+				stroke: new Stroke({ color: '#ffffff', width: 1.25 })
+			});
+			const regionHighlight = new Style({
+				fill: new Fill({ color: 'rgba(29, 78, 216, 0.2)' }),
+				stroke: new Stroke({ color: '#ffffff', width: 2.5 })
+			});
 
 			const provinceStyle: StyleFunction = (feature: FeatureLike) => {
-				if (highlightCountry) return regionStyle();
-				if (highlightDistrict) return undefined;
-				return sameName(feature.get('name'), highlightProvince) ? regionStyle() : undefined;
+				if (highlightCountry) return regionHighlight;
+				if (highlightDistrict) return provinceOutline;
+				return sameName(feature.get('name'), highlightProvince) ? regionHighlight : provinceOutline;
 			};
 
 			const districtStyle: StyleFunction = (feature: FeatureLike) => {
-				if (highlightCountry || !highlightDistrict) return undefined;
+				if (!highlightDistrict) return districtOutline;
 				return sameName(feature.get('name'), highlightDistrict) &&
 					sameName(feature.get('province'), highlightProvince)
-					? regionStyle()
-					: undefined;
+					? regionHighlight
+					: districtOutline;
 			};
 
 			const provinceLayer = new VectorLayerCtor({
@@ -747,7 +756,7 @@
 			tone === 'edit'
 				? 'bg-success-emphasis/15 text-success-emphasis dark:bg-success-emphasis/25'
 				: 'bg-accent text-accent-foreground';
-		return `flex size-11 shrink-0 items-center justify-center rounded-md transition-colors ${toneClass} focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40 ${active ? activeClass : ''}`;
+		return `flex size-9 shrink-0 items-center justify-center rounded-md transition-colors pointer-coarse:size-11 ${toneClass} focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:pointer-events-none disabled:opacity-40 ${active ? activeClass : ''}`;
 	}
 	function chooseTool(tool: EditTool) {
 		editorRef?.selectTool(tool);
@@ -857,9 +866,9 @@
 						role="toolbar"
 						aria-label="Map tools"
 						bind:clientWidth={toolbarWidth}
-						class="absolute end-3 top-3 z-20 flex max-w-[calc(100%-1.5rem)] items-start {toolbarCollapsed
+						class="absolute end-2 top-2 z-20 flex max-w-[calc(100%-1rem)] items-start {toolbarCollapsed
 							? ''
-							: 'gap-1'} rounded-lg bg-background/85 p-1 text-xs shadow-md backdrop-blur"
+							: 'gap-0.5'} rounded-lg bg-background/85 p-0.5 text-xs shadow-md backdrop-blur"
 					>
 						<div
 							class="grid transition-[grid-template-columns] duration-200 ease-out motion-reduce:transition-none {toolbarCollapsed
@@ -868,7 +877,7 @@
 							inert={toolbarCollapsed}
 						>
 							<div
-								class="flex min-w-0 flex-nowrap items-center justify-end gap-1 overflow-hidden transition-opacity duration-150 motion-reduce:transition-none"
+								class="flex min-w-0 flex-nowrap items-center justify-end gap-0.5 overflow-hidden transition-opacity duration-150 motion-reduce:transition-none"
 								class:opacity-0={toolbarCollapsed}
 							>
 								<button
@@ -896,7 +905,7 @@
 									class={toolbarButtonClass()}><Home class="size-4" /></button
 								>
 								{#if canEdit}
-									<span class="mx-1 h-7 w-px bg-border" aria-hidden="true"></span>
+									<span class="mx-0.5 h-6 w-px bg-border" aria-hidden="true"></span>
 									<div
 										class="grid transition-[grid-template-columns] duration-200 ease-out motion-reduce:transition-none {editing
 											? 'grid-cols-[0fr]'
@@ -926,7 +935,7 @@
 									>
 										<div class="min-w-0 overflow-hidden" inert={!editing}>
 											<div
-												class="flex items-center gap-1 transition-opacity duration-200 motion-reduce:transition-none"
+												class="flex items-center gap-0.5 transition-opacity duration-200 motion-reduce:transition-none"
 												class:opacity-0={!editing}
 											>
 												<button
@@ -967,7 +976,7 @@
 													class={toolbarButtonClass(editorStatus?.activeTool === 'marker')}
 													><MapPin class="size-4" /></button
 												>
-												<span class="mx-1 h-7 w-px bg-border" aria-hidden="true"></span>
+												<span class="mx-0.5 h-6 w-px bg-border" aria-hidden="true"></span>
 												<button
 													type="button"
 													aria-label="Save school map"
@@ -1092,7 +1101,7 @@
 					</div>
 					{#if layersPanelOpen || (editing && olMap && canEdit)}
 						<div
-							class="absolute end-3 top-18 z-20 flex max-h-[min(26rem,calc(100%_-_5.5rem))] w-[min(26rem,calc(100%-1.5rem))] flex-col overflow-hidden rounded-lg border bg-background/85 text-sm shadow-lg backdrop-blur"
+							class="absolute end-2 top-14 z-20 flex max-h-[min(26rem,calc(100%_-_4rem))] w-[min(26rem,calc(100%-1rem))] flex-col overflow-hidden rounded-lg border bg-background/85 text-sm shadow-lg backdrop-blur"
 							style:width={toolbarWidth ? `max(20rem, ${toolbarWidth}px)` : undefined}
 						>
 							<div class="min-h-0 overflow-y-auto">

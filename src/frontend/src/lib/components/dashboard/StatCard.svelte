@@ -14,7 +14,8 @@
 	interface Props {
 		title: string;
 		value: string;
-		trend: number | null;
+		/** Year-over-year change. Omit to hide the trend footer entirely. */
+		trend?: number | null;
 		icon: Component<IconProps>;
 		/** Optional CSS colour for the headline value, e.g. a pass-rate band colour. */
 		valueColor?: string;
@@ -25,11 +26,11 @@
 	let { title, value, trend, icon: Icon, valueColor, trendUnit = '%' }: Props = $props();
 
 	let trendLabel = $derived.by(() => {
-		if (trend === null) return 'N/A';
+		if (trend === null || trend === undefined) return 'N/A';
 		return `${trend > 0 ? '+' : ''}${trend}${trendUnit}`;
 	});
 
-	let isPositive = $derived(trend !== null && trend >= 0);
+	let isPositive = $derived(trend !== null && trend !== undefined && trend >= 0);
 	let isNeutral = $derived(trend === null);
 </script>
 
@@ -46,23 +47,25 @@
 			{value}
 		</CardTitle>
 	</CardHeader>
-	<CardFooter class="flex-col items-start gap-1.5 text-sm">
-		<Badge variant="outline" class="gap-1">
-			{#if isNeutral}
-				<Minus class="size-3" />
-			{:else if isPositive}
-				<ArrowUpRight class="size-3" />
-			{:else}
-				<ArrowDownRight class="size-3" />
-			{/if}
-			{trendLabel}
-		</Badge>
-		<div class="text-muted-foreground">
-			{isNeutral
-				? 'No trend data available'
-				: isPositive
-					? 'Up from last year'
-					: 'Down from last year'}
-		</div>
-	</CardFooter>
+	{#if trend !== undefined}
+		<CardFooter class="flex-col items-start gap-1.5 text-sm">
+			<Badge variant="outline" class="gap-1">
+				{#if isNeutral}
+					<Minus class="size-3" />
+				{:else if isPositive}
+					<ArrowUpRight class="size-3" />
+				{:else}
+					<ArrowDownRight class="size-3" />
+				{/if}
+				{trendLabel}
+			</Badge>
+			<div class="text-muted-foreground">
+				{isNeutral
+					? 'No trend data available'
+					: isPositive
+						? 'Up from last year'
+						: 'Down from last year'}
+			</div>
+		</CardFooter>
+	{/if}
 </Card>
