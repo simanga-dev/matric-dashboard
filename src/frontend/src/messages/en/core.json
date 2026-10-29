@@ -33,6 +33,7 @@
 	"shortcuts_commandPalette": "Open command palette",
 	"shortcuts_help": "Keyboard shortcuts",
 	"shortcuts_editMap": "Edit the selected school map (overview)",
+	"shortcuts_focusSearch": "Search schools",
 
 	"commandPalette_placeholder": "Type a command or search...",
 	"commandPalette_noResults": "No results found.",

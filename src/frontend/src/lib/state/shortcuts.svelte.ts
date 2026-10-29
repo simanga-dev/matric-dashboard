@@ -19,7 +19,8 @@ export const ShortcutAction = {
 	Logout: 'logout',
 	Help: 'help',
 	ToggleSidebar: 'toggleSidebar',
-	OpenMapEditor: 'openMapEditor'
+	OpenMapEditor: 'openMapEditor',
+	FocusSearch: 'focusSearch'
 } as const;
 
 export type ShortcutActionType = (typeof ShortcutAction)[keyof typeof ShortcutAction];
@@ -76,6 +77,12 @@ const SHORTCUTS: ShortcutConfig[] = [
 		action: ShortcutAction.Help,
 		description: m.shortcuts_help,
 		display: () => (IS_MAC ? '⇧ ?' : 'Shift+?')
+	},
+	{
+		code: 'Slash',
+		action: ShortcutAction.FocusSearch,
+		description: m.shortcuts_focusSearch,
+		display: () => '/'
 	},
 	{
 		code: 'KeyE',

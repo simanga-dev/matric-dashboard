@@ -2,6 +2,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { flushSync, mount, tick, unmount } from 'svelte';
 import SchoolSearch from './SchoolSearch.svelte';
+import { globalShortcuts } from '$lib/state/shortcuts.svelte';
 import type { School } from '$lib/types/dashboard';
 
 const mocks = vi.hoisted(() => ({
@@ -70,7 +71,7 @@ beforeEach(() => {
 	mocks.page.state = {};
 	mocks.page.params = {};
 	mocks.page.route = { id: '/(app)/overview' };
-	mocks.fetchSchools.mockResolvedValue({ items: schools });
+	mocks.fetchSchools.mockResolvedValue({ items: schools, totalCount: 42 });
 });
 
 afterEach(async () => {
@@ -116,5 +117,105 @@ describe('school search navigation', () => {
 		await tick();
 
 		expect(mocks.goto).not.toHaveBeenCalled();
+	});
+});
+
+function press(target: HTMLElement, key: string) {
+	const input = target.querySelector('input');
+	if (!input) throw new Error('Missing search input');
+	input.dispatchEvent(new KeyboardEvent('keydown', { key, bubbles: true, cancelable: true }));
+	flushSync();
+}
+
+describe('school search experience', () => {
+	it('opens the top result on Enter without arrowing first', async () => {
+		const target = mountSearch();
+		await search(target, 'maputle');
+		press(target, 'Enter');
+
+		const [url] = mocks.goto.mock.calls[0] as [string];
+		expect(url).toContain('school=925630449');
+	});
+
+	it('wraps from the last row to the first with the arrow keys', async () => {
+		const target = mountSearch();
+		await search(target);
+		press(target, 'ArrowUp');
+		const selected = target.querySelector('[role="option"][aria-selected="true"]');
+		expect(selected?.textContent).toContain('See all 42 results');
+		press(target, 'ArrowDown');
+		const first = target.querySelector('[role="option"][aria-selected="true"]');
+		expect(first?.textContent).toContain('Maputle Secondary School');
+	});
+
+	it('links to the full directory with the current search', async () => {
+		const target = mountSearch();
+		await search(target, 'secondary');
+		const options = target.querySelectorAll<HTMLElement>('[role="option"]');
+		options[options.length - 1]?.click();
+
+		expect(mocks.goto).toHaveBeenCalledWith('/schools?search=secondary');
+	});
+
+	it('highlights the searched term in school names', async () => {
+		const target = mountSearch();
+		await search(target, 'fezile');
+		const marks = [...target.querySelectorAll('mark')].map((mark) => mark.textContent);
+		expect(marks).toEqual(['Fezile']);
+	});
+
+	it('explains when no schools match', async () => {
+		mocks.fetchSchools.mockResolvedValue({ items: [], totalCount: 0 });
+		const target = mountSearch();
+		await search(target, 'zzz');
+
+		expect(target.textContent).toContain('No schools match');
+		expect(target.querySelector('[role="option"]')).toBeNull();
+	});
+
+	it('shows an error message when the search request fails', async () => {
+		mocks.fetchSchools.mockRejectedValue(new Error('offline'));
+		const target = mountSearch();
+		await search(target, 'maputle');
+
+		expect(target.textContent).toContain('Search is unavailable');
+	});
+
+	it('ignores a slow response that arrives after a newer search', async () => {
+		let resolveFirst: (value: unknown) => void = () => {};
+		mocks.fetchSchools
+			.mockImplementationOnce(() => new Promise((resolve) => (resolveFirst = resolve)))
+			.mockResolvedValueOnce({ items: [schools[1]], totalCount: 1 });
+		const target = mountSearch();
+		await search(target, 'map');
+		await search(target, 'fezile');
+		resolveFirst({ items: [schools[0]], totalCount: 1 });
+		await tick();
+
+		const names = [...target.querySelectorAll('[role="option"]')].map((o) => o.textContent);
+		expect(names[0]).toContain('Fezile Dabi Secondary');
+		expect(names).toHaveLength(2);
+	});
+
+	it('clears the query with the clear button', async () => {
+		const target = mountSearch();
+		await search(target);
+		target.querySelector<HTMLButtonElement>('button[aria-label="Clear search"]')?.click();
+		flushSync();
+
+		expect(target.querySelector('input')?.value).toBe('');
+		expect(target.querySelector('[role="option"]')).toBeNull();
+	});
+
+	it('focuses the search input with the / shortcut', () => {
+		const target = mountSearch();
+		flushSync();
+		const shortcuts = globalShortcuts(window);
+		window.dispatchEvent(
+			new KeyboardEvent('keydown', { key: '/', code: 'Slash', bubbles: true, cancelable: true })
+		);
+
+		expect(document.activeElement).toBe(target.querySelector('input'));
+		shortcuts.destroy();
 	});
 });

@@ -33,6 +33,7 @@
 	"shortcuts_commandPalette": "Otevřít příkazovou paletu",
 	"shortcuts_help": "Klávesové zkratky",
 	"shortcuts_editMap": "Upravit mapu vybrané školy (přehled)",
+	"shortcuts_focusSearch": "Hledat školy",
 
 	"commandPalette_placeholder": "Zadejte příkaz nebo hledejte...",
 	"commandPalette_noResults": "Žádné výsledky.",
