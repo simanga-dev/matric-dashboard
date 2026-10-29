@@ -209,7 +209,7 @@
 	}
 </script>
 
-<div class="relative" onfocusout={handleFocusOut}>
+<div class="relative w-48 sm:w-80 lg:w-[26rem]" onfocusout={handleFocusOut}>
 	<div
 		class="flex items-center gap-1.5 rounded-lg bg-muted/50 px-3 py-1.5 transition-colors focus-within:bg-accent focus-within:text-accent-foreground focus-within:ring-2 focus-within:ring-ring"
 		class:border={!borderless}
@@ -232,7 +232,7 @@
 			aria-label={m.search_schools_label()}
 			autocomplete="off"
 			spellcheck="false"
-			class="w-40 bg-transparent text-sm outline-none placeholder:text-muted-foreground md:w-56"
+			class="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
 			role="combobox"
 			aria-expanded={open}
 			aria-controls={resultsId}
@@ -267,7 +267,7 @@
 
 	{#if open}
 		<div
-			class="absolute top-full left-0 z-50 mt-1.5 w-[min(26rem,calc(100vw-2rem))] overflow-hidden rounded-xl border bg-popover text-popover-foreground shadow-xl motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1"
+			class="absolute top-full left-0 z-50 mt-1.5 w-full min-w-[min(20rem,calc(100vw-2rem))] overflow-hidden rounded-xl border bg-popover text-popover-foreground shadow-xl motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-1"
 		>
 			{#if status === 'loading' && results.length === 0}
 				<div class="space-y-1 p-1.5" aria-label={m.search_schools_searching()}>
@@ -325,12 +325,14 @@
 											>{:else}<span class="text-foreground/80">{part.text}</span>{/if}
 									{/each}
 								</div>
-								<div class="truncate text-xs text-muted-foreground">
-									{toTitleCase(school.province)}{#if school.circuit}
-										<span aria-hidden="true"> · </span>{toTitleCase(school.circuit)}{/if}
-									<span aria-hidden="true"> · </span><span class="font-mono tabular-nums"
-										>{school.id}</span
-									>
+								<div class="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
+									<span class="shrink-0">{toTitleCase(school.province)}</span>
+									{#if school.circuit}
+										<span aria-hidden="true">·</span>
+										<span class="truncate">{toTitleCase(school.circuit)}</span>
+									{/if}
+									<span aria-hidden="true">·</span>
+									<span class="shrink-0 font-mono tabular-nums">{school.id}</span>
 								</div>
 							</div>
 							<span
