@@ -326,12 +326,6 @@
 										{/each}
 									</div>
 									<div class="flex min-w-0 items-center gap-1.5 text-xs text-muted-foreground">
-										<span
-											class="shrink-0 font-medium tabular-nums {passRateTextClass(school.passRate)}"
-										>
-											{m.search_schools_passRate({ rate: formatPassRate(school.passRate) })}
-										</span>
-										<span aria-hidden="true">·</span>
 										<span class="shrink-0">{toTitleCase(school.province)}</span>
 										{#if school.circuit}
 											<span aria-hidden="true">·</span>
@@ -339,6 +333,13 @@
 										{/if}
 										<span aria-hidden="true">·</span>
 										<span class="shrink-0 font-mono tabular-nums">{school.id}</span>
+									</div>
+									<div
+										class="mt-0.5 text-xs font-medium tabular-nums {passRateTextClass(
+											school.passRate
+										)}"
+									>
+										{m.search_schools_passRate({ rate: formatPassRate(school.passRate) })}
 									</div>
 								</div>
 							</li>
