@@ -7,7 +7,10 @@ import type {
 	SchoolList,
 	SchoolSort,
 	SchoolSortOrder,
-	SchoolSubjects
+	SchoolSubjects,
+	SubjectDetail,
+	SubjectSchoolList,
+	SubjectSchoolSort
 } from '$lib/types/dashboard';
 import type { components } from './v1';
 
@@ -15,6 +18,13 @@ type GetResponse<T> = {
 	200: { content: { 'application/json': T } };
 	default: { content: { 'application/problem+json': components['schemas']['ProblemDetails'] } };
 };
+
+/** Counts returned after republishing the school directory to Meilisearch. */
+export interface SearchIndexRebuild {
+	indexed: number;
+	removed: number;
+	durationMs: number;
+}
 
 /** Dashboard contracts supplement the generated spec until it includes these endpoints. */
 export interface DashboardPaths {
@@ -34,6 +44,7 @@ export interface DashboardPaths {
 					pageNumber?: number;
 					pageSize?: number;
 					search?: string;
+					province?: string;
 					sort?: SchoolSort;
 					order?: SchoolSortOrder;
 				};
@@ -63,6 +74,38 @@ export interface DashboardPaths {
 		get: {
 			parameters: { query?: { province?: string; district?: string; year?: number } };
 			responses: GetResponse<RegionSubjects>;
+		};
+	};
+	'/api/v1/dashboard/subjects/{code}': {
+		get: {
+			parameters: {
+				path: { code: string };
+				query?: { province?: string; district?: string; year?: number };
+			};
+			responses: GetResponse<SubjectDetail>;
+		};
+	};
+	'/api/v1/dashboard/subjects/{code}/schools': {
+		get: {
+			parameters: {
+				path: { code: string };
+				query?: {
+					province?: string;
+					district?: string;
+					year?: number;
+					search?: string;
+					pageNumber?: number;
+					pageSize?: number;
+					sort?: SubjectSchoolSort;
+					order?: SchoolSortOrder;
+				};
+			};
+			responses: GetResponse<SubjectSchoolList>;
+		};
+	};
+	'/api/v1/search-index/schools': {
+		post: {
+			responses: GetResponse<SearchIndexRebuild>;
 		};
 	};
 }

@@ -3,27 +3,19 @@
 	import { metricHelp } from '$lib/components/common/metric-help';
 	import { TrendingUp } from '@lucide/svelte';
 	import * as Tooltip from '$lib/components/ui/tooltip';
-
-	/**
-	 * A single subject row for the bar chart. `year` is optional and only shown
-	 * when it differs from the headline year, so subjects last offered earlier
-	 * stay legible.
-	 */
-	export interface SubjectBar {
-		name: string;
-		totalWrote: number;
-		percentAchieved: number | null;
-		year?: number;
-	}
+	import type { SubjectBar } from './subject-bar';
 
 	let {
 		subjects,
 		headlineYear = null,
-		class: className = ''
+		class: className = '',
+		showSummary = true
 	}: {
 		subjects: SubjectBar[];
 		headlineYear?: number | null;
 		class?: string;
+		/** Shows the totals and approximation note under the bars. */
+		showSummary?: boolean;
 	} = $props();
 
 	let ordered = $derived(
@@ -56,6 +48,44 @@
 	}
 </script>
 
+{#snippet bar(subject: SubjectBar)}
+	<div class="relative flex min-h-9 min-w-0 flex-1 items-center rounded-md bg-muted/25">
+		{#each [25, 50, 75, 100] as grid (grid)}
+			<span
+				class="pointer-events-none absolute inset-y-0 border-s border-border/40"
+				style="inset-inline-start: {grid}%"
+				aria-hidden="true"
+			></span>
+		{/each}
+		<div
+			class="pointer-events-none absolute inset-y-0 start-0 flex overflow-hidden rounded-md opacity-30 transition-[width] duration-500 ease-out group-hover:opacity-45 group-focus-visible:opacity-45 motion-reduce:transition-none"
+			style:width={`${Math.min(100, Math.max(0, barWidth(subject)))}%`}
+			aria-hidden="true"
+		>
+			{#if subject.percentAchieved !== null}
+				<span
+					class="h-full bg-emerald-500"
+					style:width={`${subject.totalWrote > 0 ? (passedCount(subject) / subject.totalWrote) * 100 : 0}%`}
+				></span>
+				<span class="h-full flex-1 bg-rose-500"></span>
+			{:else}
+				<span class="h-full w-full bg-muted-foreground"></span>
+			{/if}
+		</div>
+		<span class="relative flex items-center gap-2 px-3 py-2 text-xs leading-snug font-medium">
+			{subject.name}
+		</span>
+	</div>
+	<span class="w-12 shrink-0 text-end">
+		<span class="block text-xs font-semibold tabular-nums">
+			{subject.totalWrote.toLocaleString()}
+		</span>
+		{#if subject.year && subject.year !== headlineYear}
+			<span class="block text-[10px] text-muted-foreground tabular-nums">{subject.year}</span>
+		{/if}
+	</span>
+{/snippet}
+
 <div class={className}>
 	<div
 		class="mb-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground"
@@ -86,45 +116,14 @@
 							aria-label={rowTitle(subject)}
 							class="group flex w-full items-center gap-3 rounded-md text-start outline-none focus-visible:ring-2 focus-visible:ring-ring"
 						>
-							<div class="relative flex min-h-9 min-w-0 flex-1 items-center rounded-md bg-muted/25">
-								{#each [25, 50, 75, 100] as grid (grid)}
-									<span
-										class="pointer-events-none absolute inset-y-0 border-s border-border/40"
-										style="inset-inline-start: {grid}%"
-										aria-hidden="true"
-									></span>
-								{/each}
-								<div
-									class="pointer-events-none absolute inset-y-0 start-0 flex overflow-hidden rounded-md opacity-30 transition-[width] duration-500 ease-out group-hover:opacity-45 group-focus-visible:opacity-45 motion-reduce:transition-none"
-									style:width={`${Math.min(100, Math.max(0, barWidth(subject)))}%`}
-									aria-hidden="true"
-								>
-									{#if subject.percentAchieved !== null}
-										<span
-											class="h-full bg-emerald-500"
-											style:width={`${subject.totalWrote > 0 ? (passedCount(subject) / subject.totalWrote) * 100 : 0}%`}
-										></span>
-										<span class="h-full flex-1 bg-rose-500"></span>
-									{:else}
-										<span class="h-full w-full bg-muted-foreground"></span>
-									{/if}
-								</div>
-								<span
-									class="relative flex items-center gap-2 px-3 py-2 text-xs leading-snug font-medium"
-								>
-									{subject.name}
-								</span>
-							</div>
-							<span class="w-12 shrink-0 text-end">
-								<span class="block text-xs font-semibold tabular-nums">
-									{subject.totalWrote.toLocaleString()}
-								</span>
-								{#if subject.year && subject.year !== headlineYear}
-									<span class="block text-[10px] text-muted-foreground tabular-nums"
-										>{subject.year}</span
-									>
+							{#snippet child({ props })}
+								{#if subject.href}
+									<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -- callers pass resolved hrefs -->
+									<a {...props} href={subject.href}>{@render bar(subject)}</a>
+								{:else}
+									<button {...props} type="button">{@render bar(subject)}</button>
 								{/if}
-							</span>
+							{/snippet}
 						</Tooltip.Trigger>
 						<Tooltip.Content
 							side="top"
@@ -163,19 +162,21 @@
 		</ul>
 	</Tooltip.Provider>
 
-	<div class="mt-3 flex items-start gap-2 border-t pt-2.5">
-		<TrendingUp class="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
-		<div class="text-xs">
-			<p class="font-medium">
-				{subjects.reduce((total, s) => total + s.totalWrote, 0).toLocaleString()} subject entries<InfoTooltip
-					label="subject entries"
-					text={metricHelp.subjectEntries}
-				/>
-			</p>
-			<p class="text-muted-foreground">
-				Across {subjects.length} subjects{headlineYear ? ` in ${headlineYear}` : ''}
-			</p>
-			<p class="mt-1 text-muted-foreground">Pass counts estimated from reported pass rates.</p>
+	{#if showSummary}
+		<div class="mt-3 flex items-start gap-2 border-t pt-2.5">
+			<TrendingUp class="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+			<div class="text-xs">
+				<p class="font-medium">
+					{subjects.reduce((total, s) => total + s.totalWrote, 0).toLocaleString()} subject entries<InfoTooltip
+						label="subject entries"
+						text={metricHelp.subjectEntries}
+					/>
+				</p>
+				<p class="text-muted-foreground">
+					Across {subjects.length} subjects{headlineYear ? ` in ${headlineYear}` : ''}
+				</p>
+				<p class="mt-1 text-muted-foreground">Pass counts estimated from reported pass rates.</p>
+			</div>
 		</div>
-	</div>
+	{/if}
 </div>

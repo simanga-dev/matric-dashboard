@@ -9,8 +9,9 @@
 
 	let { children, data } = $props();
 
-	// The overview is a full-bleed workspace: it manages its own height and
-	// wants no page padding or card frame around it.
+	// The overview is full-bleed and manages its own padding. Every page still
+	// shares one chrome: the header sits directly on the shell background and
+	// the page content below it is the single rounded, bordered surface.
 	let fullBleed = $derived(page.route.id === '/(app)/overview');
 
 	// When health polling detects the backend went down, re-run server loads.
@@ -29,24 +30,20 @@
 
 <Sidebar.Provider
 	open={data.sidebarOpen}
-	class="h-dvh overflow-hidden"
-	style="--sidebar-width: calc(var(--spacing) * 72); --header-height: calc(var(--spacing) * 12);"
+	class="h-dvh overflow-hidden bg-sidebar"
+	style="--sidebar-width: 19.5rem; --header-height: calc(var(--spacing) * 12);"
 >
 	<AppSidebar user={data.user} />
-	<Sidebar.Inset
-		class={fullBleed
-			? 'md:peer-data-[variant=inset]:m-0 md:peer-data-[variant=inset]:ms-0 md:peer-data-[variant=inset]:rounded-none md:peer-data-[variant=inset]:shadow-none md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ms-0'
-			: undefined}
-	>
-		<ContentHeader borderless={fullBleed} />
+	<Sidebar.Inset class="bg-transparent md:m-0 md:rounded-none md:shadow-none">
+		<ContentHeader borderless />
 		{#if data.user && !data.user.emailConfirmed}
 			<EmailVerificationBanner />
 		{/if}
 
 		<div
 			class={cn(
-				'flex flex-1 flex-col bg-background',
-				!fullBleed && 'md:m-2 md:rounded-xl md:shadow-sm'
+				'flex min-h-0 flex-1 flex-col bg-background',
+				'overflow-hidden md:me-2 md:mb-2 md:rounded-xl md:border md:border-sidebar-border'
 			)}
 		>
 			<div

@@ -52,9 +52,12 @@ def load_csv(path: str, clean_names: dict[str, str] | None = None) -> list[dict]
             if not emis:
                 continue
 
-            # Build a clean document with the EMIS as the primary key
+            # Build a clean document with the EMIS as the primary key.
+            # `school_id` is the identifier the API reads from hits before
+            # hydrating them from the database.
             doc = {
                 "id": emis,
+                "school_id": emis,
                 "province": row.get("province", "").strip(),
                 "district_name": row.get("district_name", "").strip(),
                 "emis_number": emis,
@@ -108,7 +111,10 @@ def _float_or_none(val: str | None) -> float | None:
 
 def upload_documents(documents: list[dict], api_key: str) -> None:
     """Upload documents to MeiliSearch in batches."""
-    url = f"{MEILI_URL}/indexes/{INDEX_NAME}/documents"
+    # The API and this uploader both use the EMIS number in `id` as the primary
+    # key. `school_id` is published for the API but is not the primary key, so
+    # Meilisearch must be told which candidate to use.
+    url = f"{MEILI_URL}/indexes/{INDEX_NAME}/documents?primaryKey=id"
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {api_key}",

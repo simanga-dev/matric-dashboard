@@ -20,12 +20,13 @@ public interface IDashboardService
     Task<IReadOnlyList<PassRateTrendOutput>> GetPassRateTrendsAsync(string? years = null);
 
     /// <summary>
-    /// Returns a paginated list of schools with optional search and per-column sorting.
+    /// Returns a paginated list of schools with optional search, province filter, and per-column sorting.
     /// </summary>
     /// <param name="sort">Column to sort by: name, province, totalWrote, totalPassed, passRate, or mapUpdatedAt.</param>
     /// <param name="order">Sort direction: asc or desc. Defaults to desc for metrics and mapUpdatedAt, asc otherwise.</param>
+    /// <param name="province">Optional province filter (exact name).</param>
     Task<SchoolListOutput> GetSchoolsAsync(int pageNumber, int pageSize, string? search = null, string? sort = null,
-        string? order = null);
+        string? order = null, string? province = null);
 
     /// <summary>
     /// Returns aggregated NSC performance for the country, or narrowed to a
@@ -51,6 +52,37 @@ public interface IDashboardService
         string? province,
         string? district,
         int? year = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns a single subject's NSC performance for the country, or narrowed to
+    /// a province and/or district, with a yearly trend and province and district
+    /// breakdowns for the selected year.
+    /// </summary>
+    /// <param name="code">Stable subject code (e.g. "mathematics").</param>
+    /// <param name="province">Optional province filter (exact name).</param>
+    /// <param name="district">Optional district filter (exact name), typically with a province.</param>
+    /// <param name="year">Optional academic year; defaults to the latest year with data in the scope.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A successful result, or a not-found failure when the subject does not exist.</returns>
+    Task<Result<SubjectDetailOutput>> GetSubjectDetailAsync(
+        string code,
+        string? province,
+        string? district,
+        int? year = null,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns a paginated, searchable, sortable list of schools that offered a
+    /// subject in the selected academic year.
+    /// </summary>
+    /// <param name="code">Stable subject code (e.g. "mathematics").</param>
+    /// <param name="input">Scope, year, search, sorting, and paging options.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A successful result, or a not-found failure when the subject does not exist.</returns>
+    Task<Result<SubjectSchoolListOutput>> GetSubjectSchoolsAsync(
+        string code,
+        SubjectSchoolsInput input,
         CancellationToken cancellationToken = default);
 
     /// <summary>

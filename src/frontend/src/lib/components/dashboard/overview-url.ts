@@ -12,6 +12,8 @@ import type { School } from '$lib/types/dashboard';
  * - `school`   selected school id (EMIS number)
  * - `province` selected province name
  * - `district` selected district (circuit) name, scoped by province
+ * - `schools`  `1` while the school directory dialog is open, so closing or
+ *              sharing the dialog survives a reload
  * - `open`     base64url of `{ p: string[], c: [province, circuit][] }`, the
  *              expanded provinces and circuits. Base64url keeps the value
  *              compact and free of query-breaking characters.
@@ -23,6 +25,7 @@ export interface OverviewUrlState {
 	school: string | null;
 	province: string | null;
 	district: string | null;
+	schools: boolean;
 	expandedProvinces: string[];
 	expandedCircuits: string[];
 }
@@ -44,6 +47,7 @@ export function revealOverviewSchool(state: OverviewUrlState, school: School): O
 		school: school.id,
 		province: null,
 		district: null,
+		schools: state.schools,
 		expandedProvinces: [...new Set([...state.expandedProvinces, school.province])],
 		expandedCircuits: [
 			...new Set([...state.expandedCircuits, circuitKey(school.province, school.circuit)])
@@ -170,6 +174,7 @@ export function parseOverviewState(search: string): OverviewUrlState {
 		school: school === null ? null : decode(school),
 		province: province === null ? null : decode(province),
 		district: district === null ? null : decode(district),
+		schools: rawParam(search, 'schools') === '1',
 		expandedProvinces: payload.p,
 		expandedCircuits: payload.c.map(([prov, circuit]) => circuitKey(prov, circuit))
 	};
@@ -181,6 +186,7 @@ export function hasOverviewState(state: OverviewUrlState): boolean {
 		state.school ||
 		state.province ||
 		state.district ||
+		state.schools ||
 		state.expandedProvinces.length ||
 		state.expandedCircuits.length
 	);
@@ -202,6 +208,8 @@ export function serializeOverviewState(state: OverviewUrlState): string {
 		const payload: OpenPayload = { p: state.expandedProvinces, c: circuits };
 		parts.push(`open=${encodeBase64Url(JSON.stringify(payload))}`);
 	}
+
+	if (state.schools) parts.push('schools=1');
 
 	return parts.join('&');
 }

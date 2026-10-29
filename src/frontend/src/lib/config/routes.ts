@@ -9,6 +9,7 @@ export const routes = {
 	dashboard: '/dashboard',
 	overview: '/overview',
 	schools: '/schools',
+	subjects: '/subjects',
 	login: '/login',
 	register: '/register',
 	forgotPassword: '/forgot-password',
@@ -23,6 +24,14 @@ export const routes = {
  */
 export function schoolPath(id: number | string): `/schools/${string}` {
 	return `/schools/${String(id)}`;
+}
+
+/**
+ * Builds the detail-page pathname for a single subject by its stable code.
+ * The code is URI-encoded so unexpected characters cannot alter the path.
+ */
+export function subjectPath(code: string): `/subjects/${string}` {
+	return `/subjects/${encodeURIComponent(code)}`;
 }
 
 /**

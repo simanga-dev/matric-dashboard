@@ -10,18 +10,18 @@
 		Shield,
 		Clock,
 		KeyRound,
-		Package2,
+		GraduationCap,
 		LogIn,
 		BookOpen,
 		BookMarked,
 		MapPinned,
-		GraduationCap,
-		Trophy,
 		List,
+		UserRound,
+		Settings,
 		type IconProps
 	} from '@lucide/svelte';
 	import * as m from '$lib/paraglide/messages';
-	import { UserNav } from '$lib/components/layout';
+	import UserNav from './UserNav.svelte';
 	import { LoginForm } from '$lib/components/auth';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import type { Component } from 'svelte';
@@ -34,8 +34,14 @@
 	let { user }: Props = $props();
 
 	const sidebar = Sidebar.useSidebar();
+
+	// Dokploy-style rows: compact height, quiet icons, and a translucent
+	// foreground overlay for hover and the active item. Using the foreground
+	// token keeps the contrast right in both light and dark themes.
 	const navigationButtonClass =
-		'min-h-[44px] gap-3 rounded-lg px-3 text-sidebar-foreground/85 transition-colors hover:bg-sidebar-accent/60 data-[active=true]:bg-sidebar-accent/80 group-data-[collapsible=icon]:min-h-0';
+		'h-9 min-h-9 gap-2.5 rounded-md px-2 text-sm font-normal text-sidebar-foreground hover:bg-sidebar-foreground/[0.06] data-[active=true]:bg-sidebar-foreground/10 data-[active=true]:font-medium data-[active=true]:text-sidebar-foreground [&>svg]:text-sidebar-foreground/80 [&>svg]:transition-colors group-data-[collapsible=icon]:min-h-0';
+
+	const groupLabelClass = 'h-8 px-2 text-xs font-medium text-sidebar-foreground/60';
 
 	type NavItem = { title: () => string; href: string; icon: Component<IconProps> };
 	type AdminNavItem = NavItem & { permission: AdminRoute['permission'] };
@@ -46,16 +52,18 @@
 			href: resolve(routes.overview),
 			icon: MapPinned
 		},
-		{
-			title: m.nav_schools,
-			href: resolve(routes.schools),
-			icon: GraduationCap
-		},
-		{
-			title: () => 'Top Achievers',
-			href: '/top-achievers',
-			icon: Trophy
-		},
+		// Hidden for now - the directory opens as a dialog from the overview.
+		// {
+		// 	title: m.nav_schools,
+		// 	href: resolve(routes.schools),
+		// 	icon: GraduationCap
+		// },
+		// Hidden for now - re-enable when the Top Achievers page is ready.
+		// {
+		// 	title: () => 'Top Achievers',
+		// 	href: '/top-achievers',
+		// 	icon: Trophy
+		// },
 		{
 			title: () => 'Subjects',
 			href: '/subjects',
@@ -73,6 +81,19 @@
 			title: () => 'Study Guide',
 			href: '/study-guide',
 			icon: List
+		}
+	];
+
+	const accountItems: NavItem[] = [
+		{
+			title: m.nav_profile,
+			href: resolve(routes.profile),
+			icon: UserRound
+		},
+		{
+			title: m.nav_settings,
+			href: resolve(routes.settings),
+			icon: Settings
 		}
 	];
 
@@ -124,28 +145,41 @@
 	}
 </script>
 
-<!-- eslint-disable svelte/no-navigation-without-resolve -- hrefs are pre-resolved using resolve() in navMain -->
-<Sidebar.Root variant="inset" collapsible="icon" class="ps-[env(safe-area-inset-left,0px)]">
-	<Sidebar.Header class="px-2 pt-3 pb-4">
-		<Sidebar.Menu>
-			<Sidebar.MenuItem>
-				<Sidebar.MenuButton size="lg" class="rounded-lg px-3">
+<!-- eslint-disable svelte/no-navigation-without-resolve -- hrefs are pre-resolved using resolve() for routes -->
+<Sidebar.Root variant="floating" collapsible="icon" class="ps-[env(safe-area-inset-left,0px)]">
+	<Sidebar.Header class="p-2">
+		<Sidebar.Menu class="flex-row items-center gap-1 group-data-[collapsible=icon]:flex-col">
+			<Sidebar.MenuItem class="min-w-0 flex-1 group-data-[collapsible=icon]:flex-none">
+				<Sidebar.MenuButton
+					size="lg"
+					class="h-10 gap-2 rounded-md px-1.5 hover:bg-sidebar-foreground/[0.06]"
+				>
 					{#snippet child({ props })}
-						<a href={resolve(routes.overview)} onclick={handleNavigate} {...props}>
+						<a
+							href={resolve(routes.overview)}
+							onclick={handleNavigate}
+							class="flex min-w-0 items-center gap-2"
+							aria-label={m.app_name()}
+							{...props}
+						>
 							<div
-								class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-foreground"
+								class="flex size-7 shrink-0 items-center justify-center rounded-md border border-sidebar-border bg-sidebar-accent/50 text-sidebar-foreground"
 							>
-								<Package2 class="size-4" />
+								<GraduationCap class="size-4" />
 							</div>
-							<span class="truncate font-semibold tracking-tight">{m.app_name()}</span>
+							<span class="truncate text-sm font-medium group-data-[collapsible=icon]:hidden">
+								{m.app_name()}
+							</span>
 						</a>
 					{/snippet}
 				</Sidebar.MenuButton>
 			</Sidebar.MenuItem>
 		</Sidebar.Menu>
 	</Sidebar.Header>
-	<Sidebar.Content class="gap-4">
+
+	<Sidebar.Content class="gap-2">
 		<Sidebar.Group>
+			<Sidebar.GroupLabel class={groupLabelClass}>Home</Sidebar.GroupLabel>
 			<Sidebar.GroupContent>
 				<Sidebar.Menu>
 					{#each navMain as item (item.href)}
@@ -173,42 +207,11 @@
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
 
-		<Sidebar.Group class="group-data-[collapsible=icon]:hidden">
-			<Sidebar.GroupLabel class="px-3 font-normal text-sidebar-foreground/60"
-				>Documents</Sidebar.GroupLabel
-			>
-			<Sidebar.Menu>
-				{#each documents as item (item.href)}
-					<Sidebar.MenuItem>
-						<Sidebar.MenuButton
-							class={navigationButtonClass}
-							tooltipContent={item.title()}
-							isActive={isActive(item.href)}
-						>
-							{#snippet child({ props })}
-								<a
-									href={item.href}
-									onclick={handleNavigate}
-									aria-current={isActive(item.href) ? 'page' : undefined}
-									{...props}
-								>
-									<item.icon />
-									<span>{item.title()}</span>
-								</a>
-							{/snippet}
-						</Sidebar.MenuButton>
-					</Sidebar.MenuItem>
-				{/each}
-			</Sidebar.Menu>
-		</Sidebar.Group>
-
-		{#if visibleAdminItems.length > 0}
-			<Sidebar.Group class="group-data-[collapsible=icon]:hidden">
-				<Sidebar.GroupLabel class="px-3 font-normal text-sidebar-foreground/60"
-					>{m.nav_admin()}</Sidebar.GroupLabel
-				>
+		<Sidebar.Group>
+			<Sidebar.GroupLabel class={groupLabelClass}>Documents</Sidebar.GroupLabel>
+			<Sidebar.GroupContent>
 				<Sidebar.Menu>
-					{#each visibleAdminItems as item (item.href)}
+					{#each documents as item (item.href)}
 						<Sidebar.MenuItem>
 							<Sidebar.MenuButton
 								class={navigationButtonClass}
@@ -230,39 +233,93 @@
 						</Sidebar.MenuItem>
 					{/each}
 				</Sidebar.Menu>
+			</Sidebar.GroupContent>
+		</Sidebar.Group>
+
+		{#if user}
+			<Sidebar.Group>
+				<Sidebar.GroupLabel class={groupLabelClass}>Settings</Sidebar.GroupLabel>
+				<Sidebar.GroupContent>
+					<Sidebar.Menu>
+						{#each accountItems as item (item.href)}
+							<Sidebar.MenuItem>
+								<Sidebar.MenuButton
+									class={navigationButtonClass}
+									tooltipContent={item.title()}
+									isActive={isActive(item.href)}
+								>
+									{#snippet child({ props })}
+										<a
+											href={item.href}
+											onclick={handleNavigate}
+											aria-current={isActive(item.href) ? 'page' : undefined}
+											{...props}
+										>
+											<item.icon />
+											<span>{item.title()}</span>
+										</a>
+									{/snippet}
+								</Sidebar.MenuButton>
+							</Sidebar.MenuItem>
+						{/each}
+					</Sidebar.Menu>
+				</Sidebar.GroupContent>
+			</Sidebar.Group>
+		{/if}
+
+		{#if visibleAdminItems.length > 0}
+			<Sidebar.Group>
+				<Sidebar.GroupLabel class={groupLabelClass}>{m.nav_admin()}</Sidebar.GroupLabel>
+				<Sidebar.GroupContent>
+					<Sidebar.Menu>
+						{#each visibleAdminItems as item (item.href)}
+							<Sidebar.MenuItem>
+								<Sidebar.MenuButton
+									class={navigationButtonClass}
+									tooltipContent={item.title()}
+									isActive={isActive(item.href)}
+								>
+									{#snippet child({ props })}
+										<a
+											href={item.href}
+											onclick={handleNavigate}
+											aria-current={isActive(item.href) ? 'page' : undefined}
+											{...props}
+										>
+											<item.icon />
+											<span>{item.title()}</span>
+										</a>
+									{/snippet}
+								</Sidebar.MenuButton>
+							</Sidebar.MenuItem>
+						{/each}
+					</Sidebar.Menu>
+				</Sidebar.GroupContent>
 			</Sidebar.Group>
 		{/if}
 	</Sidebar.Content>
+
 	<Sidebar.Footer class="pb-[max(0.5rem,env(safe-area-inset-bottom,0px))]">
-		{#if !sidebar.isMobile || !user}
-			<Sidebar.Separator />
-		{/if}
-		{#if !sidebar.isMobile}
-			<div class="flex w-full items-center gap-1 group-data-[collapsible=icon]:justify-center">
+		<Sidebar.Menu>
+			<Sidebar.MenuItem>
 				{#if user}
-					<UserNav {user} />
+					<UserNav {user} variant="sidebar" />
 				{:else}
 					<Sidebar.MenuButton
+						size="lg"
+						class="h-10 gap-2 rounded-md px-2 text-sidebar-foreground hover:bg-sidebar-foreground/[0.06]"
 						tooltipContent={m.auth_login_submit()}
+						aria-label={m.auth_login_submit()}
 						onclick={() => (loginDialogOpen = true)}
 					>
-						<LogIn class="size-5" />
+						<LogIn class="size-4" />
+						<span class="truncate text-sm font-normal group-data-[collapsible=icon]:hidden">
+							{m.auth_login_submit()}
+						</span>
 					</Sidebar.MenuButton>
 				{/if}
-			</div>
-		{:else if !user}
-			<Sidebar.Menu>
-				<Sidebar.MenuItem>
-					<Sidebar.MenuButton
-						tooltipContent={m.auth_login_submit()}
-						onclick={() => (loginDialogOpen = true)}
-					>
-						<LogIn />
-						<span>{m.auth_login_submit()}</span>
-					</Sidebar.MenuButton>
-				</Sidebar.MenuItem>
-			</Sidebar.Menu>
-		{/if}
+			</Sidebar.MenuItem>
+		</Sidebar.Menu>
 	</Sidebar.Footer>
 </Sidebar.Root>
 

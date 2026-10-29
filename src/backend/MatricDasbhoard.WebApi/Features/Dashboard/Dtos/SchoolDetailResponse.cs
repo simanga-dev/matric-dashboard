@@ -20,8 +20,8 @@ public class SchoolDetailResponse
     /// <summary>Examination centre number assigned by the DBE.</summary>
     public string CentreNumber { get; init; } = string.Empty;
 
-    /// <summary>Socio-economic quintile (1 is poorest, 5 is wealthiest).</summary>
-    public int Quintile { get; init; }
+    /// <summary>Socio-economic quintile (1 is poorest, 5 is wealthiest), null when not published.</summary>
+    public int? Quintile { get; init; }
 
     /// <summary>Learners who wrote in the latest available year.</summary>
     public int TotalWrote { get; init; }
@@ -46,6 +46,54 @@ public class SchoolDetailResponse
 
     /// <summary>Subjects written in <see cref="SubjectsOfferedYear"/>, ordered by name.</summary>
     public IReadOnlyList<OfferedSubjectResponse> SubjectsOffered { get; init; } = [];
+
+    /// <summary>Raw quintile value from the DBE masterlist (e.g. "Q3", "N/A").</summary>
+    public string? QuintileCode { get; init; }
+
+    /// <summary>School email address.</summary>
+    public string? Email { get; init; }
+
+    /// <summary>School telephone number in E.164 form.</summary>
+    public string? Telephone { get; init; }
+
+    /// <summary>Public or independent sector.</summary>
+    public string? Sector { get; init; }
+
+    /// <summary>Phase of schooling offered.</summary>
+    public string? Phase { get; init; }
+
+    /// <summary>Normalized land ownership.</summary>
+    public string? LandOwnership { get; init; }
+
+    /// <summary>Normalized building ownership.</summary>
+    public string? BuildingOwnership { get; init; }
+
+    /// <summary>Whether the school is a Section 21 school, null when unknown.</summary>
+    public bool? IsSection21 { get; init; }
+
+    /// <summary>Whether the school charges no fees, null when unknown.</summary>
+    public bool? IsNoFeeSchool { get; init; }
+
+    /// <summary>Urban or rural classification.</summary>
+    public string? UrbanRural { get; init; }
+
+    /// <summary>Latest learner and educator counts, null when no masterlist data exists.</summary>
+    public SchoolEnrolmentResponse? Enrolment { get; init; }
+}
+
+/// <summary>
+/// Learner and educator counts for a single year.
+/// </summary>
+public class SchoolEnrolmentResponse
+{
+    /// <summary>Data year the counts apply to.</summary>
+    public int Year { get; init; }
+
+    /// <summary>Learners enrolled, null when not published.</summary>
+    public int? Learners { get; init; }
+
+    /// <summary>Educators employed, null when not published.</summary>
+    public int? Educators { get; init; }
 }
 
 /// <summary>

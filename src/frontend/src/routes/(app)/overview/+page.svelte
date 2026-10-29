@@ -38,6 +38,9 @@
 				school: typeof record.school === 'string' ? record.school : null,
 				province: typeof record.province === 'string' ? record.province : null,
 				district: typeof record.district === 'string' ? record.district : null,
+				// The dialog is a transient view, so returning to the page should
+				// not reopen it; only an explicit URL or history entry does.
+				schools: false,
 				expandedProvinces: strings(record.expandedProvinces),
 				expandedCircuits: strings(record.expandedCircuits)
 			};
@@ -53,6 +56,7 @@
 	let selectedSchoolId: string | null = $state(initial.school);
 	let selectedProvince: string | null = $state(initial.province);
 	let selectedDistrict: string | null = $state(initial.district);
+	let schoolsOpen = $state(initial.schools);
 	let expandedProvinces = $state<Set<string>>(new Set(initial.expandedProvinces));
 	let expandedCircuits = $state<Set<string>>(new Set(initial.expandedCircuits));
 	let restoredSchoolId = $state<string | null>(
@@ -75,6 +79,7 @@
 			school: selectedSchoolId,
 			province: selectedProvince,
 			district: selectedDistrict,
+			schools: schoolsOpen,
 			expandedProvinces: [...expandedProvinces],
 			expandedCircuits: [...expandedCircuits]
 		};
@@ -93,6 +98,7 @@
 		selectedSchoolId = state.school;
 		selectedProvince = state.province;
 		selectedDistrict = state.district;
+		schoolsOpen = state.schools;
 		expandedProvinces = new Set(state.expandedProvinces);
 		expandedCircuits = new Set(state.expandedCircuits);
 	}
@@ -133,6 +139,7 @@
 			school: selectedSchoolId,
 			province: selectedProvince,
 			district: selectedDistrict,
+			schools: schoolsOpen,
 			expandedProvinces: [...expandedProvinces],
 			expandedCircuits: [...expandedCircuits]
 		};
@@ -151,6 +158,8 @@
 			school: selectedSchoolId,
 			province: selectedProvince,
 			district: selectedDistrict,
+			// Keep the transient dialog out of the remembered workspace.
+			schools: false,
 			expandedProvinces: [...expandedProvinces],
 			expandedCircuits: [...expandedCircuits]
 		};
@@ -173,6 +182,7 @@
 			schools={data.schools}
 			{restoredSchoolId}
 			{revealRequest}
+			bind:schoolsOpen
 			bind:selectedSchoolId
 			bind:selectedProvince
 			bind:selectedDistrict
@@ -190,10 +200,10 @@
 		min-width: 0;
 	}
 	/* Wide layout is side-by-side, so let it fill the app shell. The shell
-	   reserves only the header above the workspace. */
+	   reserves the header above the workspace and the card's bottom margin. */
 	@media (min-width: 1200px) {
 		.workspace {
-			height: calc(100dvh - var(--header-height, 3rem));
+			height: calc(100dvh - var(--header-height, 3rem) - 0.5rem);
 		}
 	}
 </style>

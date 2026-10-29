@@ -41,6 +41,7 @@ print(f"Query time: {data.get('processingTimeMs', '?')}ms")
 print()
 for hit in data.get("hits", []):
     print(f"  ID: {hit.get('id')}")
+    print(f"  School ID: {hit.get('school_id')}")
     print(f"  Centre: {hit.get('centre_name')}")
     print(f"  Province: {hit.get('province')}")
     print(f"  District: {hit.get('district_name')}")

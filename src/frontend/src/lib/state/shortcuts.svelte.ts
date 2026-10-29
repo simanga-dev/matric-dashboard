@@ -165,14 +165,48 @@ export function isOverlayOpen(): boolean {
 	);
 }
 
-function isInput(target: EventTarget | null): boolean {
-	if (!(target instanceof HTMLElement)) return false;
-	return (
-		target.tagName === 'INPUT' ||
-		target.tagName === 'TEXTAREA' ||
-		target.tagName === 'SELECT' ||
-		target.isContentEditable
-	);
+/**
+ * Editable controls that own printable keys. This is narrower than
+ * `isShortcutTargetBlocked`: page shortcuts may still run while a tree row or
+ * toolbar button has focus, because those do not accept text entry.
+ */
+const TEXT_ENTRY_SELECTOR = [
+	'input',
+	'textarea',
+	'select',
+	'[contenteditable]:not([contenteditable="false"])',
+	'[role="textbox"]',
+	'[role="searchbox"]',
+	'[role="combobox"]'
+].join(', ');
+
+function isTextEntry(target: EventTarget | null): boolean {
+	return target instanceof Element && target.closest(TEXT_ENTRY_SELECTOR) !== null;
+}
+
+/**
+ * The deepest element in the event path. Using the composed path unwraps
+ * shadow-DOM retargeting, where `event.target` is the host rather than the
+ * control that actually received the key.
+ */
+function eventTargetElement(event: KeyboardEvent): EventTarget | null {
+	const path = typeof event.composedPath === 'function' ? event.composedPath() : [];
+	return path.find((node) => node instanceof Element) ?? event.target;
+}
+
+/**
+ * True when the key press belongs to an editable control. The event target
+ * covers the common case; the active element also covers controls that
+ * re-dispatch keys from the body and inputs whose events are retargeted.
+ */
+function ownsKeyboardInput(event: KeyboardEvent): boolean {
+	return isTextEntry(eventTargetElement(event)) || isTextEntry(document.activeElement);
+}
+
+/** True when the action has something to run, so keys are not swallowed in vain. */
+function hasHandler(action: ShortcutActionType, handlers: ShortcutHandlers): boolean {
+	if (action === ShortcutAction.Help || action === ShortcutAction.CommandPalette) return true;
+	return Boolean(handlers[action] ?? registeredHandlers.get(action));
 }
 
 function matchShortcut(event: KeyboardEvent): ShortcutConfig | undefined {
@@ -195,9 +229,15 @@ export function globalShortcuts(node: Window, handlers: ShortcutHandlers = {}) {
 	let currentHandlers = handlers;
 
 	function onKeydown(event: KeyboardEvent) {
+		// IME composition owns its keys; treating them as shortcuts would drop
+		// characters mid-word for input methods that emit keydown events.
+		if (event.defaultPrevented || event.isComposing || event.keyCode === 229) return;
 		const sc = matchShortcut(event);
 		if (!sc) return;
-		if (!sc.allowInInput && isInput(event.target)) return;
+		if (!sc.allowInInput && ownsKeyboardInput(event)) return;
+		// Single-key shortcuts must not block typing where no handler is mounted
+		// (for example E on a page without the school map editor).
+		if (!hasHandler(sc.action, currentHandlers)) return;
 		event.preventDefault();
 		executeAction(sc.action, currentHandlers);
 	}

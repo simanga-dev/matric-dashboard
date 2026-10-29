@@ -1,6 +1,10 @@
 import type { PageServerLoad } from './$types';
-import { getSchoolById } from '$lib/server/dashboard';
+import { getSchoolById, getSchoolSpatial } from '$lib/server/dashboard';
 
 export const load: PageServerLoad = async ({ fetch, url, params }) => {
-	return { school: await getSchoolById(fetch, url.origin, params.id) };
+	const [school, spatial] = await Promise.all([
+		getSchoolById(fetch, url.origin, params.id),
+		getSchoolSpatial(fetch, url.origin, params.id)
+	]);
+	return { school, spatial };
 };

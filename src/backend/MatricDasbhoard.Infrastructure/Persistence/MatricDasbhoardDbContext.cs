@@ -60,6 +60,11 @@ internal class MatricDasbhoardDbContext(DbContextOptions<MatricDasbhoardDbContex
     public DbSet<SchoolPerformance> SchoolPerformances { get; set; }
 
     /// <summary>
+    /// Gets or sets the school enrolment records table for yearly learner and educator counts.
+    /// </summary>
+    public DbSet<SchoolEnrolment> SchoolEnrolments { get; set; }
+
+    /// <summary>
     /// Gets or sets the NSC examination subjects table.
     /// </summary>
     public DbSet<Subject> Subjects { get; set; }

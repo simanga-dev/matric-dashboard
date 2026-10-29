@@ -18,5 +18,8 @@ public enum ErrorType
     Forbidden = 3,
 
     /// <summary>Optimistic concurrency conflict (409 Conflict).</summary>
-    Conflict = 4
+    Conflict = 4,
+
+    /// <summary>An upstream dependency is unavailable (503 Service Unavailable).</summary>
+    ServiceUnavailable = 5
 }

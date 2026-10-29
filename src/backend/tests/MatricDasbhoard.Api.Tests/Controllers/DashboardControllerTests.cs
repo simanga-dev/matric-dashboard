@@ -214,6 +214,204 @@ public class DashboardControllerTests(CustomWebApplicationFactory factory) : ICl
         Assert.Equal(1, row.SchoolCount);
     }
 
+    /// <summary>The subject detail endpoint returns scoped totals, trend, and province and district breakdowns.</summary>
+    [Fact]
+    public async Task SubjectDetail_ReturnsScopedAggregatesAndBreakdowns()
+    {
+        using var client = factory.CreateClient();
+        await SeedSubjectAsync("api-subject-detail");
+
+        using var response = await client.GetAsync(
+            "/api/v1/dashboard/subjects/api-subject-detail?province=FREE%20STATE");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var contract = await response.Content.ReadFromJsonAsync<SubjectDetailContract>();
+        Assert.NotNull(contract);
+        Assert.Equal("api-subject-detail", contract.Code);
+        Assert.Equal("API Subject", contract.Name);
+        Assert.False(contract.IsGateway);
+        Assert.Equal("province", contract.Scope);
+        Assert.Equal("FREE STATE", contract.ScopeName);
+        Assert.Equal("FREE STATE", contract.Province);
+        Assert.Null(contract.District);
+        Assert.Equal(2024, contract.Year);
+        Assert.Equal([2023, 2024], contract.AvailableYears);
+        Assert.Equal(2, contract.SchoolCount);
+        Assert.Equal(100, contract.TotalWrote);
+        Assert.Null(contract.Achieved);
+        Assert.Equal(58.0, contract.PercentAchieved);
+        Assert.Equal(
+            [new SubjectYearContract(2023, 1, 50, 25, 50.0), new SubjectYearContract(2024, 2, 100, null, 58.0)],
+            contract.Trend);
+        Assert.Equal(
+            [
+                new SubjectRegionContract("FREE STATE", 2, 100, null, 58.0),
+                new SubjectRegionContract("MPUMALANGA", 1, 100, 90, 90.0)
+            ],
+            contract.Provinces);
+        Assert.Equal(
+            [
+                new SubjectRegionContract("Lejweleputswa", 1, 40, null, 25.0),
+                new SubjectRegionContract("Motheo", 1, 60, 48, 80.0)
+            ],
+            contract.Districts);
+
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal(JsonValueKind.Null, json.RootElement.GetProperty("achieved").ValueKind);
+        Assert.Equal(JsonValueKind.Null, json.RootElement.GetProperty("district").ValueKind);
+        Assert.True(json.RootElement.TryGetProperty("scopeName", out _));
+        Assert.False(json.RootElement.TryGetProperty("ScopeName", out _));
+    }
+
+    /// <summary>A scope without data still returns 200 with no year and empty collections.</summary>
+    [Fact]
+    public async Task SubjectDetail_EmptyScopeReturnsEmptyResult()
+    {
+        using var client = factory.CreateClient();
+        await SeedSubjectAsync("api-subject-empty");
+
+        using var response = await client.GetAsync(
+            "/api/v1/dashboard/subjects/api-subject-empty?province=FREE%20STATE&district=Nowhere");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var root = json.RootElement;
+        Assert.Equal("district", root.GetProperty("scope").GetString());
+        Assert.Equal("Nowhere", root.GetProperty("scopeName").GetString());
+        Assert.Equal(JsonValueKind.Null, root.GetProperty("year").ValueKind);
+        Assert.Empty(root.GetProperty("availableYears").EnumerateArray());
+        Assert.Equal(0, root.GetProperty("totalWrote").GetInt32());
+        Assert.Equal(JsonValueKind.Null, root.GetProperty("percentAchieved").ValueKind);
+        Assert.Empty(root.GetProperty("trend").EnumerateArray());
+        Assert.Empty(root.GetProperty("provinces").EnumerateArray());
+        Assert.Empty(root.GetProperty("districts").EnumerateArray());
+    }
+
+    /// <summary>The subject school list pages, sorts, and reports computed paging properties.</summary>
+    [Fact]
+    public async Task SubjectSchools_ReturnsSortedPageWithPagingMetadata()
+    {
+        using var client = factory.CreateClient();
+        await SeedSubjectAsync("api-subject-schools");
+
+        using var response = await client.GetAsync(
+            "/api/v1/dashboard/subjects/api-subject-schools/schools?pageNumber=1&pageSize=2");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var contract = await response.Content.ReadFromJsonAsync<SubjectSchoolListContract>();
+        Assert.NotNull(contract);
+        Assert.Equal(2024, contract.Year);
+        Assert.Equal(3, contract.TotalCount);
+        Assert.Equal(1, contract.PageNumber);
+        Assert.Equal(2, contract.PageSize);
+        Assert.Equal(2, contract.TotalPages);
+        Assert.False(contract.HasPreviousPage);
+        Assert.True(contract.HasNextPage);
+        Assert.Equal(
+            [
+                new SubjectSchoolContract("api-subject-schools-c", "Gamma School", "MPUMALANGA", "Ehlanzeni", 1, 100, 90, 90.0),
+                new SubjectSchoolContract("api-subject-schools-a", "Alpha School", "FREE STATE", "Motheo", 3, 60, 48, 80.0)
+            ],
+            contract.Items);
+
+        using var filtered = await client.GetAsync(
+            "/api/v1/dashboard/subjects/api-subject-schools/schools?province=FREE%20STATE&search=BETA&sort=name&order=asc");
+        var filteredContract = await filtered.Content.ReadFromJsonAsync<SubjectSchoolListContract>();
+        Assert.NotNull(filteredContract);
+        var row = Assert.Single(filteredContract.Items);
+        Assert.Equal("api-subject-schools-b", row.Id);
+        Assert.Null(row.Achieved);
+        Assert.Equal(25.0, row.PercentAchieved);
+        Assert.Equal(25, filteredContract.PageSize);
+    }
+
+    /// <summary>A page number far past the end returns an empty 200 page instead of overflowing the offset.</summary>
+    [Fact]
+    public async Task SubjectSchools_HugePageNumberReturnsEmptyPage()
+    {
+        using var client = factory.CreateClient();
+        await SeedSubjectAsync("api-subject-huge-page");
+
+        using var response = await client.GetAsync(
+            $"/api/v1/dashboard/subjects/api-subject-huge-page/schools?pageNumber={int.MaxValue}&pageSize=100");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var contract = await response.Content.ReadFromJsonAsync<SubjectSchoolListContract>();
+        Assert.NotNull(contract);
+        Assert.Empty(contract.Items);
+        Assert.Equal(3, contract.TotalCount);
+        Assert.False(contract.HasNextPage);
+    }
+
+    /// <summary>Unknown subject codes return a 404 ProblemDetails on both subject endpoints.</summary>
+    [Theory]
+    [InlineData("/api/v1/dashboard/subjects/missing-subject")]
+    [InlineData("/api/v1/dashboard/subjects/missing-subject/schools")]
+    public async Task SubjectEndpoints_MissingSubjectReturns404ProblemDetails(string url)
+    {
+        using var client = factory.CreateClient();
+        using var response = await client.GetAsync(url);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
+        using var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        Assert.Equal(404, json.RootElement.GetProperty("status").GetInt32());
+        Assert.Equal("Subject not found.", json.RootElement.GetProperty("detail").GetString());
+    }
+
+    /// <summary>The school directory filters by an exact province when one is supplied.</summary>
+    [Fact]
+    public async Task Schools_FiltersByProvince()
+    {
+        using var client = factory.CreateClient();
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MatricDasbhoardDbContext>();
+        db.Schools.AddRange(
+            new School("API PROVINCE", "District", "api-province-b", "1", "Bravo Province School", 3),
+            new School("API PROVINCE", "District", "api-province-a", "2", "Alpha Province School", 3),
+            new School("API OTHER PROVINCE", "District", "api-province-c", "3", "Charlie Province School", 3));
+        await db.SaveChangesAsync();
+
+        using var response = await client.GetAsync("/api/v1/dashboard/schools?province=API%20PROVINCE&sort=name");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var contract = await response.Content.ReadFromJsonAsync<SchoolListContract>();
+        Assert.NotNull(contract);
+        Assert.Equal(2, contract.TotalCount);
+        Assert.Equal(["api-province-a", "api-province-b"], contract.Items.Select(i => i.Id));
+        Assert.All(contract.Items, i => Assert.Equal("API PROVINCE", i.Province));
+    }
+
+    /// <summary>
+    /// Seeds a non-gateway subject (unique code keeps tests isolated in the shared
+    /// database) across two provinces: 2024 Alpha 60/48/80.0 and Beta 40/null/25.0
+    /// in FREE STATE, Gamma 100/90/null in MPUMALANGA; 2023 Alpha 50/25/50.0.
+    /// </summary>
+    private async Task SeedSubjectAsync(string code)
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<MatricDasbhoardDbContext>();
+        var subject = new Subject(code, "API Subject", isGateway: false);
+        var alpha = new School("FREE STATE", "Motheo", code + "-a", "1", "Alpha School", 3);
+        var beta = new School("FREE STATE", "Lejweleputswa", code + "-b", "2", "Beta School", 2);
+        var gamma = new School("MPUMALANGA", "Ehlanzeni", code + "-c", "3", "Gamma School", 1);
+        foreach (var (school, performance) in new[]
+                 {
+                     (alpha, new SchoolSubjectPerformance(2023, 50, 25, 50.0m)),
+                     (alpha, new SchoolSubjectPerformance(2024, 60, 48, 80.0m)),
+                     (beta, new SchoolSubjectPerformance(2024, 40, null, 25.0m)),
+                     (gamma, new SchoolSubjectPerformance(2024, 100, 90, null))
+                 })
+        {
+            school.AddSubjectPerformance(performance);
+            subject.AddPerformance(performance);
+        }
+
+        db.Subjects.Add(subject);
+        db.Schools.AddRange(alpha, beta, gamma);
+        await db.SaveChangesAsync();
+    }
+
     /// <summary>A missing school continues to use the v1 not-found ProblemDetails response.</summary>
     [Fact]
     public async Task Detail_MissingSchoolReturns404ProblemDetails()

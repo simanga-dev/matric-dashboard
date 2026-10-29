@@ -14,6 +14,7 @@ using MatricDasbhoard.Application.Features.Captcha;
 using MatricDasbhoard.Application.Features.Email;
 using MatricDasbhoard.Application.Features.Jobs;
 using MatricDasbhoard.Application.Features.SchoolSpatial;
+using MatricDasbhoard.Application.Features.SearchIndex;
 using MatricDasbhoard.Application.Identity;
 using MatricDasbhoard.Infrastructure.Persistence;
 using NSubstitute.ClearExtensions;
@@ -39,6 +40,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
     public IExternalAuthService ExternalAuthService { get; } = Substitute.For<IExternalAuthService>();
     public IProviderConfigService ProviderConfigService { get; } = Substitute.For<IProviderConfigService>();
     public ISchoolSpatialService SchoolSpatialService { get; } = Substitute.For<ISchoolSpatialService>();
+    public ISchoolSearchIndexService SchoolSearchIndexService { get; } = Substitute.For<ISchoolSearchIndexService>();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -82,6 +84,9 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             // Replace services with mocks
             services.RemoveAll<ISchoolSpatialService>();
             services.AddSingleton(SchoolSpatialService);
+
+            services.RemoveAll<ISchoolSearchIndexService>();
+            services.AddSingleton(SchoolSearchIndexService);
             services.RemoveAll<IAuthenticationService>();
             services.AddSingleton(AuthenticationService);
 
@@ -156,5 +161,6 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         ExternalAuthService.ClearSubstitute(ClearOptions.All);
         ProviderConfigService.ClearSubstitute(ClearOptions.All);
         SchoolSpatialService.ClearSubstitute(ClearOptions.All);
+        SchoolSearchIndexService.ClearSubstitute(ClearOptions.All);
     }
 }

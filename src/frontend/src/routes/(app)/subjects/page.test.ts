@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { mount, tick, unmount } from 'svelte';
 import SubjectsPage from './+page.svelte';
 import { fetchRegionSubjects, fetchSchoolById, fetchSchoolSubjects } from '$lib/api/dashboard';
-import type { RegionSubjects, SchoolSubjects } from '$lib/types/dashboard';
+import type { RegionSubject, RegionSubjects, SchoolSubjects } from '$lib/types/dashboard';
 
 const router = vi.hoisted(() => ({
 	page: { url: new URL('http://localhost/subjects'), state: {} },
@@ -20,6 +20,8 @@ vi.mock('$app/navigation', () => ({
 	}
 }));
 vi.mock('$app/paths', () => ({ resolve: (path: string) => path }));
+// The tooltip provider lives in the root layout, which is not mounted here.
+vi.mock('$lib/components/common/InfoTooltip.svelte', () => ({ default: () => {} }));
 vi.mock('$lib/api/dashboard', () => ({
 	fetchRegionSubjects: vi.fn(),
 	fetchSchoolSubjects: vi.fn(),
@@ -61,18 +63,7 @@ async function render(path: string) {
 	const target = document.createElement('div');
 	document.body.append(target);
 	component = mount(SubjectsPage, {
-		target,
-		props: {
-			data: {
-				schools: [],
-				user: null,
-				backendError: null,
-				hadSession: false,
-				locale: 'en',
-				apiUrl: undefined,
-				sidebarOpen: true
-			}
-		}
+		target
 	});
 	await tick();
 	await navigate(path);
@@ -177,5 +168,122 @@ describe('subject scope navigation', () => {
 		expect(fetchSchoolSubjects).toHaveBeenLastCalledWith('100', 2024);
 		expect(fetchSchoolSubjects).toHaveBeenCalledTimes(2);
 		expect(router.page.url.search).toBe('?school=100&year=2024');
+	});
+});
+
+const subjects: RegionSubject[] = [
+	{
+		code: 'mathematics',
+		name: 'Mathematics',
+		totalWrote: 300,
+		achieved: 150,
+		percentAchieved: 50,
+		schoolCount: 30
+	},
+	{
+		code: 'accounting',
+		name: 'Accounting',
+		totalWrote: 100,
+		achieved: 90,
+		percentAchieved: 90,
+		schoolCount: 20
+	},
+	{
+		code: 'history',
+		name: 'History',
+		totalWrote: 100,
+		achieved: null,
+		percentAchieved: null,
+		schoolCount: 10
+	}
+];
+
+function tableNames(): string[] {
+	return [...document.querySelectorAll('tbody tr td:first-child')].map(
+		(cell) => cell.textContent?.trim() ?? ''
+	);
+}
+
+function headerButton(label: string): HTMLButtonElement {
+	const match = [...document.querySelectorAll('th button')].find(
+		(button) => button.textContent?.trim() === label
+	);
+	if (!(match instanceof HTMLButtonElement)) throw new Error(`No header "${label}"`);
+	return match;
+}
+
+describe('subject list', () => {
+	beforeEach(() => {
+		vi.mocked(fetchRegionSubjects).mockImplementation(async (province, district, year) => ({
+			...regionResults(province, district, year ?? 2025),
+			schoolCount: 42,
+			subjects
+		}));
+	});
+
+	it('links every subject to its detail page with the current scope', async () => {
+		await render('/subjects?province=GAUTENG&district=Central&year=2024');
+
+		const tableLink = [...document.querySelectorAll('tbody a')].find(
+			(link) => link.textContent?.trim() === 'Accounting'
+		);
+		expect(tableLink?.getAttribute('href')).toBe(
+			'/subjects/accounting?province=GAUTENG&district=Central&year=2024'
+		);
+		const barLinks = [...document.querySelectorAll('[data-subject-bar] a')].map((link) =>
+			link.getAttribute('href')
+		);
+		expect(barLinks).toContain('/subjects/mathematics?province=GAUTENG&district=Central&year=2024');
+	});
+
+	it('links school-scoped subjects to the unscoped subject page', async () => {
+		vi.mocked(fetchSchoolSubjects).mockResolvedValue({
+			schoolId: '100',
+			year: 2024,
+			availableYears: [2024],
+			subjects: [
+				{
+					subjectId: 'a1',
+					code: 'accounting',
+					name: 'Accounting',
+					totalWrote: 10,
+					achieved: 9,
+					percentAchieved: 90
+				}
+			]
+		});
+		await render('/subjects?school=100&year=2024');
+
+		const link = document.querySelector('tbody a');
+		expect(link?.getAttribute('href')).toBe('/subjects/accounting');
+	});
+
+	it('summarises the scope with a learner-weighted pass rate', async () => {
+		await render('/subjects');
+
+		const summary = document.querySelector('[aria-label="Scope summary"]');
+		expect(summary?.textContent).toContain('3');
+		expect(summary?.textContent).toContain('500');
+		expect(summary?.textContent).toContain('42');
+		// (150 + 90) / (300 + 100): History has no achievement count and is excluded.
+		expect(summary?.textContent).toContain('60.0%');
+	});
+
+	it('sorts the table by column with unavailable values last', async () => {
+		await render('/subjects');
+		expect(tableNames()).toEqual(['Accounting', 'History', 'Mathematics']);
+
+		headerButton('Pass rate').click();
+		await tick();
+		expect(tableNames()).toEqual(['Accounting', 'Mathematics', 'History']);
+		expect(headerButton('Pass rate').closest('th')?.getAttribute('aria-sort')).toBe('descending');
+
+		headerButton('Pass rate').click();
+		await tick();
+		expect(tableNames()).toEqual(['Mathematics', 'Accounting', 'History']);
+
+		headerButton('Wrote').click();
+		await tick();
+		expect(tableNames()).toEqual(['Mathematics', 'Accounting', 'History']);
 	});
 });

@@ -11,7 +11,6 @@
 	import * as m from '$lib/paraglide/messages';
 	import {
 		MapPinned,
-		GraduationCap,
 		User,
 		Settings,
 		Users,
@@ -53,14 +52,15 @@
 				goto(resolve(routes.overview));
 			}
 		},
-		{
-			label: m.nav_schools,
-			icon: GraduationCap,
-			action: () => {
-				close();
-				goto(resolve(routes.schools));
-			}
-		},
+		// Hidden for now - the directory opens as a dialog from the overview.
+		// {
+		// 	label: m.nav_schools,
+		// 	icon: GraduationCap,
+		// 	action: () => {
+		// 		close();
+		// 		goto(resolve(routes.schools));
+		// 	}
+		// },
 		{
 			label: m.profile_title,
 			icon: User,

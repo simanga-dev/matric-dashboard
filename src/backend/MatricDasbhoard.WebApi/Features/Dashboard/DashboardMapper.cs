@@ -111,7 +111,25 @@ internal static class DashboardMapper
         Years = output.Years.Select(y => y.ToResponse()).ToList(),
         Comparison = output.Comparison.ToResponse(),
         SubjectsOfferedYear = output.SubjectsOfferedYear,
-        SubjectsOffered = output.SubjectsOffered?.Select(s => s.ToResponse()).ToList() ?? []
+        SubjectsOffered = output.SubjectsOffered?.Select(s => s.ToResponse()).ToList() ?? [],
+        QuintileCode = output.QuintileCode,
+        Email = output.Email,
+        Telephone = output.Telephone,
+        Sector = output.Sector,
+        Phase = output.Phase,
+        LandOwnership = output.LandOwnership,
+        BuildingOwnership = output.BuildingOwnership,
+        IsSection21 = output.IsSection21,
+        IsNoFeeSchool = output.IsNoFeeSchool,
+        UrbanRural = output.UrbanRural,
+        Enrolment = output.Enrolment is null
+            ? null
+            : new SchoolEnrolmentResponse
+            {
+                Year = output.Enrolment.Year,
+                Learners = output.Enrolment.Learners,
+                Educators = output.Enrolment.Educators
+            }
     };
 
     extension(OfferedSubjectOutput output)
@@ -189,6 +207,95 @@ internal static class DashboardMapper
             Achieved = output.Achieved,
             PercentAchieved = output.PercentAchieved,
             SchoolCount = output.SchoolCount
+        };
+    }
+
+    extension(SubjectDetailOutput output)
+    {
+        /// <summary>
+        /// Maps a single subject's scoped performance, trend, and regional breakdowns.
+        /// </summary>
+        public SubjectDetailResponse ToResponse() => new()
+        {
+            Code = output.Code,
+            Name = output.Name,
+            IsGateway = output.IsGateway,
+            Scope = output.Scope,
+            ScopeName = output.ScopeName,
+            Province = output.Province,
+            District = output.District,
+            Year = output.Year,
+            AvailableYears = output.AvailableYears,
+            SchoolCount = output.SchoolCount,
+            TotalWrote = output.TotalWrote,
+            Achieved = output.Achieved,
+            PercentAchieved = output.PercentAchieved,
+            Trend = output.Trend.Select(t => t.ToResponse()).ToList(),
+            Provinces = output.Provinces.Select(r => r.ToResponse()).ToList(),
+            Districts = output.Districts.Select(r => r.ToResponse()).ToList()
+        };
+    }
+
+    extension(SubjectYearOutput output)
+    {
+        /// <summary>
+        /// Maps one year of a subject's aggregated performance.
+        /// </summary>
+        public SubjectYearResponse ToResponse() => new()
+        {
+            Year = output.Year,
+            SchoolCount = output.SchoolCount,
+            TotalWrote = output.TotalWrote,
+            Achieved = output.Achieved,
+            PercentAchieved = output.PercentAchieved
+        };
+    }
+
+    extension(SubjectRegionOutput output)
+    {
+        /// <summary>
+        /// Maps a subject's aggregated performance in one province or district.
+        /// </summary>
+        public SubjectRegionResponse ToResponse() => new()
+        {
+            Name = output.Name,
+            SchoolCount = output.SchoolCount,
+            TotalWrote = output.TotalWrote,
+            Achieved = output.Achieved,
+            PercentAchieved = output.PercentAchieved
+        };
+    }
+
+    extension(SubjectSchoolListOutput output)
+    {
+        /// <summary>
+        /// Maps a paginated list of schools that offered a subject.
+        /// </summary>
+        public SubjectSchoolListResponse ToResponse() => new()
+        {
+            Year = output.Year,
+            Items = output.Items.Select(i => i.ToResponse()).ToList(),
+            TotalCount = output.TotalCount,
+            PageNumber = output.PageNumber,
+            PageSize = output.PageSize
+        };
+    }
+
+    extension(SubjectSchoolOutput output)
+    {
+        /// <summary>
+        /// Maps one school's result in a subject.
+        /// </summary>
+        public SubjectSchoolResponse ToResponse() => new()
+        {
+            Id = output.Id,
+            Name = output.Name,
+            Province = output.Province,
+            District = output.District,
+            Quintile = output.Quintile,
+            TotalWrote = output.TotalWrote,
+            Achieved = output.Achieved,
+            PercentAchieved = output.PercentAchieved
         };
     }
 

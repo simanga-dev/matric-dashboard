@@ -3,6 +3,8 @@
 	import * as Table from '$lib/components/ui/table';
 	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
+	import * as Select from '$lib/components/ui/select';
+	import { untrack } from 'svelte';
 	import {
 		Search,
 		ChevronLeft,
@@ -17,7 +19,8 @@
 	import { fetchSchools } from '$lib/api/dashboard';
 	import { schoolPath } from '$lib/config';
 	import type { School, SchoolList, SchoolSort, SchoolSortOrder } from '$lib/types/dashboard';
-	import { toTitleCase } from '$lib/utils';
+	import { cn, toTitleCase } from '$lib/utils';
+	import type { SchoolsViewQuery } from './schools-url';
 	import * as m from '$lib/paraglide/messages';
 	import {
 		createTable,
@@ -30,29 +33,67 @@
 	} from '@tanstack/svelte-table';
 
 	interface Props {
+		/** Search text from the route; followed when it changes. */
 		externalSearch?: string;
 		title?: string;
 		pageSize?: number;
+		/** Province filter from the route (exact name, e.g. "GAUTENG"); followed when it changes. */
+		externalProvince?: string | null;
+		/** Province options. When given, a province filter is shown. */
+		provinces?: string[];
+		/** Sort column from the route; followed when it changes. */
+		externalSort?: SchoolSort | null;
+		/** Sort direction from the route; followed when it changes. */
+		externalOrder?: SchoolSortOrder | null;
+		/** Page number from the route; followed when it changes. */
+		externalPage?: number;
+		/** Called whenever the applied search, province, sort or page changes, e.g. to sync the URL. */
+		onQueryChange?: (query: SchoolsViewQuery) => void;
 	}
 
-	let { externalSearch, title = 'Schools Performance', pageSize = 10 }: Props = $props();
+	let {
+		externalSearch,
+		title = 'Schools Performance',
+		pageSize = 10,
+		externalProvince = null,
+		provinces,
+		externalSort = null,
+		externalOrder = null,
+		externalPage = 1,
+		onQueryChange
+	}: Props = $props();
+
+	const ALL_PROVINCES = '__all__';
 
 	let schoolData = $state<SchoolList | null>(null);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
-	// Snapshot the deep-link search once; the effect below follows later route changes.
-	const initialSearch = externalSearch ?? '';
+	// Snapshot the deep-link values once; the effects below follow later route changes.
+	const initialSearch = untrack(() => externalSearch ?? '');
 	let searchQuery = $state(initialSearch);
 	let appliedSearch = $state(initialSearch);
-	let page = $state(1);
-	let sorting = $state<SortingState>([]);
+	// Writable deriveds follow the route value and accept local overrides until it changes.
+	let province = $derived<string | null>(externalProvince);
+	let page = $derived(externalPage);
+	let sorting = $state<SortingState>(untrack(() => toSorting(externalSort, externalOrder)));
 	let controller: AbortController | null = null;
+
+	function toSorting(sort: SchoolSort | null, order: SchoolSortOrder | null): SortingState {
+		return sort ? [{ id: sort, desc: order === 'desc' }] : [];
+	}
 
 	// Follow route-level deep links such as /schools?search=pretoria.
 	$effect(() => {
 		const incoming = externalSearch ?? '';
 		searchQuery = incoming;
 		appliedSearch = incoming;
+	});
+
+	$effect(() => {
+		const next = toSorting(externalSort, externalOrder);
+		const current = untrack(() => sorting[0]);
+		// Only replace the state on a real change so an unchanged route does not refetch.
+		if (current?.id !== next[0]?.id || current?.desc !== next[0]?.desc) sorting = next;
 	});
 
 	// Debounce typing so a directory request is not issued per keystroke.
@@ -151,6 +192,7 @@
 	let request = $derived({
 		page,
 		search: appliedSearch,
+		province,
 		sort: sorting[0]?.id as SchoolSort | undefined,
 		order: (sorting[0] ? (sorting[0].desc ? 'desc' : 'asc') : undefined) as
 			| SchoolSortOrder
@@ -158,14 +200,27 @@
 	});
 
 	$effect(() => {
-		const { page: currentPage, search, sort, order } = request;
-		void loadData(currentPage, search, sort, order);
+		const { page: currentPage, search, province: currentProvince, sort, order } = request;
+		void loadData(currentPage, search, currentProvince, sort, order);
 		return () => controller?.abort();
+	});
+
+	// Report the applied view so the route can mirror it in the URL.
+	$effect(() => {
+		const query: SchoolsViewQuery = {
+			search: request.search,
+			province: request.province,
+			sort: request.sort ?? null,
+			order: request.order ?? null,
+			page: request.page
+		};
+		untrack(() => onQueryChange?.(query));
 	});
 
 	async function loadData(
 		currentPage: number,
 		query: string,
+		provinceFilter: string | null,
 		sort: SchoolSort | undefined,
 		order: SchoolSortOrder | undefined
 	) {
@@ -180,6 +235,7 @@
 					pageNumber: currentPage,
 					pageSize,
 					search: query || undefined,
+					province: provinceFilter ?? undefined,
 					sort,
 					order
 				},
@@ -205,6 +261,16 @@
 	function goToPage(newPage: number) {
 		page = newPage;
 	}
+
+	function selectProvince(value: string | undefined) {
+		province = !value || value === ALL_PROVINCES ? null : value;
+		page = 1;
+	}
+
+	// Keep a deep-linked province selectable before (or without) the option list.
+	let provinceOptions = $derived(
+		province && provinces && !provinces.includes(province) ? [province, ...provinces] : provinces
+	);
 
 	function formatPassRate(rate: number): string {
 		return `${rate.toFixed(1)}%`;
@@ -235,6 +301,25 @@
 		<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
 			<CardTitle>{title}</CardTitle>
 			<div class="flex flex-wrap items-center gap-2">
+				{#if provinceOptions}
+					<Select.Root
+						type="single"
+						value={province ?? ALL_PROVINCES}
+						onValueChange={selectProvince}
+					>
+						<Select.Trigger class="h-8 w-full sm:w-44" aria-label="Province">
+							<span class={cn(!province && 'text-muted-foreground')}>
+								{province ? toTitleCase(province) : 'All provinces'}
+							</span>
+						</Select.Trigger>
+						<Select.Content>
+							<Select.Item value={ALL_PROVINCES}>All provinces</Select.Item>
+							{#each provinceOptions as option (option)}
+								<Select.Item value={option}>{toTitleCase(option)}</Select.Item>
+							{/each}
+						</Select.Content>
+					</Select.Root>
+				{/if}
 				<Input
 					bind:value={searchQuery}
 					placeholder="Search schools..."
