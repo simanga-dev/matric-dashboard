@@ -39,6 +39,14 @@ describe('subject regional breakdown', () => {
 		expect(target.textContent).toContain('Free State');
 	});
 
+	it('sizes pie slices by share of learners who wrote', async () => {
+		const target = await render({});
+
+		expect(target.querySelectorAll('[data-region-slice]')).toHaveLength(3);
+		// 900 of 1,700 learners wrote in Gauteng.
+		expect(target.textContent).toContain('52.9%');
+	});
+
 	it('drills into a region by click or keyboard and marks the selected one', async () => {
 		const onSelect = vi.fn();
 		const target = await render({ onSelect, selected: 'GAUTENG', kind: 'district' });
@@ -51,6 +59,8 @@ describe('subject regional breakdown', () => {
 		expect(onSelect.mock.calls).toEqual([['GAUTENG'], ['LIMPOPO']]);
 		expect(gauteng.getAttribute('aria-current')).toBe('true');
 		expect(limpopo.hasAttribute('aria-current')).toBe(false);
-		expect(target.querySelector('th')?.textContent).toBe('District');
+		expect(target.querySelector('ul[aria-label$="breakdown"]')?.getAttribute('aria-label')).toBe(
+			'District breakdown'
+		);
 	});
 });

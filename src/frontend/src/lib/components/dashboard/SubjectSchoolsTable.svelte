@@ -3,27 +3,23 @@
 	import { EmptyState } from '$lib/components/common';
 	import * as Card from '$lib/components/ui/card';
 	import * as Table from '$lib/components/ui/table';
-	import { Input } from '$lib/components/ui/input';
 	import { Button } from '$lib/components/ui/button';
 	import { fetchSubjectSchools } from '$lib/api/dashboard';
 	import { schoolPath } from '$lib/config';
 	import { passRateColor } from './school-hierarchy';
-	import type { SchoolSortOrder, SubjectSchoolList, SubjectSchoolSort } from '$lib/types/dashboard';
+	import type {
+		SchoolSortOrder,
+		SubjectSchool,
+		SubjectSchoolList,
+		SubjectSchoolSort
+	} from '$lib/types/dashboard';
 	import { cn, toTitleCase } from '$lib/utils';
-	import {
-		ArrowDown,
-		ArrowUp,
-		ChevronLeft,
-		ChevronRight,
-		ChevronsUpDown,
-		School as SchoolIcon,
-		Search
-	} from '@lucide/svelte';
+	import { ArrowDown, ArrowUp, ChevronsUpDown, School as SchoolIcon } from '@lucide/svelte';
 
 	/**
-	 * Schools that wrote one subject in a scope and year. Search, paging and
-	 * ordering are server-side so the whole result set is ordered, not just the
-	 * loaded page. Changing the scope returns to the first page.
+	 * Schools that wrote one subject in a scope and year, ordered server-side.
+	 * Ten rows at a time; "Show more" appends the next page. Changing the scope
+	 * returns to the first page.
 	 */
 	interface Props {
 		code: string;
@@ -40,21 +36,20 @@
 		province = null,
 		district = null,
 		year = null,
-		pageSize = 20
+		pageSize = 10
 	}: Props = $props();
 
 	let list = $state<SubjectSchoolList | null>(null);
+	let items = $state<SubjectSchool[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
-	let searchQuery = $state('');
-	let appliedSearch = $state('');
 	let page = $state(1);
 	let sort = $state<SubjectSchoolSort>('percentAchieved');
 	let order = $state<SchoolSortOrder>('desc');
 	let retry = $state(0);
 	let controller: AbortController | null = null;
 
-	// A new subject, scope or year is a new result set: start from page one.
+	// A new subject, scope or year is a new result set: start from the first page.
 	let scopeKey = $derived(`${code}|${province ?? ''}|${district ?? ''}|${year ?? ''}`);
 	let lastScopeKey: string | null = null;
 	$effect.pre(() => {
@@ -63,35 +58,27 @@
 		lastScopeKey = key;
 	});
 
-	// Debounce typing so a request is not issued per keystroke.
-	$effect(() => {
-		const query = searchQuery.trim();
-		const timer = setTimeout(() => {
-			if (query === appliedSearch) return;
-			appliedSearch = query;
-			page = 1;
-		}, 250);
-		return () => clearTimeout(timer);
-	});
-
-	// One effect drives every fetch, including the first.
+	// One effect drives the first page and each "show more" page.
 	$effect(() => {
 		void retry;
 		const query = {
 			province,
 			district,
 			year,
-			search: appliedSearch || undefined,
 			pageNumber: page,
 			pageSize,
 			sort,
 			order
 		};
-		void load(code, query);
+		void load(code, query, page === 1);
 		return () => controller?.abort();
 	});
 
-	async function load(subjectCode: string, query: Parameters<typeof fetchSubjectSchools>[1]) {
+	async function load(
+		subjectCode: string,
+		query: Parameters<typeof fetchSubjectSchools>[1],
+		replace: boolean
+	) {
 		controller?.abort();
 		const requestController = new AbortController();
 		controller = requestController;
@@ -106,18 +93,13 @@
 			);
 			if (requestController.signal.aborted) return;
 			list = result;
+			items = replace ? result.items : [...items, ...result.items];
 		} catch (e) {
 			if (requestController.signal.aborted) return;
 			error = e instanceof Error ? e.message : 'Failed to load schools';
 		} finally {
 			if (!requestController.signal.aborted) loading = false;
 		}
-	}
-
-	/** Applies the typed search immediately instead of waiting for the debounce. */
-	function applySearch() {
-		appliedSearch = searchQuery.trim();
-		page = 1;
 	}
 
 	const descFirst: Record<SubjectSchoolSort, boolean> = {
@@ -148,16 +130,11 @@
 		class: string;
 	}
 
-	const sortable: Record<SubjectSchoolSort, Column> = {
+	const sortable: Record<'name' | 'totalWrote' | 'percentAchieved', Column> = {
 		name: { id: 'name', label: 'School', class: '' },
-		province: { id: 'province', label: 'Province / district', class: 'hidden md:table-cell' },
-		totalWrote: { id: 'totalWrote', label: 'Wrote', class: 'text-right' },
-		achieved: { id: 'achieved', label: 'Achieved', class: 'hidden text-right sm:table-cell' },
-		percentAchieved: { id: 'percentAchieved', label: 'Pass rate', class: 'text-right' }
+		totalWrote: { id: 'totalWrote', label: 'Wrote', class: 'w-20 text-right' },
+		percentAchieved: { id: 'percentAchieved', label: 'Pass rate', class: 'w-24 text-right' }
 	};
-
-	let items = $derived(list?.items ?? []);
-	let hasSearch = $derived(appliedSearch.length > 0);
 </script>
 
 {#snippet sortHeader(column: Column)}
@@ -184,41 +161,16 @@
 
 <Card.Root>
 	<Card.Header>
-		<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-			<div>
-				<Card.Title class="flex items-center gap-2 text-base">
-					<SchoolIcon class="size-4 text-primary" />
-					Schools that wrote {subjectName}
-				</Card.Title>
-				<Card.Description>
-					{list?.year ? `${list.year} results` : 'Latest results'}{list
-						? ` · ${list.totalCount.toLocaleString()} schools`
-						: ''}
-				</Card.Description>
-			</div>
-			<form
-				class="flex items-center gap-2"
-				onsubmit={(event) => {
-					event.preventDefault();
-					applySearch();
-				}}
-			>
-				<Input
-					bind:value={searchQuery}
-					placeholder="Search schools..."
-					aria-label="Search schools that wrote {subjectName}"
-					class="h-8 w-full sm:w-56"
-				/>
-				<Button
-					type="submit"
-					variant="outline"
-					size="icon-sm"
-					aria-label="Search schools"
-					disabled={loading}
-				>
-					<Search class="size-3.5" />
-				</Button>
-			</form>
+		<div>
+			<Card.Title class="flex items-center gap-2 text-base">
+				<SchoolIcon class="size-4 text-primary" />
+				Schools that wrote {subjectName}
+			</Card.Title>
+			<Card.Description>
+				{list?.year ? `${list.year} results` : 'Latest results'}{list
+					? ` · ${list.totalCount.toLocaleString()} schools`
+					: ''}
+			</Card.Description>
 		</div>
 	</Card.Header>
 	<Card.Content>
@@ -232,12 +184,7 @@
 				<Button variant="outline" size="sm" onclick={() => retry++}>Try again</Button>
 			</div>
 		{:else if items.length === 0}
-			<EmptyState
-				icon={SchoolIcon}
-				message={hasSearch
-					? `No schools match "${appliedSearch}".`
-					: `No schools wrote ${subjectName} in this scope.`}
-			/>
+			<EmptyState icon={SchoolIcon} message={`No schools wrote ${subjectName} in this scope.`} />
 		{:else}
 			<div
 				aria-busy={loading}
@@ -247,43 +194,44 @@
 					<Table.Header>
 						<Table.Row>
 							{@render sortHeader(sortable.name)}
-							{@render sortHeader(sortable.province)}
-							<Table.Head class="hidden text-right lg:table-cell">Quintile</Table.Head>
 							{@render sortHeader(sortable.totalWrote)}
-							{@render sortHeader(sortable.achieved)}
 							{@render sortHeader(sortable.percentAchieved)}
 						</Table.Row>
 					</Table.Header>
 					<Table.Body>
 						{#each items as school (school.id)}
-							<Table.Row>
-								<Table.Cell class="max-w-64 font-medium">
+							<Table.Row class="group">
+								<Table.Cell class="max-w-72 font-medium transition-colors group-hover:bg-primary/5">
 									<a
 										href={resolve(schoolPath(school.id))}
 										class="block truncate underline-offset-4 hover:text-primary hover:underline focus-visible:underline focus-visible:outline-none"
 									>
 										{toTitleCase(school.name)}
 									</a>
-									<span class="block truncate text-xs font-normal text-muted-foreground md:hidden">
-										{toTitleCase(school.district)}, {toTitleCase(school.province)}
+									<span
+										class="mt-0.5 flex items-center gap-1.5 text-xs font-normal text-muted-foreground"
+									>
+										<span class="min-w-0 truncate">
+											{toTitleCase(school.district)}, {toTitleCase(school.province)}
+										</span>
+										{#if school.quintile !== null && school.quintile > 0}
+											<span
+												class="shrink-0 rounded border px-1 text-[10px] leading-4 tabular-nums"
+												aria-label={`Quintile ${school.quintile}`}
+											>
+												Q{school.quintile}
+											</span>
+										{/if}
 									</span>
 								</Table.Cell>
-								<Table.Cell class="hidden md:table-cell">
-									<span class="block">{toTitleCase(school.province)}</span>
-									<span class="block text-xs text-muted-foreground">
-										{toTitleCase(school.district)}
-									</span>
-								</Table.Cell>
-								<Table.Cell class="hidden text-right tabular-nums lg:table-cell">
-									{school.quintile !== null && school.quintile > 0 ? school.quintile : '-'}
-								</Table.Cell>
-								<Table.Cell class="text-right tabular-nums">
+								<Table.Cell
+									class="text-right tabular-nums transition-colors group-hover:bg-primary/5"
+								>
 									{school.totalWrote.toLocaleString()}
 								</Table.Cell>
-								<Table.Cell class="hidden text-right tabular-nums sm:table-cell">
-									{school.achieved?.toLocaleString() ?? '-'}
-								</Table.Cell>
-								<Table.Cell class="text-right font-medium tabular-nums">
+								<Table.Cell
+									class="text-right font-medium tabular-nums transition-colors group-hover:bg-primary/5"
+								>
 									{#if school.percentAchieved === null}
 										<span class="text-muted-foreground">-</span>
 									{:else}
@@ -298,31 +246,21 @@
 				</Table.Root>
 			</div>
 
-			<div class="flex flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
-				<p class="text-sm text-muted-foreground">
-					Page {list?.pageNumber ?? 1} of {Math.max(1, list?.totalPages ?? 1)}
-					({(list?.totalCount ?? 0).toLocaleString()} schools)
-				</p>
-				<div class="flex items-center gap-2 sm:justify-end">
+			<div class="flex flex-col items-center gap-2 pt-4">
+				{#if list?.hasNextPage}
 					<Button
 						variant="outline"
 						size="sm"
-						disabled={!list?.hasPreviousPage || loading}
-						onclick={() => (page = Math.max(1, page - 1))}
-					>
-						<ChevronLeft class="size-4" />
-						Previous
-					</Button>
-					<Button
-						variant="outline"
-						size="sm"
-						disabled={!list?.hasNextPage || loading}
+						class="w-full"
+						disabled={loading}
 						onclick={() => (page += 1)}
 					>
-						Next
-						<ChevronRight class="size-4" />
+						Show more
 					</Button>
-				</div>
+				{/if}
+				<p class="text-xs text-muted-foreground">
+					Showing {items.length.toLocaleString()} of {(list?.totalCount ?? 0).toLocaleString()} schools
+				</p>
 			</div>
 		{/if}
 	</Card.Content>

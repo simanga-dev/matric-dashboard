@@ -125,18 +125,15 @@ afterEach(async () => {
 });
 
 describe('subject detail page', () => {
-	it('shows the subject header, KPIs and a breadcrumb back to the scoped list', async () => {
+	it('shows the subject KPIs and loads the scoped schools', async () => {
 		const target = await render({ scope: { province: null, district: null, year: 2024 } });
 
 		expect(target.querySelector('h1')?.textContent).toBe('Mathematics');
-		expect(target.textContent).toContain('Gateway subject');
 		expect(target.textContent).toContain('200,000');
 		expect(target.textContent).toContain('130,000');
 		expect(target.textContent).toContain('65.0%');
 		expect(target.textContent).toContain('+5 pts');
 		expect(target.textContent).toContain('+25%');
-		const crumb = [...target.querySelectorAll('a')].find((a) => a.textContent === 'Subjects');
-		expect(crumb?.getAttribute('href')).toBe('/subjects?year=2024');
 		expect(fetchSubjectSchools).toHaveBeenCalledWith(
 			'mathematics',
 			expect.objectContaining({ province: null, year: 2024 }),
@@ -153,13 +150,6 @@ describe('subject detail page', () => {
 			noScroll: true,
 			keepFocus: true
 		});
-	});
-
-	it('switches the year through the URL', async () => {
-		const target = await render();
-		[...target.querySelectorAll('button')].find((b) => b.textContent?.trim() === '2023')?.click();
-
-		expect(goto).toHaveBeenCalledWith('/subjects/mathematics?year=2023', expect.any(Object));
 	});
 
 	it('shows district rows once a province is selected', async () => {
@@ -187,6 +177,16 @@ describe('subject detail page', () => {
 			'/subjects/mathematics?province=GAUTENG&district=TSHWANE+SOUTH',
 			expect.any(Object)
 		);
+	});
+
+	it('combines pass rate and learners who wrote in a single trend chart', async () => {
+		const target = await render();
+
+		expect(target.querySelectorAll('[data-trend-bar]')).toHaveLength(2);
+		target.querySelector<HTMLButtonElement>('[data-trend-point="2024"]')?.focus();
+		await tick();
+
+		expect(target.querySelector('[role="tooltip"]')?.textContent).toContain('200,000 wrote');
 	});
 
 	it('shows an empty state when the scope has no results for the subject', async () => {

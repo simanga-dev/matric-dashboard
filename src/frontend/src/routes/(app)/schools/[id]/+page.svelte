@@ -10,6 +10,7 @@
 	import SchoolLocationMap from '$lib/components/dashboard/SchoolLocationMap.svelte';
 	import SmoothTrendChart from '$lib/components/dashboard/SmoothTrendChart.svelte';
 	import { routes } from '$lib/config';
+	import { setDynamicLabel, clearDynamicLabel } from '$lib/state/breadcrumb.svelte';
 	import { cn, toTitleCase } from '$lib/utils';
 	import type { PageData } from './$types';
 	import {
@@ -38,6 +39,14 @@
 	// The server load resolves the school for the current route param, so the
 	// page renders on first paint and stays correct across param changes.
 	let school = $derived(data.school);
+
+	// The system header breadcrumb shows the school's display name, not its id.
+	$effect(() => {
+		const name = school?.name;
+		if (!name) return;
+		setDynamicLabel(toTitleCase(name));
+		return () => clearDynamicLabel();
+	});
 
 	function formatPassRate(rate: number): string {
 		return `${rate.toFixed(1)}%`;

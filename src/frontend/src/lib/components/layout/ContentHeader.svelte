@@ -6,7 +6,8 @@
 	import { page } from '$app/state';
 	import { resolve } from '$app/paths';
 	import { breadcrumbState } from '$lib/state/breadcrumb.svelte';
-	import { shortcutsState, ShortcutAction, getShortcutSymbol } from '$lib/state/shortcuts.svelte';
+	import { toTitleCase } from '$lib/utils';
+	import { shortcutsState } from '$lib/state/shortcuts.svelte';
 	import { routes } from '$lib/config';
 	import { adminRoutes } from '$lib/config';
 	import * as m from '$lib/paraglide/messages';
@@ -20,6 +21,8 @@
 		overview: m.nav_overview,
 		profile: m.nav_profile,
 		settings: m.nav_settings,
+		subjects: () => 'Subjects',
+		schools: m.nav_schools,
 		users: m.nav_adminUsers,
 		roles: m.nav_adminRoles,
 		jobs: m.nav_adminJobs,
@@ -31,6 +34,8 @@
 		overview: resolve(routes.overview),
 		profile: resolve(routes.profile),
 		settings: resolve(routes.settings),
+		subjects: resolve(routes.subjects),
+		schools: resolve(routes.schools),
 		users: resolve(adminRoutes.users.path),
 		roles: resolve(adminRoutes.roles.path),
 		jobs: resolve(adminRoutes.jobs.path),
@@ -59,12 +64,18 @@
 				if (isLast) {
 					result.push({ label: labelFn() });
 				} else {
-					result.push({ label: labelFn(), href: segmentHrefs[segment] });
+					const baseHref = segmentHrefs[segment];
+					// Keep the current scope (province, district, year) when it belongs to the section.
+					const href =
+						baseHref && segment === 'subjects' && page.url.search
+							? `${baseHref}${page.url.search}`
+							: baseHref;
+					result.push({ label: labelFn(), href });
 				}
 			} else if (isLast && breadcrumbState.dynamicLabel) {
 				result.push({ label: breadcrumbState.dynamicLabel });
 			} else if (isLast) {
-				result.push({ label: segment });
+				result.push({ label: toTitleCase(segment.replace(/-/g, ' ')) });
 			}
 		}
 
@@ -104,6 +115,7 @@
 
 	<SchoolSearch {borderless} />
 
+	<!-- Command palette button hidden for now; Ctrl+K still opens the palette.
 	<button
 		onclick={() => (shortcutsState.isCommandPaletteOpen = true)}
 		aria-label={m.shortcuts_commandPalette()}
@@ -115,6 +127,7 @@
 			{getShortcutSymbol(ShortcutAction.CommandPalette)}
 		</kbd>
 	</button>
+	-->
 
 	<div class="flex flex-1 items-center justify-end gap-1 lg:gap-2">
 		<LanguageSelector />

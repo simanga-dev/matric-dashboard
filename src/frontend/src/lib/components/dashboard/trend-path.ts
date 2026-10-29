@@ -1,4 +1,4 @@
-export type TrendPoint = { year: number; passRate: number };
+export type TrendPoint = { year: number; passRate: number; wrote?: number | null };
 export type ChartPoint = { x: number; y: number };
 
 /** Sort valid observations and retain the last observation for duplicate years. */

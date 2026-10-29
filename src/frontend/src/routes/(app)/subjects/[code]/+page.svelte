@@ -5,21 +5,17 @@
 	import { resolve } from '$app/paths';
 	import { navigating, page } from '$app/state';
 	import { EmptyState } from '$lib/components/common';
-	import * as Breadcrumb from '$lib/components/ui/breadcrumb';
 	import * as Card from '$lib/components/ui/card';
-	import * as Select from '$lib/components/ui/select';
-	import { Badge } from '$lib/components/ui/badge';
 	import { Button } from '$lib/components/ui/button';
 	import StatCard from '$lib/components/dashboard/StatCard.svelte';
 	import SmoothTrendChart from '$lib/components/dashboard/SmoothTrendChart.svelte';
 	import SubjectRegionBreakdown from '$lib/components/dashboard/SubjectRegionBreakdown.svelte';
 	import SubjectSchoolsTable from '$lib/components/dashboard/SubjectSchoolsTable.svelte';
-	import YearPills from '$lib/components/dashboard/YearPills.svelte';
 	import { passRateColor } from '$lib/components/dashboard/school-hierarchy';
+	import { setDynamicLabel, clearDynamicLabel } from '$lib/state/breadcrumb.svelte';
 	import {
 		SUBJECT_DETAIL_DEPENDENCY,
 		subjectHref,
-		subjectsListHref,
 		type SubjectScopeParams
 	} from '$lib/components/dashboard/subject-url';
 	import type { SubjectTrendPoint } from '$lib/types/dashboard';
@@ -31,36 +27,27 @@
 		MapPin,
 		Percent,
 		TrendingUp,
-		Users,
-		X
+		Users
 	} from '@lucide/svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 
-	const ALL = '__all__';
-
 	let detail = $derived(data.detail);
 	let scope = $derived(data.scope);
 	let subjectName = $derived(detail?.name ?? 'Subject');
 
+	// The system header breadcrumb shows the subject's display name, not its URL slug.
+	$effect(() => {
+		const name = detail?.name;
+		if (!name) return;
+		setDynamicLabel(name);
+		return () => clearDynamicLabel();
+	});
+
 	// Scope changes are query navigations that rerun the load for this page.
 	let updating = $derived(navigating.to?.url.pathname === page.url.pathname);
 
-	let provinceOptions = $derived(
-		[...(detail?.provinces ?? [])].map((row) => row.name).sort((a, b) => a.localeCompare(b))
-	);
-	let districtOptions = $derived(
-		[...(detail?.districts ?? [])].map((row) => row.name).sort((a, b) => a.localeCompare(b))
-	);
-
-	let scopeKind = $derived(
-		detail?.scope === 'district'
-			? 'District'
-			: detail?.scope === 'province'
-				? 'Province'
-				: 'National'
-	);
 	let scopeLabel = $derived(
 		detail?.scope === 'country' || !detail ? 'South Africa' : toTitleCase(detail.scopeName)
 	);
@@ -94,9 +81,12 @@
 				(point): point is SubjectTrendPoint & { percentAchieved: number } =>
 					point.percentAchieved !== null
 			)
-			.map((point) => ({ year: point.year, passRate: point.percentAchieved }))
+			.map((point) => ({
+				year: point.year,
+				passRate: point.percentAchieved,
+				wrote: point.totalWrote
+			}))
 	);
-	let maxTrendWrote = $derived(Math.max(1, ...(detail?.trend ?? []).map((p) => p.totalWrote)));
 
 	let breakdownKind = $derived<'province' | 'district'>(scope.province ? 'district' : 'province');
 	let breakdownRows = $derived(
@@ -107,28 +97,10 @@
 		void goto(resolve(subjectHref(data.code, next)), { noScroll: true, keepFocus: true });
 	}
 
-	function selectProvince(value: string | undefined) {
-		const province = !value || value === ALL ? null : value;
-		navigateScope({ province, district: null, year: scope.year });
-	}
-
-	function selectDistrict(value: string | undefined) {
-		const district = !value || value === ALL ? null : value;
-		navigateScope({ province: scope.province, district, year: scope.year });
-	}
-
-	function selectYear(year: number) {
-		navigateScope({ province: scope.province, district: scope.district, year });
-	}
-
 	function drillInto(name: string) {
 		if (breakdownKind === 'province')
 			navigateScope({ province: name, district: null, year: scope.year });
 		else navigateScope({ province: scope.province, district: name, year: scope.year });
-	}
-
-	function clearScope() {
-		navigateScope({ province: null, district: null, year: scope.year });
 	}
 
 	function retry() {
@@ -153,92 +125,7 @@
 <div class="flex flex-1 flex-col">
 	<div class="@container/main flex flex-1 flex-col gap-2">
 		<div class="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-			<div class="flex flex-wrap items-end justify-between gap-4 px-4 lg:px-6">
-				<div class="space-y-2">
-					<Breadcrumb.Root>
-						<Breadcrumb.List>
-							<Breadcrumb.Item>
-								<Breadcrumb.Link href={resolve(subjectsListHref(scope))}>Subjects</Breadcrumb.Link>
-							</Breadcrumb.Item>
-							<Breadcrumb.Separator />
-							<Breadcrumb.Item>
-								<Breadcrumb.Page>{subjectName}</Breadcrumb.Page>
-							</Breadcrumb.Item>
-						</Breadcrumb.List>
-					</Breadcrumb.Root>
-					<div class="flex flex-wrap items-center gap-3">
-						<h1 class="text-2xl font-semibold tracking-tight">{subjectName}</h1>
-						{#if detail?.isGateway}
-							<Badge variant="secondary">Gateway subject</Badge>
-						{/if}
-					</div>
-					<p class="text-sm text-muted-foreground">
-						{scopeKind} · {scopeLabel}{detail?.year ? ` · ${detail.year}` : ''}
-					</p>
-				</div>
-				{#if detail}
-					<div class="flex flex-wrap items-center gap-2">
-						<Select.Root
-							type="single"
-							value={scope.province ?? ALL}
-							onValueChange={selectProvince}
-							disabled={updating}
-						>
-							<Select.Trigger class="h-8 w-full sm:w-48" aria-label="Province">
-								<span class={cn(!scope.province && 'text-muted-foreground')}>
-									{scope.province ? toTitleCase(scope.province) : 'All provinces'}
-								</span>
-							</Select.Trigger>
-							<Select.Content>
-								<Select.Item value={ALL}>All provinces</Select.Item>
-								{#each provinceOptions as option (option)}
-									<Select.Item value={option}>{toTitleCase(option)}</Select.Item>
-								{/each}
-							</Select.Content>
-						</Select.Root>
-
-						{#if scope.province}
-							<Select.Root
-								type="single"
-								value={scope.district ?? ALL}
-								onValueChange={selectDistrict}
-								disabled={updating}
-							>
-								<Select.Trigger class="h-8 w-full sm:w-52" aria-label="District">
-									<span class={cn(!scope.district && 'text-muted-foreground')}>
-										{scope.district ? toTitleCase(scope.district) : 'All districts'}
-									</span>
-								</Select.Trigger>
-								<Select.Content>
-									<Select.Item value={ALL}>All districts</Select.Item>
-									{#each districtOptions as option (option)}
-										<Select.Item value={option}>{toTitleCase(option)}</Select.Item>
-									{/each}
-								</Select.Content>
-							</Select.Root>
-
-							<Button variant="outline" size="sm" onclick={clearScope} disabled={updating}>
-								<X class="size-3.5" />
-								National view
-							</Button>
-						{/if}
-
-						{#if updating}
-							<span role="status" class="text-xs text-muted-foreground">Updating...</span>
-						{/if}
-					</div>
-				{/if}
-			</div>
-
-			{#if detail && detail.availableYears.length > 0}<div class="px-4 lg:px-6">
-					<YearPills
-						years={detail.availableYears}
-						selected={detail.year}
-						onSelect={selectYear}
-						disabled={updating}
-					/>
-				</div>
-			{/if}
+			<h1 class="sr-only">{subjectName}</h1>
 
 			{#if data.loadError || !detail}
 				<div class="px-4 lg:px-6">
@@ -303,7 +190,7 @@
 						/>
 					</div>
 
-					<div class="grid grid-cols-1 gap-4 px-4 md:gap-6 lg:px-6 @5xl/main:grid-cols-2">
+					<div class="flex flex-col gap-4 px-4 md:gap-6 lg:px-6">
 						<Card.Root>
 							<Card.Header>
 								<Card.Title class="flex items-center gap-2 text-base">
@@ -317,81 +204,61 @@
 									/> and learners who wrote, {scopeLabel}
 								</Card.Description>
 							</Card.Header>
-							<Card.Content class="space-y-5">
-								<SmoothTrendChart years={trendPoints} height={200} />
-								<div>
-									<p class="mb-2 text-xs font-medium text-muted-foreground">
+							<Card.Content class="space-y-3">
+								<div class="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+									<span class="flex items-center gap-1.5">
+										<span aria-hidden="true" class="h-0.5 w-4 rounded-full bg-chart-1"></span>
+										Pass rate
+									</span>
+									<span class="flex items-center gap-1.5">
+										<span aria-hidden="true" class="size-2.5 rounded-sm bg-primary/30"></span>
 										Learners who wrote<InfoTooltip
 											label="subject learners who wrote"
 											text={metricHelp.subjectWrote}
 										/>
-									</p>
-									<ul class="flex h-20 items-end gap-1" aria-label="Learners who wrote by year">
-										{#each detail.trend as point (point.year)}
-											<li class="flex h-full min-w-0 flex-1 flex-col justify-end">
-												<span class="sr-only"
-													>{point.year}: {point.totalWrote.toLocaleString()} wrote</span
-												>
-												<div
-													aria-hidden="true"
-													title={`${point.year}: ${point.totalWrote.toLocaleString()} wrote`}
-													class={cn(
-														'w-full rounded-t-sm motion-safe:transition-[height] motion-safe:duration-500',
-														point.year === detail.year ? 'bg-primary' : 'bg-primary/25'
-													)}
-													style:height={`${Math.max(2, (point.totalWrote / maxTrendWrote) * 100)}%`}
-												></div>
-											</li>
-										{/each}
-									</ul>
-									<div
-										class="mt-1 flex justify-between text-[11px] text-muted-foreground tabular-nums"
-										aria-hidden="true"
-									>
-										<span>{detail.trend[0]?.year}</span>
-										<span>{detail.trend.at(-1)?.year}</span>
-									</div>
+									</span>
 								</div>
+								<SmoothTrendChart years={trendPoints} height={280} />
 							</Card.Content>
 						</Card.Root>
 
-						<Card.Root>
-							<Card.Header>
-								<Card.Title class="flex items-center gap-2 text-base">
-									<MapPin class="size-4 text-primary" />
-									{breakdownKind === 'district' ? 'By district' : 'By province'}
-								</Card.Title>
-								<Card.Description>
-									{breakdownKind === 'district'
-										? `Districts in ${toTitleCase(scope.province ?? '')}`
-										: 'Every province'}{detail.year ? ` · ${detail.year}` : ''}. Select a row to
-									drill in.
-								</Card.Description>
-							</Card.Header>
-							<Card.Content>
-								{#if breakdownRows.length === 0}
-									<EmptyState icon={MapPin} message="No regional results for this year." />
-								{:else}
-									<SubjectRegionBreakdown
-										rows={breakdownRows}
-										kind={breakdownKind}
-										selected={breakdownKind === 'district' ? scope.district : scope.province}
-										onSelect={drillInto}
-									/>
-								{/if}
-							</Card.Content>
-						</Card.Root>
+						<div class="grid grid-cols-1 items-start gap-4 md:gap-6 @6xl/main:grid-cols-2">
+							<Card.Root>
+								<Card.Header>
+									<Card.Title class="flex items-center gap-2 text-base">
+										<MapPin class="size-4 text-primary" />
+										{breakdownKind === 'district' ? 'By district' : 'By province'}
+									</Card.Title>
+									<Card.Description>
+										{breakdownKind === 'district'
+											? `Share by district in ${toTitleCase(scope.province ?? '')}`
+											: 'Share by province'}{detail.year ? ` · ${detail.year}` : ''}. Select a
+										region to drill in.
+									</Card.Description>
+								</Card.Header>
+								<Card.Content>
+									{#if breakdownRows.length === 0}
+										<EmptyState icon={MapPin} message="No regional results for this year." />
+									{:else}
+										<SubjectRegionBreakdown
+											rows={breakdownRows}
+											kind={breakdownKind}
+											selected={breakdownKind === 'district' ? scope.district : scope.province}
+											onSelect={drillInto}
+										/>
+									{/if}
+								</Card.Content>
+							</Card.Root>
+
+							<SubjectSchoolsTable
+								code={data.code}
+								{subjectName}
+								province={scope.province}
+								district={scope.district}
+								year={detail.year}
+							/>
+						</div>
 					</div>
-				</div>
-
-				<div class="px-4 lg:px-6">
-					<SubjectSchoolsTable
-						code={data.code}
-						{subjectName}
-						province={scope.province}
-						district={scope.district}
-						year={detail.year}
-					/>
 				</div>
 			{/if}
 		</div>

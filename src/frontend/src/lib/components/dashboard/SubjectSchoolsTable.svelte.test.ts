@@ -58,7 +58,17 @@ function button(target: HTMLElement, label: string): HTMLButtonElement {
 
 beforeEach(() => {
 	fetchMock.mockReset();
-	fetchMock.mockImplementation(async () => list());
+	fetchMock.mockImplementation(async (_code, query) => {
+		const pageNumber = query?.pageNumber ?? 1;
+		const base = list();
+		return list({
+			pageNumber,
+			items:
+				pageNumber === 1
+					? base.items
+					: base.items.map((school) => ({ ...school, id: `${school.id}-${pageNumber}` }))
+		});
+	});
 });
 
 afterEach(async () => {
@@ -79,7 +89,7 @@ describe('schools that wrote a subject', () => {
 				district: null,
 				year: 2024,
 				pageNumber: 1,
-				pageSize: 20,
+				pageSize: 10,
 				sort: 'percentAchieved',
 				order: 'desc'
 			}),
@@ -96,11 +106,13 @@ describe('schools that wrote a subject', () => {
 
 	it('toggles server-side sorting and resets to the first page', async () => {
 		const target = await render();
-		button(target, 'Next').click();
+		button(target, 'Show more').click();
+		flushSync();
 		await tick();
 		expect(fetchMock.mock.calls.at(-1)?.[1]).toMatchObject({ pageNumber: 2 });
 
 		button(target, 'School').click();
+		flushSync();
 		await tick();
 		expect(fetchMock.mock.calls.at(-1)?.[1]).toMatchObject({
 			pageNumber: 1,
@@ -109,25 +121,38 @@ describe('schools that wrote a subject', () => {
 		});
 
 		button(target, 'School').click();
+		flushSync();
 		await tick();
 		expect(fetchMock.mock.calls.at(-1)?.[1]).toMatchObject({ sort: 'name', order: 'desc' });
 		const header = button(target, 'School').closest('th');
 		expect(header?.getAttribute('aria-sort')).toBe('descending');
 	});
 
-	it('debounces search into one request', async () => {
-		vi.useFakeTimers();
+	it('appends the next page when Show more is pressed', async () => {
+		fetchMock.mockImplementation(async (_code, query) => {
+			const pageNumber = query?.pageNumber ?? 1;
+			return list({
+				pageNumber,
+				items: list().items.map((school) => ({
+					...school,
+					id: `${school.id}-${pageNumber}`,
+					name: `PAGE ${pageNumber} SCHOOL`
+				})),
+				hasNextPage: pageNumber < 2
+			});
+		});
 		const target = await render();
-		const input = target.querySelector('input')!;
-		for (const value of ['m', 'ma', 'mam']) {
-			input.value = value;
-			input.dispatchEvent(new Event('input', { bubbles: true }));
-			await tick();
-		}
-		expect(fetchMock).toHaveBeenCalledTimes(1);
-		await vi.advanceTimersByTimeAsync(300);
-		expect(fetchMock).toHaveBeenCalledTimes(2);
-		expect(fetchMock.mock.calls[1]?.[1]).toMatchObject({ search: 'mam', pageNumber: 1 });
+
+		expect(target.querySelectorAll('tbody tr')).toHaveLength(1);
+		button(target, 'Show more').click();
+		flushSync();
+		await tick();
+
+		expect(target.querySelectorAll('tbody tr')).toHaveLength(2);
+		expect(target.textContent).toContain('Page 1 School');
+		expect(target.textContent).toContain('Page 2 School');
+		expect(target.textContent).not.toContain('Show more');
+		expect(target.textContent).toContain('Showing 2 of 41 schools');
 	});
 
 	it('returns to the first page when the scope changes', async () => {
@@ -141,7 +166,8 @@ describe('schools that wrote a subject', () => {
 		component = mount(SubjectSchoolsTable, { target, props });
 		await tick();
 		await tick();
-		button(target, 'Next').click();
+		button(target, 'Show more').click();
+		flushSync();
 		await tick();
 		expect(fetchMock.mock.calls.at(-1)?.[1]).toMatchObject({ pageNumber: 2 });
 

@@ -38,6 +38,18 @@
 		)
 	);
 	let active = $derived(data.find((point) => point.year === (hoveredYear ?? focusedYear)));
+	let barPoints = $derived(
+		data.filter(
+			(point): point is TrendPoint & { wrote: number } =>
+				typeof point.wrote === 'number' && Number.isFinite(point.wrote) && point.wrote > 0
+		)
+	);
+	let hasBars = $derived(barPoints.length > 0);
+	let maxWrote = $derived(Math.max(1, ...barPoints.map((point) => point.wrote)));
+	let barWidth = $derived(Math.min(28, Math.max(3, (plotWidth / Math.max(1, data.length)) * 0.55)));
+	function barTop(wrote: number) {
+		return baseline - (wrote / maxWrote) * plotHeight * 0.92;
+	}
 	let gridTicks = $derived.by(() => {
 		const step = maxRate - minRate <= 30 ? 10 : 20;
 		const ticks: number[] = [];
@@ -103,7 +115,9 @@
 	<div
 		class="relative"
 		role="group"
-		aria-label="Pass rate trend. Hover, tap, or focus a year to view its percentage."
+		aria-label={hasBars
+			? 'Pass rate and learners who wrote by year. Hover, tap, or focus a year to view its values.'
+			: 'Pass rate trend. Hover, tap, or focus a year to view its percentage.'}
 		data-trend-chart
 		onpointermove={hoverPoint}
 		onpointerleave={() => (hoveredYear = null)}
@@ -115,7 +129,13 @@
 			class="block w-full"
 			preserveAspectRatio="xMidYMid meet"
 			role="img"
-			aria-label={`NSC pass rate by year: ${data.map((point) => `${point.year} ${point.passRate.toFixed(1)} percent`).join(', ')}`}
+			aria-label={`NSC pass rate by year: ${data
+				.map((point) =>
+					hasBars && point.wrote
+						? `${point.year} ${point.passRate.toFixed(1)} percent pass rate, ${point.wrote.toLocaleString()} learners who wrote`
+						: `${point.year} ${point.passRate.toFixed(1)} percent`
+				)
+				.join(', ')}`}
 		>
 			<defs>
 				<linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
@@ -131,6 +151,19 @@
 					y2={yScale(value)}
 					stroke="hsl(var(--border))"
 					stroke-width="1"
+				/>
+			{/each}
+			{#each barPoints as point (point.year)}
+				<rect
+					data-trend-bar={point.year}
+					x={xScale(point.year) - barWidth / 2}
+					y={barTop(point.wrote)}
+					width={barWidth}
+					height={baseline - barTop(point.wrote)}
+					rx="1.5"
+					fill="hsl(var(--chart-1) / 0.22)"
+					class="motion-safe:transition-opacity"
+					opacity={active && active.year !== point.year ? 0.5 : 1}
 				/>
 			{/each}
 			{#if paths.area}<path d={paths.area} fill={`url(#${gradientId})`} />{/if}
@@ -184,7 +217,7 @@
 				class="absolute size-[44px] -translate-x-1/2 -translate-y-1/2 rounded-full focus-visible:outline-2 focus-visible:outline-ring"
 				style:left={`${(xScale(point.year) / svgWidth) * 100}%`}
 				style:top={`${(yScale(point.passRate) / height) * 100}%`}
-				aria-label={`${point.year}: ${point.passRate.toFixed(1)}% pass rate`}
+				aria-label={`${point.year}: ${point.passRate.toFixed(1)}% pass rate${point.wrote ? `, ${point.wrote.toLocaleString()} wrote` : ''}`}
 				aria-describedby={active?.year === point.year ? `${id}-tooltip` : undefined}
 				onfocus={() => (focusedYear = point.year)}
 				onblur={() => (focusedYear = null)}
@@ -208,6 +241,11 @@
 			>
 				<div class="text-xs text-muted-foreground">{active.year}</div>
 				<div class="text-sm font-semibold tabular-nums">{active.passRate.toFixed(1)}%</div>
+				{#if active.wrote}
+					<div class="mt-1 border-t pt-1 text-[11px] text-muted-foreground tabular-nums">
+						{active.wrote.toLocaleString()} wrote
+					</div>
+				{/if}
 			</div>
 		{/if}
 	</div>
