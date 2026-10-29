@@ -49,7 +49,7 @@
 </script>
 
 {#snippet bar(subject: SubjectBar)}
-	<div class="relative flex min-h-9 min-w-0 flex-1 items-center rounded-md bg-muted/25">
+	<div class="relative flex h-9 min-w-0 flex-1 items-center rounded-md bg-muted/25">
 		{#each [25, 50, 75, 100] as grid (grid)}
 			<span
 				class="pointer-events-none absolute inset-y-0 border-s border-border/40"
@@ -72,7 +72,7 @@
 				<span class="h-full w-full bg-muted-foreground"></span>
 			{/if}
 		</div>
-		<span class="relative flex items-center gap-2 px-3 py-2 text-xs leading-snug font-medium">
+		<span class="relative min-w-0 truncate px-3 text-xs font-medium">
 			{subject.name}
 		</span>
 	</div>

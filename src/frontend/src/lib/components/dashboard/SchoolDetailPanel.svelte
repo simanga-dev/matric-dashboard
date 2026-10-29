@@ -15,6 +15,7 @@
 	import { passRateTextClass } from './school-hierarchy';
 	import SchoolPerformanceTimeline from './SchoolPerformanceTimeline.svelte';
 	import SubjectPerformanceBars from './SubjectPerformanceBars.svelte';
+	import { subjectHref } from './subject-url';
 	import {
 		Building2,
 		School as SchoolIcon,
@@ -422,7 +423,16 @@
 								/>
 							</p>
 							<SubjectPerformanceBars
-								subjects={regionSubjects.subjects}
+								subjects={regionSubjects.subjects.map((subject) => ({
+									...subject,
+									href: resolve(
+										subjectHref(subject.code, {
+											province: selectedProvince,
+											district: selectedDistrict,
+											year: regionSubjects?.year
+										})
+									)
+								}))}
 								headlineYear={regionSubjects.year}
 								class="space-y-3"
 								showSummary={false}
@@ -478,6 +488,7 @@
 			</div>
 		{:else if school}
 			{@const offered = school.subjectsOffered ?? []}
+			{@const schoolProvince = school.province}
 			{#key school.id}
 				<div class="detail-content space-y-4" class:updating={loading} inert={loading}>
 					<div class="min-w-0 px-1">
@@ -643,7 +654,12 @@
 							<p class="text-sm text-muted-foreground">No subject data</p>
 						{:else}
 							<SubjectPerformanceBars
-								subjects={offered}
+								subjects={offered.map((subject) => ({
+									...subject,
+									href: resolve(
+										subjectHref(subject.code, { province: schoolProvince, year: subject.year })
+									)
+								}))}
 								headlineYear={school.subjectsOfferedYear}
 								class="space-y-3"
 								showSummary={false}
