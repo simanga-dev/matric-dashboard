@@ -117,6 +117,30 @@ afterEach(async () => {
 	document.body.replaceChildren();
 });
 describe('explicit editor save and cancel', () => {
+	it('selects the requested initial tool once the school map has loaded', async () => {
+		await unmount(component);
+		document.body.replaceChildren();
+		mocks.status.mockClear();
+		const target = document.createElement('div');
+		document.body.append(target);
+		component = mount(SchoolMapEditor, {
+			target,
+			props: {
+				map: { getView: () => ({ animate }) } as unknown as OlMap,
+				emis: '00123',
+				name: 'Original school',
+				onsaved: saved,
+				onclose: close,
+				onstatus: mocks.status,
+				initialTool: 'draw-footprint'
+			}
+		}) as ReturnType<typeof mount> & EditorCommands;
+		await vi.waitFor(() =>
+			expect(mocks.status).toHaveBeenLastCalledWith(
+				expect.objectContaining({ activeTool: 'draw-footprint', hasDraft: true })
+			)
+		);
+	});
 	it('updates published state from the authoritative GET before Cancel can remove the draft', async () => {
 		expect(loaded).toHaveBeenCalledWith(state);
 		component.cancelEdit();

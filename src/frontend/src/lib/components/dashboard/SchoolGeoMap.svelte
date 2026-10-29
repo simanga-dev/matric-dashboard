@@ -69,7 +69,7 @@
 	);
 	let imagerySelected = $state(false);
 	let imageryMessage = $state('');
-	let editing = $state<{ emis: string; name: string } | null>(null);
+	let editing = $state<{ emis: string; name: string; initialTool?: EditTool } | null>(null);
 	let toolbarCollapsed = $state(false);
 	let layersPanelOpen = $state(false);
 	let toolbarWidth = $state(0);
@@ -733,11 +733,11 @@
 		void loadMap();
 		return registerShortcutHandler(ShortcutAction.OpenMapEditor, requestMapEditor);
 	});
-	/** Opens the editor from the E shortcut when a school is selected and editable. */
+	/** Opens the editor in drawing mode from the E shortcut when a school is selected and editable. */
 	function requestMapEditor() {
 		if (editing || !selectedSchoolId || !mapReady || !canEdit) return;
 		if (isOverlayOpen()) return;
-		openEditor();
+		openEditor('draw-footprint');
 	}
 
 	function toolbarButtonClass(
@@ -774,13 +774,13 @@
 		openEditor();
 		if (!editing) layersPanelOpen = true;
 	}
-	function openEditor() {
+	function openEditor(initialTool?: EditTool) {
 		layersPanelOpen = false;
 		if (!selectedSchoolId || !canEdit) return;
 		const school = schools.find((school) => school.id === selectedSchoolId);
 		editorStatus = null;
 		editorRef = null;
-		editing = { emis: selectedSchoolId, name: school?.name ?? selectedSchoolId };
+		editing = { emis: selectedSchoolId, name: school?.name ?? selectedSchoolId, initialTool };
 		popup = null;
 		hidePopup?.();
 		selectionMessage = '';
@@ -921,7 +921,7 @@
 													aria-label="Edit school map"
 													title="Edit school map (E)"
 													disabled={!selectedSchoolId || !mapReady}
-													onclick={openEditor}
+													onclick={() => openEditor()}
 													class={toolbarButtonClass(false, 'edit')}
 													><Pencil class="size-4" /></button
 												>
@@ -1150,6 +1150,7 @@
 												onsaved={saved}
 												onstatus={(status) => (editorStatus = status)}
 												onclose={closeEditor}
+												initialTool={editing.initialTool}
 											/>
 										{:catch}
 											<p role="alert" class="p-3">

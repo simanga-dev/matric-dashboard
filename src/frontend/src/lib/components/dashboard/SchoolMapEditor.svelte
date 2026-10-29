@@ -30,7 +30,8 @@
 		onloaded,
 		onsaved,
 		onclose,
-		onstatus
+		onstatus,
+		initialTool
 	}: {
 		map: OlMap;
 		emis: string;
@@ -39,6 +40,8 @@
 		onsaved: (state: SpatialState) => void;
 		onclose: () => void;
 		onstatus?: (status: SpatialEditorStatus) => void;
+		/** Tool to select as soon as the school map has loaded. */
+		initialTool?: EditTool;
 	} = $props();
 	// Capture identity before any request. External tree changes cannot retarget a draft.
 	const school = captureSchool();
@@ -146,6 +149,7 @@
 				(tool) => (activeTool = tool)
 			);
 			area = interactions.area();
+			if (initialTool) chooseTool(initialTool);
 			void fetchSchoolSpatialHistory(school.emis)
 				.then((entries) => {
 					if (!disposed) history = entries;
