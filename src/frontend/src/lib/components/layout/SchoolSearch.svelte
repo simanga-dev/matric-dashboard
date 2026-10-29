@@ -331,15 +331,13 @@
 											<span aria-hidden="true">·</span>
 											<span class="truncate">{toTitleCase(school.circuit)}</span>
 										{/if}
-										<span aria-hidden="true">·</span>
-										<span class="shrink-0 font-mono tabular-nums">{school.id}</span>
 									</div>
-									<div
-										class="mt-0.5 text-xs font-medium tabular-nums {passRateTextClass(
-											school.passRate
-										)}"
-									>
-										{m.search_schools_passRate({ rate: formatPassRate(school.passRate) })}
+									<div class="mt-0.5 flex items-center gap-1.5 text-xs tabular-nums">
+										<span class="font-medium {passRateTextClass(school.passRate)}">
+											{m.search_schools_passRate({ rate: formatPassRate(school.passRate) })}
+										</span>
+										<span class="text-muted-foreground/60" aria-hidden="true">|</span>
+										<span class="font-mono text-muted-foreground">{school.id}</span>
 									</div>
 								</div>
 							</li>
