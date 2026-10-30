@@ -15,6 +15,7 @@ using MatricDasbhoard.Infrastructure.Features.Avatar.Extensions;
 using MatricDasbhoard.Infrastructure.Features.Captcha.Extensions;
 using MatricDasbhoard.Infrastructure.Features.FileStorage.Extensions;
 using MatricDasbhoard.Infrastructure.Features.Email.Extensions;
+using MatricDasbhoard.Infrastructure.Features.PastPapers.Extensions;
 using MatricDasbhoard.Infrastructure.Features.Jobs.Extensions;
 using MatricDasbhoard.Infrastructure.Persistence.Extensions;
 using MatricDasbhoard.WebApi.Authorization;
@@ -82,6 +83,9 @@ try
 
         Log.Debug("Adding file storage services");
         builder.Services.AddFileStorageServices(builder.Configuration);
+
+        Log.Debug("Adding past paper services");
+        builder.Services.AddPastPaperServices();
 
         Log.Debug("Adding avatar services");
         builder.Services.AddAvatarServices();

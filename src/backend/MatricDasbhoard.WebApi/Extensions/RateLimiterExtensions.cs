@@ -43,6 +43,7 @@ internal static class RateLimiterExtensions
             AddIpPolicy(opt, RateLimitPolicies.Auth, rateLimitOptions.Auth);
             AddUserPolicy(opt, RateLimitPolicies.Sensitive, rateLimitOptions.Sensitive);
             AddUserPolicy(opt, RateLimitPolicies.AdminMutations, rateLimitOptions.AdminMutations);
+            AddPastPaperFilesPolicy(opt, rateLimitOptions.PastPaperFiles);
         });
 
         return services;
@@ -148,6 +149,35 @@ internal static class RateLimiterExtensions
 
             return RateLimitPartition.GetFixedWindowLimiter(partitionKey,
                 _ => CreateFixedWindowOptions(policyOptions));
+        });
+    }
+
+    /// <summary>
+    /// Adds the past paper file policy: a fixed-window limit chained with a concurrency limit, both
+    /// partitioned by client IP address. The concurrency lease is held until the response body has been
+    /// streamed, so one client cannot hold many slow downloads open at once.
+    /// </summary>
+    private static void AddPastPaperFilesPolicy(RateLimiterOptions options,
+        RateLimitingOptions.PastPaperFilesLimitOptions policyOptions)
+    {
+        options.AddPolicy(RateLimitPolicies.PastPaperFiles, context =>
+        {
+            var partitionKey = context.Connection.RemoteIpAddress?.ToString();
+
+            if (partitionKey is null)
+            {
+                WarnAnonymousFallback(context);
+                partitionKey = "anonymous";
+            }
+
+            return RateLimitPartition.Get(partitionKey, _ => RateLimiter.CreateChained(
+                new FixedWindowRateLimiter(CreateFixedWindowOptions(policyOptions)),
+                new ConcurrencyLimiter(new ConcurrencyLimiterOptions
+                {
+                    PermitLimit = policyOptions.ConcurrentStreamLimit,
+                    QueueLimit = 0,
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+                })));
         });
     }
 

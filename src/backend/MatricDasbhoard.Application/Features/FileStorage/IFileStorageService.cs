@@ -41,4 +41,22 @@ public interface IFileStorageService
     /// <param name="ct">A cancellation token.</param>
     /// <returns><c>true</c> if the object exists; otherwise <c>false</c>.</returns>
     Task<bool> ExistsAsync(string key, CancellationToken ct);
+
+    /// <summary>
+    /// Lists every object whose key starts with <paramref name="prefix"/>, following
+    /// continuation tokens until the listing is exhausted.
+    /// </summary>
+    /// <param name="prefix">The key prefix to list (e.g. <c>exam_papers/</c>).</param>
+    /// <param name="ct">A cancellation token.</param>
+    /// <returns>A Result containing all matching objects, or failure if the store could not be listed.</returns>
+    Task<Result<IReadOnlyList<StoredObjectInfo>>> ListAsync(string prefix, CancellationToken ct);
+
+    /// <summary>
+    /// Opens a read stream over an object without buffering it into memory.
+    /// The caller must dispose the returned <see cref="FileStreamOutput"/>.
+    /// </summary>
+    /// <param name="key">The object key (path) within the bucket.</param>
+    /// <param name="ct">A cancellation token.</param>
+    /// <returns>A Result containing the open stream and metadata, or a <c>NotFound</c> failure if the object does not exist.</returns>
+    Task<Result<FileStreamOutput>> OpenReadAsync(string key, CancellationToken ct);
 }

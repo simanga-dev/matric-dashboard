@@ -5,6 +5,7 @@ using Microsoft.Extensions.Options;
 using MatricDasbhoard.Application.Features.FileStorage;
 using MatricDasbhoard.Application.Features.FileStorage.Dtos;
 using MatricDasbhoard.Infrastructure.Features.FileStorage.Options;
+using MatricDasbhoard.Infrastructure.Features.FileStorage.Streams;
 using MatricDasbhoard.Shared;
 
 namespace MatricDasbhoard.Infrastructure.Features.FileStorage.Services;
@@ -145,6 +146,107 @@ internal sealed class S3FileStorageService(
         {
             logger.LogWarning(ex, "Unexpected error checking existence of '{Key}' in bucket '{Bucket}'", key, _bucketName);
             return false;
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<IReadOnlyList<StoredObjectInfo>>> ListAsync(string prefix, CancellationToken ct)
+    {
+        try
+        {
+            var objects = new List<StoredObjectInfo>();
+            var request = new ListObjectsV2Request
+            {
+                BucketName = _bucketName,
+                Prefix = prefix
+            };
+
+            ListObjectsV2Response response;
+            do
+            {
+                response = await s3Client.ListObjectsV2Async(request, ct);
+
+                foreach (var s3Object in response.S3Objects ?? [])
+                {
+                    if (string.IsNullOrEmpty(s3Object.Key) || s3Object.Key.EndsWith('/'))
+                    {
+                        continue;
+                    }
+
+                    DateTimeOffset? lastModified = s3Object.LastModified is { } modified
+                        ? new DateTimeOffset(modified.ToUniversalTime(), TimeSpan.Zero)
+                        : null;
+                    objects.Add(new StoredObjectInfo(s3Object.Key, s3Object.Size ?? 0, lastModified));
+                }
+
+                request.ContinuationToken = response.NextContinuationToken;
+            } while (response.IsTruncated == true && !string.IsNullOrEmpty(response.NextContinuationToken));
+
+            logger.LogDebug("Listed {Count} objects under prefix '{Prefix}' in bucket '{Bucket}'",
+                objects.Count, prefix, _bucketName);
+
+            return Result<IReadOnlyList<StoredObjectInfo>>.Success(objects);
+        }
+        catch (AmazonS3Exception ex)
+        {
+            logger.LogError(ex, "Failed to list objects under prefix '{Prefix}' in bucket '{Bucket}'", prefix, _bucketName);
+            return Result<IReadOnlyList<StoredObjectInfo>>.Failure(
+                ErrorMessages.FileStorage.ListFailed, ErrorType.ServiceUnavailable);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(ex, "Unexpected error listing objects under prefix '{Prefix}' in bucket '{Bucket}'",
+                prefix, _bucketName);
+            return Result<IReadOnlyList<StoredObjectInfo>>.Failure(
+                ErrorMessages.FileStorage.ListFailed, ErrorType.ServiceUnavailable);
+        }
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<FileStreamOutput>> OpenReadAsync(string key, CancellationToken ct)
+    {
+        try
+        {
+            var request = new GetObjectRequest
+            {
+                BucketName = _bucketName,
+                Key = key
+            };
+
+            var response = await s3Client.GetObjectAsync(request, ct);
+            try
+            {
+                long? contentLength = response.ContentLength >= 0 ? response.ContentLength : null;
+                var contentType = string.IsNullOrEmpty(response.Headers.ContentType)
+                    ? "application/octet-stream"
+                    : response.Headers.ContentType;
+
+                var output = new FileStreamOutput(
+                    new OwnedReadStream(response.ResponseStream, response), contentType, contentLength);
+                return Result<FileStreamOutput>.Success(output);
+            }
+            catch
+            {
+                // Ownership never reached the caller, so release the HTTP response here.
+                response.Dispose();
+                throw;
+            }
+        }
+        catch (AmazonS3Exception ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+        {
+            return Result<FileStreamOutput>.Failure(ErrorMessages.FileStorage.NotFound, ErrorType.NotFound);
+        }
+        catch (AmazonS3Exception ex)
+        {
+            logger.LogError(ex, "Failed to open object '{Key}' from bucket '{Bucket}'", key, _bucketName);
+            return Result<FileStreamOutput>.Failure(
+                ErrorMessages.FileStorage.ReadFailed, ErrorType.ServiceUnavailable);
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogError(ex, "Unexpected error opening object '{Key}' from bucket '{Bucket}'", key, _bucketName);
+            return Result<FileStreamOutput>.Failure(
+                ErrorMessages.FileStorage.ReadFailed, ErrorType.ServiceUnavailable);
         }
     }
 

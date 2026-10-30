@@ -14,7 +14,9 @@ public class ErrorMessagesTests
         "Security",
         "Avatar",
         "ExternalAuth",
-        "Entity"
+        "Entity",
+        "FileStorage",
+        "PastPapers"
     ];
 
     [Fact]

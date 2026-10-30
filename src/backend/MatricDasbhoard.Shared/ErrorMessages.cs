@@ -209,6 +209,26 @@ public static class ErrorMessages
     }
 
     /// <summary>
+    /// Object storage error messages.
+    /// </summary>
+    public static class FileStorage
+    {
+        public const string NotFound = "File not found.";
+        public const string ListFailed = "Failed to list files in storage.";
+        public const string ReadFailed = "Failed to retrieve file from storage.";
+    }
+
+    /// <summary>
+    /// Public past exam paper catalog error messages.
+    /// </summary>
+    public static class PastPapers
+    {
+        public const string InvalidId = "The past paper identifier is not valid.";
+        public const string NotFound = "Past paper not found.";
+        public const string CatalogUnavailable = "The past paper catalog is temporarily unavailable. Please try again later.";
+    }
+
+    /// <summary>
     /// School search index maintenance error messages.
     /// </summary>
     public static class SearchIndex

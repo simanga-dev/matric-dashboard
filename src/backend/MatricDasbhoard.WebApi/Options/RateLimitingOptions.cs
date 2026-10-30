@@ -57,6 +57,14 @@ public sealed class RateLimitingOptions
     public AdminMutationsLimitOptions AdminMutations { get; init; } = new();
 
     /// <summary>
+    /// Gets or sets the past paper file download rate limiter configuration.
+    /// Applies a fixed-window limit to public past paper file streaming, partitioned by IP address.
+    /// </summary>
+    [Required]
+    [ValidateObjectMembers]
+    public PastPaperFilesLimitOptions PastPaperFiles { get; init; } = new();
+
+    /// <summary>
     /// Base configuration for a fixed-window rate limit policy.
     /// Provides shared properties for permit limit, time window, queue behavior, and processing order.
     /// </summary>
@@ -183,6 +191,31 @@ public sealed class RateLimitingOptions
         public AdminMutationsLimitOptions()
         {
             PermitLimit = 30;
+            Window = TimeSpan.FromMinutes(1);
+            QueueLimit = 0;
+        }
+    }
+
+    /// <summary>
+    /// Configuration options for the public past paper file download rate limiter: a fixed window
+    /// chained with a concurrency limit, both partitioned by IP address.
+    /// Defaults to 60 requests per 1 minute and 4 concurrent streams, with no queuing.
+    /// </summary>
+    public sealed class PastPaperFilesLimitOptions : FixedWindowPolicyOptions
+    {
+        /// <summary>
+        /// Gets or sets the maximum number of file streams a single client IP may have open at once.
+        /// Requests beyond this limit are rejected with 429 until a stream completes.
+        /// </summary>
+        [Range(1, 1000)]
+        public int ConcurrentStreamLimit { get; [UsedImplicitly] init; } = 4;
+
+        /// <summary>
+        /// Initializes default values for the past paper file download rate limiter.
+        /// </summary>
+        public PastPaperFilesLimitOptions()
+        {
+            PermitLimit = 60;
             Window = TimeSpan.FromMinutes(1);
             QueueLimit = 0;
         }

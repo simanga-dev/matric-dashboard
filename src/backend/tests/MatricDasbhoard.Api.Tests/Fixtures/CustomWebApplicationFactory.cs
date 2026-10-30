@@ -13,6 +13,7 @@ using MatricDasbhoard.Application.Features.Audit;
 using MatricDasbhoard.Application.Features.Captcha;
 using MatricDasbhoard.Application.Features.Email;
 using MatricDasbhoard.Application.Features.Jobs;
+using MatricDasbhoard.Application.Features.PastPapers;
 using MatricDasbhoard.Application.Features.SchoolSpatial;
 using MatricDasbhoard.Application.Features.SearchIndex;
 using MatricDasbhoard.Application.Identity;
@@ -41,6 +42,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
     public IProviderConfigService ProviderConfigService { get; } = Substitute.For<IProviderConfigService>();
     public ISchoolSpatialService SchoolSpatialService { get; } = Substitute.For<ISchoolSpatialService>();
     public ISchoolSearchIndexService SchoolSearchIndexService { get; } = Substitute.For<ISchoolSearchIndexService>();
+    public IPastPaperService PastPaperService { get; } = Substitute.For<IPastPaperService>();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -87,6 +89,10 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 
             services.RemoveAll<ISchoolSearchIndexService>();
             services.AddSingleton(SchoolSearchIndexService);
+
+            services.RemoveAll<IPastPaperService>();
+            services.AddSingleton(PastPaperService);
+
             services.RemoveAll<IAuthenticationService>();
             services.AddSingleton(AuthenticationService);
 
@@ -162,5 +168,6 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
         ProviderConfigService.ClearSubstitute(ClearOptions.All);
         SchoolSpatialService.ClearSubstitute(ClearOptions.All);
         SchoolSearchIndexService.ClearSubstitute(ClearOptions.All);
+        PastPaperService.ClearSubstitute(ClearOptions.All);
     }
 }

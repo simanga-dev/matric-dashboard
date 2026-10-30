@@ -26,4 +26,9 @@ public static class CacheKeys
     /// <param name="provider">The provider identifier (e.g. "Google").</param>
     /// <returns>A cache key in the format <c>provider-config:{provider}</c>.</returns>
     public static string ProviderConfig(string provider) => $"provider-config:{provider}";
+
+    /// <summary>
+    /// The cache key for the parsed past paper catalog (all papers listed from object storage).
+    /// </summary>
+    public const string PastPaperCatalog = "past-papers:catalog";
 }

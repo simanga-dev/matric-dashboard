@@ -65,6 +65,18 @@ internal record SchoolListItemContract(string Id, string Name, string Province);
 internal record SchoolListContract(List<SchoolListItemContract> Items, int TotalCount, int PageNumber, int PageSize,
     int TotalPages, bool HasPreviousPage, bool HasNextPage);
 
+/// <summary>Frozen public past paper item contract. Enums are serialized as their PascalCase names.</summary>
+internal record PastPaperContract(string Id, string Title, string Subject, int Year, string Session, int Grade,
+    int? PaperNumber, string Kind, string? Language, string? Variant, string FileType, long SizeBytes, string? MemoId);
+
+/// <summary>Frozen paginated past paper list contract.</summary>
+internal record PastPaperListContract(List<PastPaperContract> Items, int TotalCount, int PageNumber, int PageSize,
+    int TotalPages, bool HasPreviousPage, bool HasNextPage);
+
+/// <summary>Frozen past paper facets contract.</summary>
+internal record PastPaperFacetsContract(List<string> Subjects, List<int> Years, List<string> Sessions,
+    List<string> Languages, List<int> Grades, List<string> Kinds, List<int> PaperNumbers);
+
 // Auth
 internal record AuthTokensResponse(string AccessToken, string RefreshToken, bool RequiresTwoFactor, string? ChallengeToken);
 internal record TwoFactorSetupContract(string SharedKey, string AuthenticatorUri);

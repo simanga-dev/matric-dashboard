@@ -25,4 +25,9 @@ public static class RateLimitPolicies
     /// Stricter limit for state-changing admin and job management operations, partitioned by authenticated user.
     /// </summary>
     public const string AdminMutations = "admin-mutations";
+
+    /// <summary>
+    /// Limit for public past paper file downloads, partitioned by IP address.
+    /// </summary>
+    public const string PastPaperFiles = "past-paper-files";
 }
