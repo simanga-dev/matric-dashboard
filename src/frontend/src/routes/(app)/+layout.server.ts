@@ -17,7 +17,8 @@ export const load: LayoutServerLoad = async ({ parent, route, cookies }) => {
 		route.id === '/(app)/subjects' ||
 		route.id === '/(app)/subjects/[code]' ||
 		route.id === '/(app)/schools' ||
-		route.id?.startsWith('/(app)/schools/');
+		route.id?.startsWith('/(app)/schools/') ||
+		route.id === '/(app)/past-papers';
 
 	if (!user && !isPublicRoute) {
 		const target = hadSession ? `${routes.login}?reason=session_expired` : routes.login;
