@@ -18,7 +18,8 @@ const config = {
 				'font-src': ['self'],
 				'connect-src': ['self'],
 				'worker-src': ['self', 'blob:'],
-				'frame-src': ['https://challenges.cloudflare.com'],
+				// blob: lets the past paper preview show a PDF fetched through the API.
+				'frame-src': ['https://challenges.cloudflare.com', 'blob:'],
 				'frame-ancestors': ['none'],
 				'base-uri': ['self'],
 				'form-action': ['self'],
