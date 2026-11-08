@@ -24,12 +24,24 @@
 		| { status: 'error'; message: string };
 
 	let tab = $state<Tab>('paper');
+	// Blob URLs cached per document id so switching between the paper and its
+	// memo reuses an already-loaded document instead of refetching.
+	let cache = $state<Map<string, LoadState>>(new Map());
 	let doc = $state<LoadState>({ status: 'loading' });
 	let attempt = $state(0);
 
-	// Reset the tab whenever a different paper is opened.
+	// Reset the tab and clear the document cache whenever a different paper is
+	// opened (or the dialog is closed and reopened), so blobs from a previous
+	// paper are not reused or leaked.
+	let paperId = $state<string | null>(null);
 	$effect.pre(() => {
-		if (paper) tab = startWithMemo && paper.memoId ? 'memo' : 'paper';
+		if (!paper) return;
+		if (paperId !== paper.id) {
+			paperId = paper.id;
+			cache = new Map();
+			doc = { status: 'loading' };
+		}
+		tab = startWithMemo && paper.memoId ? 'memo' : 'paper';
 	});
 
 	const fileId = $derived(
@@ -47,6 +59,7 @@
 					.join(' · ')
 			: ''
 	);
+	const loading = $derived(doc.status === 'loading');
 
 	// The API forbids framing its responses, so the PDF is fetched and shown
 	// from a local blob URL. Each load owns its URL and revokes it on cleanup.
@@ -55,9 +68,17 @@
 		void attempt;
 		if (!id) return;
 
+		const cached = cache.get(id);
+		if (cached && (cached.status === 'ready' || cached.status === 'error')) {
+			doc = cached;
+			return;
+		}
+
 		const controller = new AbortController();
 		let objectUrl: string | null = null;
-		doc = { status: 'loading' };
+		const loadingDoc: LoadState = { status: 'loading' };
+		doc = loadingDoc;
+		cache.set(id, loadingDoc);
 
 		fetch(pastPaperFileUrl(id), { signal: controller.signal })
 			.then(async (response) => {
@@ -70,19 +91,22 @@
 				}
 				const blob = await response.blob();
 				objectUrl = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
-				doc = { status: 'ready', url: objectUrl };
+				const ready: LoadState = { status: 'ready', url: objectUrl };
+				cache.set(id, ready);
+				if (fileId === id) doc = ready;
 			})
 			.catch((error: unknown) => {
 				if (controller.signal.aborted) return;
-				doc = {
+				const failed: LoadState = {
 					status: 'error',
 					message: error instanceof Error ? error.message : 'This document could not be loaded.'
 				};
+				cache.set(id, failed);
+				if (fileId === id) doc = failed;
 			});
 
 		return () => {
 			controller.abort();
-			if (objectUrl) URL.revokeObjectURL(objectUrl);
 		};
 	});
 </script>
@@ -96,11 +120,15 @@
 	<Dialog.Content
 		class="flex h-[92dvh] w-full max-w-[calc(100%-1rem)] flex-col gap-0 overflow-hidden p-0 sm:max-w-5xl"
 	>
-		<Dialog.Header class="gap-2 border-b px-4 py-3 pe-12 text-start">
-			<Dialog.Title class="truncate text-sm font-semibold">{title}</Dialog.Title>
-			<Dialog.Description class="text-xs">{subtitle}</Dialog.Description>
+		<Dialog.Header
+			class="gap-2 border-b px-3 py-2 pe-12 text-start sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+		>
+			<div class="min-w-0">
+				<Dialog.Title class="truncate text-sm leading-5 font-semibold">{title}</Dialog.Title>
+				<Dialog.Description class="text-xs leading-4">{subtitle}</Dialog.Description>
+			</div>
 
-			<div class="flex flex-wrap items-center gap-2 pt-1">
+			<div class="flex shrink-0 flex-wrap items-center gap-2">
 				{#if paper?.memoId}
 					<div
 						class="flex items-center rounded-md border bg-background p-0.5 shadow-xs"
@@ -111,9 +139,10 @@
 							<button
 								type="button"
 								aria-pressed={tab === option.value}
+								disabled={loading}
 								onclick={() => (tab = option.value as Tab)}
 								class={cn(
-									'h-7 rounded-[4px] px-2.5 text-xs font-medium transition-colors',
+									'h-7 rounded-[4px] px-2.5 text-xs font-medium transition-colors disabled:cursor-wait disabled:opacity-60',
 									tab === option.value
 										? 'bg-primary text-primary-foreground'
 										: 'text-muted-foreground hover:bg-muted'

@@ -6,7 +6,7 @@
 	"common_account": "Account",
 
 	"meta_titleTemplate": "{title} | Matric Dashboard",
-	"meta_description": "A production-ready web application template.",
+	"meta_description": "Explore South African matric results, compare school pass rates and subject performance, and find NSC past papers and study guides on Matric Trend.",
 
 	"nav_dashboard": "Dashboard",
 	"nav_overview": "Overview",

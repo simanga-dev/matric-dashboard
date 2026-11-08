@@ -1,0 +1,8 @@
+{
+  "appHost": {
+    "path": "src/backend/MatricDasbhoard.AppHost/MatricDasbhoard.AppHost.csproj"
+  },
+  "sdk": {
+    "version": "13.6.4"
+  }
+}

@@ -101,6 +101,30 @@ internal sealed class PastPaperService(
     }
 
     /// <inheritdoc />
+    public async Task<Result<PastPaperFileInfo>> GetFileInfoAsync(string id, CancellationToken cancellationToken)
+    {
+        if (!PastPaperId.IsValid(id))
+        {
+            return Result<PastPaperFileInfo>.Failure(ErrorMessages.PastPapers.InvalidId, ErrorType.Validation);
+        }
+
+        var catalog = await GetCatalogAsync(cancellationToken);
+        if (!catalog.IsAvailable)
+        {
+            return Result<PastPaperFileInfo>.Failure(
+                ErrorMessages.PastPapers.CatalogUnavailable, ErrorType.ServiceUnavailable);
+        }
+
+        var entry = catalog.Find(id);
+        if (entry is null)
+        {
+            return Result<PastPaperFileInfo>.Failure(ErrorMessages.PastPapers.NotFound, ErrorType.NotFound);
+        }
+
+        return Result<PastPaperFileInfo>.Success(ToFileInfo(entry));
+    }
+
+    /// <inheritdoc />
     public async Task<Result<PastPaperFileOutput>> OpenFileAsync(string id, CancellationToken cancellationToken)
     {
         if (!PastPaperId.IsValid(id))
@@ -135,16 +159,64 @@ internal sealed class PastPaperService(
         }
 
         var file = opened.Value;
-        var paper = entry.Paper;
+        var info = ToFileInfo(entry);
         var output = new PastPaperFileOutput(
             Content: file.Content,
+            ContentType: info.ContentType,
+            ContentLength: file.ContentLength ?? info.ContentLength,
+            FileName: info.FileName,
+            CanDisplayInline: info.CanDisplayInline,
+            LastModified: info.LastModified);
+
+        return Result<PastPaperFileOutput>.Success(output);
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<PastPaperFileOutput>> OpenThumbnailAsync(string id, CancellationToken cancellationToken)
+    {
+        var info = await GetFileInfoAsync(id, cancellationToken);
+        if (!info.IsSuccess)
+        {
+            return Result<PastPaperFileOutput>.Failure(info.Error ?? ErrorMessages.PastPapers.NotFound, info.ErrorType ?? ErrorType.ServiceUnavailable);
+        }
+
+        if (!info.Value.CanDisplayInline)
+        {
+            return Result<PastPaperFileOutput>.Failure(ErrorMessages.PastPapers.NotFound, ErrorType.NotFound);
+        }
+
+        var catalog = await GetCatalogAsync(cancellationToken);
+        var entry = catalog.Find(id);
+        if (entry is null)
+        {
+            return Result<PastPaperFileOutput>.Failure(ErrorMessages.PastPapers.NotFound, ErrorType.NotFound);
+        }
+
+        var opened = await fileStorageService.OpenReadAsync($"thumbnails/{entry.Key}.webp", cancellationToken);
+        if (!opened.IsSuccess)
+        {
+            return Result<PastPaperFileOutput>.Failure(opened.Error ?? ErrorMessages.FileStorage.ReadFailed, opened.ErrorType ?? ErrorType.ServiceUnavailable);
+        }
+
+        return Result<PastPaperFileOutput>.Success(new PastPaperFileOutput(
+            opened.Value.Content, "image/webp", opened.Value.ContentLength,
+            $"{id}.webp", true, null));
+    }
+
+    /// <summary>
+    /// Derives the file metadata for a catalog entry (MIME from extension, safe filename, and the
+    /// object's last modified time), shared by the streaming and conditional-request paths.
+    /// </summary>
+    private static PastPaperFileInfo ToFileInfo(PastPaperCatalogEntry entry)
+    {
+        var paper = entry.Paper;
+        return new PastPaperFileInfo(
+            Id: paper.Id,
             ContentType: ContentTypes.GetValueOrDefault(paper.FileType, "application/octet-stream"),
-            ContentLength: file.ContentLength ?? paper.SizeBytes,
+            ContentLength: paper.SizeBytes,
             FileName: $"{SafeFileNameStem(paper.Title)}.{paper.FileType}",
             CanDisplayInline: paper.FileType == "pdf",
             LastModified: entry.LastModified);
-
-        return Result<PastPaperFileOutput>.Success(output);
     }
 
     /// <summary>

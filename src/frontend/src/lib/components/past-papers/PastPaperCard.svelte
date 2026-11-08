@@ -32,9 +32,9 @@
 </script>
 
 <article
-	class="group flex h-full flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-xs transition-all duration-200 hover:border-primary/30 hover:shadow-md motion-safe:hover:-translate-y-0.5"
+	class="paper-card group relative flex aspect-[2/3] min-h-64 flex-col overflow-hidden rounded-lg border bg-transparent text-foreground transition-colors duration-200 hover:border-primary/30"
 >
-	<div class="relative aspect-[5/4] overflow-hidden border-b bg-muted/40">
+	<div class="absolute inset-0 overflow-hidden bg-muted/40">
 		{#if previewable}
 			<button
 				type="button"
@@ -42,10 +42,10 @@
 				onclick={() => onPreview(paper)}
 				aria-label={`Preview ${title}, ${session}`}
 			>
-				<PaperThumbnail {paper} variant={theme.thumbnail} />
+				<PaperThumbnail {paper} variant={theme.thumbnail} fill />
 			</button>
 		{:else}
-			<PaperThumbnail {paper} variant={theme.thumbnail} />
+			<PaperThumbnail {paper} variant={theme.thumbnail} fill />
 		{/if}
 
 		<div class="pointer-events-none absolute top-1.5 right-1.5 flex flex-col items-end gap-1">
@@ -79,8 +79,10 @@
 		</div>
 	</div>
 
-	<div class="flex flex-1 flex-col gap-1.5 p-2.5">
-		<h3 class="line-clamp-2 min-h-8 text-[13px] leading-snug font-medium tracking-tight">
+	<div
+		class="relative mt-auto flex flex-col bg-background/80 p-2 backdrop-blur-sm transition-colors group-hover:bg-background/90 focus-within:bg-background/90"
+	>
+		<h3 class="line-clamp-2 text-[13px] leading-4 font-medium tracking-tight">
 			{#if previewable}
 				<button
 					type="button"
@@ -94,69 +96,111 @@
 			{/if}
 		</h3>
 
-		<dl class="space-y-0.5 text-[11px] text-muted-foreground">
-			<div class="flex items-center gap-1.5">
-				<FileText class="size-3 shrink-0" aria-hidden="true" />
-				<dt class="sr-only">Document</dt>
-				<dd class="truncate">
-					{kindLabels[paper.kind]}{paper.language ? ` · ${languageLabels[paper.language]}` : ''}
-				</dd>
-			</div>
-			<div class="flex items-center gap-1.5">
-				<CalendarDays class="size-3 shrink-0" aria-hidden="true" />
-				<dt class="sr-only">Session</dt>
-				<dd class="truncate">{session} · Grade {paper.grade}</dd>
-			</div>
-			<div class="flex items-center gap-1.5">
-				<HardDrive class="size-3 shrink-0" aria-hidden="true" />
-				<dt class="sr-only">File</dt>
-				<dd class="truncate">{paper.fileType.toUpperCase()} · {formatFileSize(paper.sizeBytes)}</dd>
-			</div>
-		</dl>
+		<div class="paper-details">
+			<div class="min-h-0 overflow-hidden">
+				<dl class="space-y-0.5 text-[11px] leading-[14px] text-muted-foreground">
+					<div class="flex items-center gap-1.5">
+						<FileText class="size-3 shrink-0" aria-hidden="true" />
+						<dt class="sr-only">Document</dt>
+						<dd class="truncate">
+							{kindLabels[paper.kind]}{paper.language ? ` · ${languageLabels[paper.language]}` : ''}
+						</dd>
+					</div>
+					<div class="flex items-center gap-1.5">
+						<CalendarDays class="size-3 shrink-0" aria-hidden="true" />
+						<dt class="sr-only">Session</dt>
+						<dd class="truncate">{session} · Grade {paper.grade}</dd>
+					</div>
+					<div class="flex items-center gap-1.5">
+						<HardDrive class="size-3 shrink-0" aria-hidden="true" />
+						<dt class="sr-only">File</dt>
+						<dd class="truncate">
+							{paper.fileType.toUpperCase()} · {formatFileSize(paper.sizeBytes)}
+						</dd>
+					</div>
+				</dl>
 
-		<div class="mt-auto flex items-center gap-1 border-t pt-2">
-			<Button
-				variant="outline"
-				size="icon-sm"
-				class="size-7 rounded-[4px]"
-				disabled={!previewable}
-				onclick={() => onPreview(paper)}
-				aria-label={previewable ? `Preview ${title}` : `Preview not available for ${title}`}
-				title={previewable ? 'Preview' : 'Preview not available for this file type'}
-			>
-				<Eye class="size-3.5" />
-			</Button>
-			<Button
-				variant="outline"
-				size="icon-sm"
-				class="size-7 rounded-[4px]"
-				href={pastPaperFileUrl(paper.id, true)}
-				download
-				aria-label={`Download ${title}`}
-				title="Download"
-			>
-				<Download class="size-3.5" />
-			</Button>
-			{#if isQuestionPaper}
-				<Button
-					variant="outline"
-					size="icon-sm"
-					class="size-7 rounded-[4px]"
-					disabled={!paper.memoId}
-					onclick={() => onMemo(paper)}
-					aria-label={paper.memoId ? `Open memo for ${title}` : `No memo available for ${title}`}
-					title={paper.memoId ? 'Open memo' : 'No memo available'}
-				>
-					<FileCheck class="size-3.5" />
-				</Button>
-			{/if}
+				<div class="mt-auto flex items-center gap-0.5 pt-1">
+					<Button
+						variant="ghost"
+						size="icon-sm"
+						class="size-6 rounded-[4px]"
+						disabled={!previewable}
+						onclick={() => onPreview(paper)}
+						aria-label={previewable ? `Preview ${title}` : `Preview not available for ${title}`}
+						title={previewable ? 'Preview' : 'Preview not available for this file type'}
+					>
+						<Eye class="size-3.5" />
+					</Button>
+					<Button
+						variant="ghost"
+						size="icon-sm"
+						class="size-6 rounded-[4px]"
+						href={pastPaperFileUrl(paper.id, true)}
+						download
+						aria-label={`Download ${title}`}
+						title="Download"
+					>
+						<Download class="size-3.5" />
+					</Button>
+					{#if isQuestionPaper}
+						<Button
+							variant="ghost"
+							size="icon-sm"
+							class="size-6 rounded-[4px]"
+							disabled={!paper.memoId}
+							onclick={() => onMemo(paper)}
+							aria-label={paper.memoId
+								? `Open memo for ${title}`
+								: `No memo available for ${title}`}
+							title={paper.memoId ? 'Open memo' : 'No memo available'}
+						>
+							<FileCheck class="size-3.5" />
+						</Button>
+					{/if}
 
-			<span
-				class="ms-auto hidden items-center gap-1 text-[10px] text-muted-foreground sm:inline-flex"
-			>
-				<span class={cn('size-1.5 rounded-full', theme.dotClass)} aria-hidden="true"></span>
-				{paper.grade === 12 ? 'NSC' : `Gr ${paper.grade}`}
-			</span>
+					<span
+						class="ms-auto hidden items-center gap-1 text-[10px] text-muted-foreground sm:inline-flex"
+					>
+						<span class={cn('size-1.5 rounded-full', theme.dotClass)} aria-hidden="true"></span>
+						{paper.grade === 12 ? 'NSC' : `Gr ${paper.grade}`}
+					</span>
+				</div>
+			</div>
 		</div>
 	</div>
 </article>
+
+<style>
+	.paper-details {
+		display: grid;
+		grid-template-rows: 1fr;
+		opacity: 1;
+		transition:
+			grid-template-rows 220ms ease,
+			opacity 180ms ease;
+	}
+
+	.paper-details dl {
+		padding-top: 4px;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.paper-details {
+			grid-template-rows: 0fr;
+			opacity: 0;
+		}
+
+		.paper-card:hover .paper-details,
+		.paper-card:focus-within .paper-details {
+			grid-template-rows: 1fr;
+			opacity: 1;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.paper-details {
+			transition: none;
+		}
+	}
+</style>

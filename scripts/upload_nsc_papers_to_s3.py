@@ -9,7 +9,8 @@ preserving the on-disk layout as the object key:
 Object keys therefore mirror the folder structure produced by
 ``scripts/download_nsc_exam_papers.py``.
 
-Requirements: ``pip install boto3``
+Requirements: ``pip install boto3 Pillow`` and Poppler (``pdftoppm``).
+Re-running also backfills missing thumbnails without re-uploading existing PDFs.
 
 Configuration (environment variables):
 
@@ -33,6 +34,10 @@ from __future__ import annotations
 import argparse
 import os
 import sys
+import shutil
+import subprocess
+import tempfile
+from io import BytesIO
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
@@ -108,6 +113,23 @@ def chunked_upload(client, bucket: str, key: str, path: Path) -> None:
         )
 
 
+def generate_thumbnail(path: Path) -> bytes:
+    """Render only page one, bounded to 480 pixels, as a WebP image."""
+    from PIL import Image
+
+    with tempfile.TemporaryDirectory(prefix="paper-thumbnail-") as directory:
+        prefix = str(Path(directory) / "cover")
+        subprocess.run(
+            ["pdftoppm", "-f", "1", "-singlefile", "-scale-to", "480",
+             "-png", str(path), prefix],
+            check=True, capture_output=True, timeout=60,
+        )
+        with Image.open(prefix + ".png") as image:
+            output = BytesIO()
+            image.convert("RGB").save(output, format="WEBP", quality=82)
+            return output.getvalue()
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -135,6 +157,10 @@ def main() -> int:
         "--force",
         action="store_true",
         help="Re-upload objects that already exist in the bucket",
+    )
+    parser.add_argument(
+        "--thumbnails-only", action="store_true",
+        help="Backfill thumbnails for locally available PDFs already in storage",
     )
     args = parser.parse_args()
 
@@ -173,6 +199,15 @@ def main() -> int:
         print("ERROR: boto3 is required. Install with: pip install boto3", file=sys.stderr)
         return 1
 
+    try:
+        from PIL import Image
+    except ImportError:
+        print("ERROR: Pillow is required. Install with: pip install Pillow", file=sys.stderr)
+        return 1
+    if not shutil.which("pdftoppm"):
+        print("ERROR: Poppler (pdftoppm) is required to render PDF thumbnails.", file=sys.stderr)
+        return 1
+
     client = boto3.client(
         "s3",
         endpoint_url=endpoint,
@@ -183,6 +218,11 @@ def main() -> int:
             s3={"addressing_style": "path"},
             signature_version="s3v4",
             max_pool_connections=args.workers * 2,
+            # Older S3Mock builds add CRC64/x-amz-checksum headers on multipart
+            # uploads and reject the newer checksums boto3 adds for large bodies.
+            # "when_required" only sends checksums for endpoints that demand them.
+            request_checksum_calculation="when_required",
+            response_checksum_validation="when_required",
         ),
     )
 
@@ -210,7 +250,7 @@ def main() -> int:
 
     # Pre-fetch existing objects so we can skip already-uploaded files.
     existing: set[str] = set()
-    if not args.force:
+    if not args.force or args.thumbnails_only:
         paginator = client.get_paginator("list_objects_v2")
         try:
             for page in paginator.paginate(Bucket=bucket):
@@ -220,7 +260,14 @@ def main() -> int:
             print(f"WARNING: could not list existing objects: {error}", file=sys.stderr)
         print(f"Existing objects in bucket: {len(existing)}")
 
-    remaining = [u for u in uploads if args.force or u[1] not in existing]
+    if args.thumbnails_only:
+        uploads = [u for u in uploads if u[0].suffix.lower() == ".pdf" and u[1] in existing]
+
+    remaining = [
+        u for u in uploads
+        if args.force or u[1] not in existing
+        or (u[0].suffix.lower() == ".pdf" and f"thumbnails/{u[1]}.webp" not in existing)
+    ]
     skipped = len(uploads) - len(remaining)
     print(f"To upload: {len(remaining)} (skipping {skipped} already present)")
 
@@ -230,9 +277,17 @@ def main() -> int:
     def do_upload(item: tuple[Path, str]) -> tuple[str, str]:
         path, key = item
         try:
-            chunked_upload(client, bucket, key, path)
+            if not args.thumbnails_only and (args.force or key not in existing):
+                chunked_upload(client, bucket, key, path)
+            thumbnail_key = f"thumbnails/{key}.webp"
+            if path.suffix.lower() == ".pdf" and (args.force or thumbnail_key not in existing):
+                client.put_object(
+                    Bucket=bucket, Key=thumbnail_key,
+                    Body=generate_thumbnail(path), ContentType="image/webp",
+                    CacheControl="public, max-age=86400",
+                )
             return "uploaded", key
-        except (BotoCoreError, ClientError, OSError) as error:
+        except (BotoCoreError, ClientError, OSError, subprocess.SubprocessError, ImportError, ValueError) as error:
             return "failed", f"{path}: {error}"
 
     with ThreadPoolExecutor(max_workers=args.workers) as pool:

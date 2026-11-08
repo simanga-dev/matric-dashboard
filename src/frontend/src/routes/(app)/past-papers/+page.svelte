@@ -386,12 +386,30 @@
 			<Card.Root>
 				<Card.Content class="flex flex-col items-center gap-2 py-12 text-center">
 					<FileText class="size-6 text-muted-foreground" />
-					<p class="text-sm font-medium">No papers match your filters</p>
-					<p class="text-xs text-muted-foreground">Try another subject, year or language.</p>
-					<Button variant="outline" size="sm" class="mt-2" onclick={resetFilters}>
-						<X class="size-3.5" />
-						Reset filters
-					</Button>
+					{#if papers.pageNumber > papers.totalPages}
+						<p class="text-sm font-medium">
+							Page {papers.pageNumber} is beyond the last page ({papers.totalPages}).
+						</p>
+						<p class="text-xs text-muted-foreground">
+							There are no documents on this page. Go back to see the previous ones.
+						</p>
+						<Button
+							variant="outline"
+							size="sm"
+							class="mt-2"
+							onclick={() => apply({ page: papers.totalPages }, false)}
+						>
+							<ChevronLeft class="size-3.5" />
+							Go to last page
+						</Button>
+					{:else}
+						<p class="text-sm font-medium">No papers match your filters</p>
+						<p class="text-xs text-muted-foreground">Try another subject, year or language.</p>
+						<Button variant="outline" size="sm" class="mt-2" onclick={resetFilters}>
+							<X class="size-3.5" />
+							Reset filters
+						</Button>
+					{/if}
 				</Card.Content>
 			</Card.Root>
 		{:else if view === 'grid'}

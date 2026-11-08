@@ -33,12 +33,44 @@ public class PastPapersControllerTests : IClassFixture<CustomWebApplicationFacto
         PaperId, "Mathematics P1 Nov 2024 Eng", "Mathematics", 2024, PastPaperSession.November, 12, 1,
         PastPaperKind.QuestionPaper, PastPaperLanguage.English, null, "pdf", 524_288, MemoId);
 
+    private void ReturnsFileInfo(DateTimeOffset? lastModified) =>
+        _factory.PastPaperService.GetFileInfoAsync(PaperId, Arg.Any<CancellationToken>())
+            .Returns(Result<PastPaperFileInfo>.Success(new PastPaperFileInfo(
+                PaperId, "application/pdf", 524_288, "Mathematics P1 Nov 2024 Eng.pdf", true, lastModified)));
+
     private void ReturnsFile(string fileName, string contentType, bool inline, byte[] content)
     {
+        ReturnsFileInfo(LastModified);
         _factory.PastPaperService.OpenFileAsync(PaperId, Arg.Any<CancellationToken>())
             .Returns(_ => Result<PastPaperFileOutput>.Success(
                 new PastPaperFileOutput(new MemoryStream(content), contentType, content.Length, fileName, inline,
                     LastModified)));
+    }
+
+    [Fact]
+    public async Task Thumbnail_Anonymous_ReturnsCacheableWebp()
+    {
+        byte[] image = [1, 2, 3];
+        _factory.PastPaperService.OpenThumbnailAsync(PaperId, Arg.Any<CancellationToken>())
+            .Returns(_ => Result<PastPaperFileOutput>.Success(
+                new(new MemoryStream(image), "image/webp", image.Length, "cover.webp", true, null)));
+
+        using var response = await _client.GetAsync($"{BaseUrl}/{PaperId}/thumbnail");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("image/webp", response.Content.Headers.ContentType?.MediaType);
+        Assert.Equal(image, await response.Content.ReadAsByteArrayAsync());
+        Assert.Equal(TimeSpan.FromDays(1), response.Headers.CacheControl?.MaxAge);
+    }
+
+    [Fact]
+    public async Task Thumbnail_Missing_ReturnsProblemDetails()
+    {
+        _factory.PastPaperService.OpenThumbnailAsync(PaperId, Arg.Any<CancellationToken>())
+            .Returns(Result<PastPaperFileOutput>.Failure(ErrorMessages.PastPapers.NotFound, ErrorType.NotFound));
+        using var response = await _client.GetAsync($"{BaseUrl}/{PaperId}/thumbnail");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
     }
 
     [Fact]
@@ -138,10 +170,76 @@ public class PastPapersControllerTests : IClassFixture<CustomWebApplicationFacto
     }
 
     [Fact]
+    public async Task File_IfNoneMatchFromPreviousResponse_Returns304WithoutBody()
+    {
+        ReturnsFile("Mathematics P1 Nov 2024 Eng.pdf", "application/pdf", inline: true, [1, 2, 3]);
+
+        // First request streams the file and returns a strong ETag.
+        using var first = await _client.GetAsync($"{BaseUrl}/{PaperId}/file");
+        Assert.Equal(HttpStatusCode.OK, first.StatusCode);
+        var etag = first.Headers.ETag?.ToString();
+        Assert.NotNull(etag);
+
+        var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl}/{PaperId}/file");
+        request.Headers.TryAddWithoutValidation("If-None-Match", etag);
+        using var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.NotModified, response.StatusCode);
+        Assert.Equal("public, max-age=86400", response.Headers.CacheControl?.ToString());
+        Assert.Empty(await response.Content.ReadAsByteArrayAsync());
+        // Only the first (200) request opened the stream; the 304 short-circuited.
+        await _factory.PastPaperService.Received(1).OpenFileAsync(PaperId, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task File_IfModifiedSinceLatest_Returns304WithoutBody()
+    {
+        ReturnsFile("Mathematics P1 Nov 2024 Eng.pdf", "application/pdf", inline: true, [1, 2, 3]);
+
+        var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl}/{PaperId}/file");
+        request.Headers.TryAddWithoutValidation("If-Modified-Since", LastModified.ToString("R", System.Globalization.CultureInfo.InvariantCulture));
+        using var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.NotModified, response.StatusCode);
+        await _factory.PastPaperService.DidNotReceiveWithAnyArgs().OpenFileAsync(default!, default);
+    }
+
+    [Fact]
+    public async Task File_IfModifiedSinceOlder_ReturnsFullBody()
+    {
+        ReturnsFile("Mathematics P1 Nov 2024 Eng.pdf", "application/pdf", inline: true, [1, 2, 3]);
+
+        var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl}/{PaperId}/file");
+        request.Headers.TryAddWithoutValidation("If-Modified-Since", new DateTimeOffset(2020, 1, 1, 0, 0, 0, TimeSpan.Zero).ToString("R", System.Globalization.CultureInfo.InvariantCulture));
+        using var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        await _factory.PastPaperService.Received(1).OpenFileAsync(PaperId, Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task File_NoLastModified_FallsBackToFullBody()
+    {
+        ReturnsFileInfo(lastModified: null);
+        _factory.PastPaperService.OpenFileAsync(PaperId, Arg.Any<CancellationToken>())
+            .Returns(_ => Result<PastPaperFileOutput>.Success(new PastPaperFileOutput(
+                new MemoryStream([1, 2, 3]), "application/pdf", 3, "a.pdf", true, null)));
+
+        // Even with a matching ETag shape, a 304 needs the file metadata; when there is no
+        // LastModified the ETag still works, so this verifies an If-None-Match match still 304s.
+        var request = new HttpRequestMessage(HttpMethod.Get, $"{BaseUrl}/{PaperId}/file");
+        request.Headers.TryAddWithoutValidation("If-None-Match", $"\"{PaperId}_0\"");
+        using var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.NotModified, response.StatusCode);
+        await _factory.PastPaperService.DidNotReceiveWithAnyArgs().OpenFileAsync(default!, default);
+    }
+
+    [Fact]
     public async Task File_MalformedId_Returns400()
     {
-        _factory.PastPaperService.OpenFileAsync("NOT-AN-ID", Arg.Any<CancellationToken>())
-            .Returns(Result<PastPaperFileOutput>.Failure(ErrorMessages.PastPapers.InvalidId, ErrorType.Validation));
+        _factory.PastPaperService.GetFileInfoAsync("NOT-AN-ID", Arg.Any<CancellationToken>())
+            .Returns(Result<PastPaperFileInfo>.Failure(ErrorMessages.PastPapers.InvalidId, ErrorType.Validation));
 
         using var response = await _client.GetAsync($"{BaseUrl}/NOT-AN-ID/file");
 
@@ -152,8 +250,8 @@ public class PastPapersControllerTests : IClassFixture<CustomWebApplicationFacto
     [Fact]
     public async Task File_UnknownId_Returns404ProblemDetails()
     {
-        _factory.PastPaperService.OpenFileAsync(PaperId, Arg.Any<CancellationToken>())
-            .Returns(Result<PastPaperFileOutput>.Failure(ErrorMessages.PastPapers.NotFound, ErrorType.NotFound));
+        _factory.PastPaperService.GetFileInfoAsync(PaperId, Arg.Any<CancellationToken>())
+            .Returns(Result<PastPaperFileInfo>.Failure(ErrorMessages.PastPapers.NotFound, ErrorType.NotFound));
 
         using var response = await _client.GetAsync($"{BaseUrl}/{PaperId}/file");
 
@@ -233,6 +331,7 @@ public class PastPapersControllerTests : IClassFixture<CustomWebApplicationFacto
         var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         var opened = 0;
         var bothOpen = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        ReturnsFileInfo(LastModified);
         _factory.PastPaperService.OpenFileAsync(PaperId, Arg.Any<CancellationToken>())
             .Returns(_ =>
             {

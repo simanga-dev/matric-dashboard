@@ -66,6 +66,31 @@ public class PastPaperServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task Thumbnail_OpensMatchingStoredImage()
+    {
+        var paper = (await ListAll(Input())).First(p => p.Subject == "Mathematics");
+        var key = Keys.Single(k => PastPaperId.FromKey(k) == paper.Id);
+        var stream = new MemoryStream([1, 2, 3]);
+        _storage.OpenReadAsync($"thumbnails/{key}.webp", Arg.Any<CancellationToken>())
+            .Returns(Result<FileStreamOutput>.Success(new(stream, "image/webp", 3)));
+
+        var result = await _sut.OpenThumbnailAsync(paper.Id, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("image/webp", result.Value.ContentType);
+        Assert.Same(stream, result.Value.Content);
+        await result.Value.DisposeAsync();
+    }
+
+    [Fact]
+    public async Task Thumbnail_RejectsInvalidIdWithoutReadingStorage()
+    {
+        var result = await _sut.OpenThumbnailAsync("invalid", CancellationToken.None);
+        Assert.Equal(ErrorType.Validation, result.ErrorType);
+        await _storage.DidNotReceive().OpenReadAsync(Arg.Any<string>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
     public async Task List_ExcludesUnsupportedObjectsAndNeverExposesKeys()
     {
         var result = await _sut.ListAsync(Input(), CancellationToken.None);

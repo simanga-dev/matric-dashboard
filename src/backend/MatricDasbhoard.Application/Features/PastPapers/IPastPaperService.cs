@@ -33,4 +33,21 @@ public interface IPastPaperService
     /// failure when no paper has the identifier.
     /// </returns>
     Task<Result<PastPaperFileOutput>> OpenFileAsync(string id, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Opens the generated first-page WebP thumbnail for a PDF paper.
+    /// </summary>
+    Task<Result<PastPaperFileOutput>> OpenThumbnailAsync(string id, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Returns file metadata for a past paper without opening the storage stream, so a conditional
+    /// request (If-None-Match/If-Modified-Since) can be answered with a 304 short-circuit.
+    /// </summary>
+    /// <param name="id">The paper identifier (32 lowercase hex characters).</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>
+    /// The file metadata, a <c>Validation</c> failure for a malformed identifier, or a <c>NotFound</c>
+    /// failure when no paper has the identifier.
+    /// </returns>
+    Task<Result<PastPaperFileInfo>> GetFileInfoAsync(string id, CancellationToken cancellationToken);
 }

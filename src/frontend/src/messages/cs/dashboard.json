@@ -2,10 +2,10 @@
 	"$schema": "https://inlang.com/schema/inlang-message-format",
 
 	"meta_dashboard_title": "Nástěnka",
-	"meta_dashboard_description": "Přehled aplikace.",
+	"meta_dashboard_description": "Prozkoumejte výsledky maturit v Jihoafrické republice na Matric Trend. Porovnejte úspěšnost škol, výsledky předmětů NSC a trendy ve vzdělávání.",
 
-	"meta_overview_title": "Přehled",
-	"meta_overview_description": "Rychlý přehled vaší aplikace.",
+	"meta_overview_title": "Výsledky maturit a úspěšnost škol v Jihoafrické republice",
+	"meta_overview_description": "Prozkoumejte výsledky maturit podle provincií, okresů a škol v Jihoafrické republice. Porovnejte úspěšnost NSC a výsledky předmětů na Matric Trend.",
 
 	"meta_schools_title": "Školy",
 	"meta_schools_description": "Prohledejte národní adresář škol a otevřete profil výsledků NSC dané školy.",
